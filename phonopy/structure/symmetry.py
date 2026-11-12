@@ -368,6 +368,14 @@ class Symmetry:
         self._map_atoms = np.asarray(self._dataset.equivalent_atoms, dtype="int64")
 
     def _set_symmetry_operations_with_magmoms(self) -> None:
+        """Set symmetry operations from the magnetic symmetry dataset.
+
+        Time reversal is dropped from the operations.  In a grey group
+        (type 2), every (R, t) appears with and without time reversal, so
+        only those without it are kept to avoid duplicated (R, t).  In the
+        other types, each (R, t) appears once.
+
+        """
         _dataset = spglib.get_magnetic_symmetry_dataset(
             self._cell.totuple(distinguish_symbol_index=self._distinguish_symbol_index),  # type: ignore
             symprec=self._symprec,
@@ -375,10 +383,16 @@ class Symmetry:
         assert _dataset is not None
         self._dataset = _dataset
 
+        if self._dataset.msg_type == 2:
+            selected = np.asarray(self._dataset.time_reversals) == 0
+        else:
+            selected = np.ones(len(self._dataset.rotations), dtype=bool)
         self._symmetry_operations = {
-            "rotations": np.asarray(self._dataset.rotations, dtype="int64", order="C"),
+            "rotations": np.asarray(
+                self._dataset.rotations[selected], dtype="int64", order="C"
+            ),
             "translations": np.asarray(
-                self._dataset.translations, dtype="double", order="C"
+                self._dataset.translations[selected], dtype="double", order="C"
             ),
         }
         self._map_atoms = np.asarray(self._dataset.equivalent_atoms, dtype="int64")
