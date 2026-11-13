@@ -2,7 +2,6 @@
 """Tests for routines in derivative_dynmat.py."""
 
 import numpy as np
-import pytest
 
 from phonopy import Phonopy
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
@@ -290,51 +289,3 @@ def test_ddm_gonze_lee_matches_fd(ph_nacl: Phonopy):
     np.testing.assert_allclose(analytic, fd, rtol=1e-5, atol=1e-6)
 
 
-@pytest.mark.parametrize("anisotropic", [False, True])
-def test_wang_second_derivative_matches_fd(ph_nacl_wang: Phonopy, anisotropic):
-    """Include both NAC derivatives in the Cartesian dynamical-matrix Hessian."""
-    ph = ph_nacl_wang
-    if anisotropic:
-        ph = Phonopy(
-            ph_nacl_wang.unitcell,
-            ph_nacl_wang.supercell_matrix,
-            primitive_matrix=ph_nacl_wang.primitive_matrix,
-            is_symmetry=False,
-        )
-        ph.force_constants = ph_nacl_wang.force_constants.copy()
-        born = np.array([[1.2, 0.2, 0.1], [-0.3, 0.9, 0.25], [0.05, -0.15, 1.1]])
-        ph.nac_params = {
-            **ph_nacl_wang.nac_params,
-            "born": np.array([born, -born]),
-            "dielectric": np.array(
-                [[3.0, 0.2, 0.1], [0.2, 4.0, -0.3], [0.1, -0.3, 5.0]]
-            ),
-        }
-
-    q = np.array([0.13, 0.17, 0.19])
-    h = 1e-5
-    second = DerivativeOfDynamicalMatrix(ph.dynamical_matrix)
-    second.set_derivative_order(2)
-    second.run(q)
-    analytic = second.d_dynamical_matrix
-
-    first = DerivativeOfDynamicalMatrix(ph.dynamical_matrix)
-    pairs = ((0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1))
-    fd = []
-    for a, b in pairs:
-        step = h * ph.primitive.cell.T[b]
-        first.run(q + step)
-        plus = first.d_dynamical_matrix[a].copy()
-        first.run(q - step)
-        minus = first.d_dynamical_matrix[a].copy()
-        fd.append((plus - minus) / (2 * h))
-
-    np.testing.assert_allclose(analytic, fd, rtol=1e-5, atol=1e-5)
-
-
-def test_wang_second_derivative_fixed_direction(ph_nacl_wang: Phonopy):
-    """A fixed Gamma NAC direction does not define a Cartesian Hessian."""
-    derivative = DerivativeOfDynamicalMatrix(ph_nacl_wang.dynamical_matrix)
-    derivative.set_derivative_order(2)
-    with pytest.raises(NotImplementedError):
-        derivative.run([0, 0, 0], q_direction=[1, 0, 0])

@@ -603,13 +603,9 @@ mod = phonon.run_modulations(
 )
 modulated_cells = mod.modulated_supercells
 phonon.write_modulations()  # MPOSCAR-001, MPOSCAR-002, ...
-```
 
-`derivative_order=2` uses second derivatives of the dynamical matrix to
-resolve degenerate modes. For Wang NAC at finite q, these include the
-q-dependence of the non-analytical correction as well as the lattice phase.
-Second derivatives with a fixed `nac_q_direction` are not supported: a
-directional limit at Gamma does not define a Cartesian NAC Hessian.
+
+```
 
 ### Irreducible representations
 

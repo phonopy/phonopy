@@ -1851,7 +1851,6 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
     def _parse_conf_modulation(self, conf_modulation: str) -> None:
         modulation: dict[str, Any] = {}
         modulation["dimension"] = [1, 1, 1]
-        modulation["order"] = None
         mod_list = conf_modulation.split(",")
         header = mod_list[0].split()
         if len(header) > 2 and len(mod_list) > 1:

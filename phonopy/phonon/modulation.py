@@ -31,7 +31,6 @@ class Modulation:
         dimension: Sequence[int] | Sequence[Sequence[int]] | NDArray[np.int64],
         phonon_modes: Sequence[tuple[NDArray[np.double], int, float, float]],
         delta_q: NDArray[np.double] | Sequence[float] | None = None,
-        derivative_order: int | None = None,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
         factor: float | None = None,
     ) -> None:
@@ -49,8 +48,6 @@ class Modulation:
         self._ddm = DerivativeOfDynamicalMatrix(
             dynamical_matrix, lang=dynamical_matrix.lang
         )
-        self._derivative_order = derivative_order
-
         if factor is None:
             self._factor = get_physical_units().DefaultToTHz
         else:
@@ -77,7 +74,6 @@ class Modulation:
                 self._dm,
                 self._ddm,
                 perturbation=self._delta_q,
-                derivative_order=self._derivative_order,
                 nac_q_direction=self._nac_q_direction,
             )
             u = self._get_displacements(eigvecs[:, band_index], q, amplitude, argument)
@@ -338,7 +334,6 @@ def get_eigenvectors(
     dm: DynamicalMatrix,
     ddm: DerivativeOfDynamicalMatrix,
     perturbation: Sequence[float] | NDArray[np.double] | None = None,
-    derivative_order: int | None = None,
     nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
 ) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
     """Return degenerated eigenvalues and rotated eigenvalues."""
@@ -353,29 +348,11 @@ def get_eigenvectors(
     if perturbation is None:
         return eigvals, eigvecs
 
-    if derivative_order is not None:
-        ddm.set_derivative_order(derivative_order)
     ddm.run(q)
     ddm_vals = ddm.d_dynamical_matrix
     assert ddm_vals is not None
     d = np.asarray(perturbation, dtype="double")
     norm = np.linalg.norm(d)
-    if len(ddm_vals) == 3:
-        dD = (d[0] * ddm_vals[0] + d[1] * ddm_vals[1] + d[2] * ddm_vals[2]) / norm
-    elif len(ddm_vals) == 6:
-        dD = (
-            d[0] * d[0] * ddm_vals[0]
-            + d[1] * d[1] * ddm_vals[1]
-            + d[2] * d[2] * ddm_vals[2]
-            + 2 * d[1] * d[2] * ddm_vals[3]
-            + 2 * d[0] * d[2] * ddm_vals[4]
-            + 2 * d[0] * d[1] * ddm_vals[5]
-        ) / norm**2
-    else:
-        raise ValueError(
-            "Derivative tensor of the dynamical matrix must have leading "
-            f"dimension 3 or 6, got {len(ddm_vals)}."
-        )
+    dD = (d[0] * ddm_vals[0] + d[1] * ddm_vals[1] + d[2] * ddm_vals[2]) / norm
     _, rot_eigvecs = lift_degeneracy(eigvals, eigvecs, dD)
-
     return eigvals, rot_eigvecs

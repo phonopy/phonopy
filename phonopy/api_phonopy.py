@@ -2993,7 +2993,6 @@ class Phonopy:
         dimension: Sequence[int] | NDArray[np.int64],
         phonon_modes: Sequence,
         delta_q: Sequence[float] | NDArray[np.double] | None = None,
-        derivative_order: int | None = None,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
     ) -> Modulation:
         """Generate atomic displacements of phonon modes.
@@ -3039,7 +3038,6 @@ class Phonopy:
             dimension,
             phonon_modes,
             delta_q=delta_q,
-            derivative_order=derivative_order,
             nac_q_direction=nac_q_direction,
             factor=self._unit_conversion_factor,
         )

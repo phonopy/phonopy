@@ -18,8 +18,6 @@ from phonopy.harmonic.dynamical_matrix import (
 )
 from phonopy.structure.cells import sparse_to_dense_svecs
 
-_SECOND_DERIVATIVE_PAIRS = ((0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1))
-
 
 class DerivativeOfDynamicalMatrix:
     """Compute analytical derivative of the dynamical matrix.
@@ -34,10 +32,6 @@ class DerivativeOfDynamicalMatrix:
     - The Python path covers no-NAC, Wang NAC, and Gonze-Lee NAC.  The
       Gonze-Lee branch evaluates the analytic dipole-dipole derivative
       (see ``dDdq/main.tex``) on top of the short-range part.
-    - Derivative order 2 is supported only by the Python path and only
-      for no-NAC and Wang NAC.
-      Wang second derivatives require ``q_direction=None``; a fixed
-      direction at Gamma does not define a Cartesian NAC Hessian.
 
     Attributes
     ----------
@@ -91,8 +85,6 @@ class DerivativeOfDynamicalMatrix:
 
         self._ddm: NDArray[np.cdouble] | None = None
 
-        # Second derivatives use the Python implementation (no-NAC or Wang NAC).
-        self._derivative_order: int | None = None
 
     def run(
         self,
@@ -111,8 +103,7 @@ class DerivativeOfDynamicalMatrix:
             Gamma.  Ignored when ``self._dynmat`` has no NAC.
         force_python : bool, optional, default=False
             Force the Python implementation regardless of ``self._lang``.
-            Mainly intended for testing and for derivative orders > 1
-            (which only the Python path supports).
+            Mainly intended for testing.
 
         """
         _q = np.array(q, dtype="double")
@@ -120,16 +111,11 @@ class DerivativeOfDynamicalMatrix:
             _q_direction = None
         else:
             _q_direction = np.array(q_direction, dtype="double")
-        if force_python or self._derivative_order is not None:
+        if force_python:
             self._run_py(_q, q_direction=_q_direction)
         else:
             self._run_compiled(_q, q_direction=_q_direction)
 
-    def set_derivative_order(self, order: int) -> None:
-        """Set order of derivative (must be 1 or 2)."""
-        if order not in (1, 2):
-            raise ValueError(f"derivative order must be 1 or 2 (got {order!r})")
-        self._derivative_order = order
 
     @property
     def d_dynamical_matrix(self) -> NDArray[np.cdouble] | None:
@@ -139,9 +125,7 @@ class DerivativeOfDynamicalMatrix:
         -------
         ndarray or None
             Derivative of dynamical matrix with respect to Cartesian q.
-            The first dimension is 3 for first derivatives and 6 for second
-            derivatives, packed as [xx, yy, zz, yz, xz, xy].
-            shape=(3 or 6, num_patom * 3, num_patom * 3),
+            shape=(3, num_patom * 3, num_patom * 3),
             dtype="c%d" % (np.dtype('double').itemsize * 2)
 
         """
@@ -399,7 +383,7 @@ class DerivativeOfDynamicalMatrix:
         and the analytic dipole-dipole derivative is added on top (see
         ``_gonze_lee_d_recip_dipole_dipole``).
 
-        Derivative order 2 is supported only for no-NAC and Wang NAC.
+        Only first derivatives are supported.
 
         """
         fc, fc_nac, d_fc_nac, d_dd = self._prepare_py_inputs(q, q_direction)
@@ -409,15 +393,8 @@ class DerivativeOfDynamicalMatrix:
         multiplicity = self._multi
         num_patom = len(self._p2s_map)
         num_satom = len(self._s2p_map)
-        num_elem = 6 if self._derivative_order == 2 else 3
-        d2_fc_nac = None
-        if num_elem == 6 and isinstance(self._dynmat, DynamicalMatrixWang):
-            if q_direction is not None:
-                raise NotImplementedError(
-                    "Wang NAC second derivatives require q without a fixed "
-                    "q_direction; the NAC Hessian at Gamma is not defined."
-                )
-            d2_fc_nac = self._dd_wang_nac(q)
+
+        num_elem = 3
 
         ddm = np.zeros((num_elem, 3 * num_patom, 3 * num_patom), dtype=np.cdouble)
 
@@ -439,7 +416,7 @@ class DerivativeOfDynamicalMatrix:
                 vecs_multi = vecs[multi[1] : multi[1] + multi[0]]
                 phase_multi = np.exp(2j * np.pi * (vecs_multi @ q))
                 vecs_multi_cart = vecs_multi @ self._pcell.cell
-                coef = self._derivative_coef(vecs_multi_cart, num_elem)
+                coef = self._derivative_coef(vecs_multi_cart)
 
                 fc_elem = fc[fc_row, k]
                 if fc_nac is not None:
@@ -449,27 +426,11 @@ class DerivativeOfDynamicalMatrix:
                 # Sum over multi vectors at once: gives (num_elem,) scalars.
                 scalars = (coef.T @ phase_multi) / (mass * multi[0])
                 ddm_local += scalars[:, None, None] * fc_elem
-
-                if d_fc_nac is not None and num_elem == 3:
+                if d_fc_nac is not None:
                     # Wang: add the d/dq of the NAC correction.
                     ddm_local += d_fc_nac[:, i, j] * (
                         phase_multi.sum() / (mass * multi[0])
                     )
-                elif d2_fc_nac is not None:
-                    assert d_fc_nac is not None
-                    phase = phase_multi.sum() / (mass * multi[0])
-                    d_phase = (
-                        self._derivative_coef(vecs_multi_cart, 3).T @ phase_multi
-                    ) / (mass * multi[0])
-                    for component, (a, b) in enumerate(_SECOND_DERIVATIVE_PAIRS):
-                        # The phase Hessian times NAC is already included above.
-                        # Add the two cross terms and phase times the NAC Hessian.
-                        ddm_local[component] += (
-                            d_phase[a] * d_fc_nac[b, i, j]
-                            + d_phase[b] * d_fc_nac[a, i, j]
-                            + phase * d2_fc_nac[component, i, j]
-                        )
-
             ddm[:, (i * 3) : (i * 3 + 3), (j * 3) : (j * 3 + 3)] = ddm_local
 
         if d_dd is not None:
@@ -503,10 +464,6 @@ class DerivativeOfDynamicalMatrix:
         """
         if isinstance(self._dynmat, DynamicalMatrixGL):
             # Gonze-Lee: short-range FC + analytic Ewald derivative.
-            if self._derivative_order == 2:
-                raise NotImplementedError(
-                    "Derivative order 2 is not implemented for Gonze-Lee NAC."
-                )
             dm_gl = self._dynmat
             if dm_gl.short_range_force_constants is None:
                 dm_gl.make_Gonze_nac_dataset()
@@ -525,26 +482,11 @@ class DerivativeOfDynamicalMatrix:
                 "Only Wang and Gonze-Lee NAC are implemented in the "
                 "Python derivative path."
             )
-        return self._force_constants, None, None, None
-
     @staticmethod
-    def _derivative_coef(
-        vecs_cart: NDArray[np.double], num_elem: int
-    ) -> NDArray[np.cdouble]:
-        """Return per-multi-vector derivative coefficients.
+    def _derivative_coef(vecs_cart: NDArray[np.double]) -> NDArray[np.cdouble]:
+        """Return per-multi-vector derivative coefficients."""
+        return 2j * np.pi * vecs_cart
 
-        Shape ``(M, num_elem)`` where M is the number of equivalent
-        shortest vectors.  For order 1, ``coef[m, l] = 2*pi*i * vec[m, l]``.
-        For order 2, the upper-triangular outer-product
-        ``(2*pi*i)^2 * vec ⊗ vec`` is packed in the order ``[xx, yy, zz,
-        yz, xz, xy]``.
-
-        """
-        coef1 = 2j * np.pi * vecs_cart
-        if num_elem == 3:
-            return coef1
-        outer = coef1[:, :, None] * coef1[:, None, :]  # (M, 3, 3)
-        return outer.reshape(len(coef1), 9)[:, [0, 4, 8, 5, 2, 1]]
 
     # --- Gonze-Lee NAC: analytical dD_DD/dq from the Ewald sum. ---
     # See dDdq/main.tex for the derivation; the formula is
@@ -732,62 +674,6 @@ class DerivativeOfDynamicalMatrix:
         num_satom = len(self._scell)
         N = num_satom // num_atom
         return d_nac_q * nac_factor / N
-
-    def _dd_wang_nac(self, q_direction: NDArray[np.double]) -> NDArray[np.double]:
-        """Return Cartesian Wang NAC Hessian, packed as xx, yy, zz, yz, xz, xy.
-
-        Write the correction as P/B, where P = outer(q @ Z_i, q @ Z_j)
-        and B = q @ dielectric @ q. For Cartesian directions a and b,
-        the quotient rule gives
-
-            (P/B)_ab = P_ab/B - (P_a B_b + P_b B_a + P B_ab)/B**2
-                       + 2 P B_a B_b/B**3.
-
-        Here B_a = 2 (dielectric @ q)_a and B_ab = 2 dielectric[a, b].
-        """
-        assert isinstance(self._dynmat, DynamicalMatrixNAC)
-        num_atom = len(self._pcell)
-        dd_nac_q = np.zeros((6, num_atom, num_atom, 3, 3), dtype="double")
-        if (np.abs(q_direction) < 1e-5).all():
-            return dd_nac_q
-
-        born = self._dynmat.born
-        dielectric = self._dynmat.dielectric_constant
-        q = np.linalg.inv(self._pcell.cell) @ q_direction
-        denominator = self._wang_B(dielectric, q)
-        d_denominator = 2 * dielectric @ q
-        for i, j in np.ndindex(num_atom, num_atom):
-            A_i = self._wang_A(q, born, i)
-            A_j = self._wang_A(q, born, j)
-            numerator = np.outer(A_i, A_j)
-            # d(q @ Z_i)/dq_c = born[i, c].
-            d_numerator = np.array(
-                [
-                    np.outer(born[i, c], A_j) + np.outer(A_i, born[j, c])
-                    for c in range(3)
-                ]
-            )
-            for component, (a, b) in enumerate(_SECOND_DERIVATIVE_PAIRS):
-                dd_numerator = np.outer(born[i, a], born[j, b]) + np.outer(
-                    born[i, b], born[j, a]
-                )
-                dd_nac_q[component, i, j] = (
-                    dd_numerator / denominator
-                    - (
-                        d_numerator[a] * d_denominator[b]
-                        + d_numerator[b] * d_denominator[a]
-                        + 2 * numerator * dielectric[a, b]
-                    )
-                    / denominator**2
-                    + 2
-                    * numerator
-                    * d_denominator[a]
-                    * d_denominator[b]
-                    / denominator**3
-                )
-
-        N = len(self._scell) // num_atom
-        return dd_nac_q * self._dynmat.nac_factor / N
 
     def _wang_A(
         self, q: NDArray[np.double], Z: NDArray[np.double], atom_num: int
