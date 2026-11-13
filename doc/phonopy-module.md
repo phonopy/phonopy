@@ -603,8 +603,6 @@ mod = phonon.run_modulations(
 )
 modulated_cells = mod.modulated_supercells
 phonon.write_modulations()  # MPOSCAR-001, MPOSCAR-002, ...
-
-
 ```
 
 ### Irreducible representations

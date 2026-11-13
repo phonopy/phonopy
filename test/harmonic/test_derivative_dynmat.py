@@ -287,5 +287,3 @@ def test_ddm_gonze_lee_matches_fd(ph_nacl: Phonopy):
         fd[mu] = (fd[mu] + fd[mu].conj().T) / 2
 
     np.testing.assert_allclose(analytic, fd, rtol=1e-5, atol=1e-6)
-
-

@@ -85,7 +85,6 @@ class DerivativeOfDynamicalMatrix:
 
         self._ddm: NDArray[np.cdouble] | None = None
 
-
     def run(
         self,
         q: Sequence[float] | NDArray[np.double],
@@ -115,7 +114,6 @@ class DerivativeOfDynamicalMatrix:
             self._run_py(_q, q_direction=_q_direction)
         else:
             self._run_compiled(_q, q_direction=_q_direction)
-
 
     @property
     def d_dynamical_matrix(self) -> NDArray[np.cdouble] | None:
@@ -482,11 +480,11 @@ class DerivativeOfDynamicalMatrix:
                 "Only Wang and Gonze-Lee NAC are implemented in the "
                 "Python derivative path."
             )
+
     @staticmethod
     def _derivative_coef(vecs_cart: NDArray[np.double]) -> NDArray[np.cdouble]:
         """Return per-multi-vector derivative coefficients."""
         return 2j * np.pi * vecs_cart
-
 
     # --- Gonze-Lee NAC: analytical dD_DD/dq from the Ewald sum. ---
     # See dDdq/main.tex for the derivation; the formula is
