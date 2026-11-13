@@ -24,44 +24,49 @@ class ThermalPropertiesDict(TypedDict):
     heat_capacity: NDArray[np.double]
 
 
-def mode_cv(
-    temps: float | NDArray[np.double],
-    freqs: float | NDArray[np.double],
-    classical: bool = False,
-) -> float | NDArray[np.double]:  # freqs (eV)
-    """Return mode heat capacity.
+def bose_einstein_dist(
+    x: NDArray[np.double] | float, t: NDArray[np.double] | float
+) -> NDArray[np.double] | float:
+    """Return Bose-Einstein distribution.
 
     Parameters
     ----------
-    temp : float
-        Temperature in K.
-    freqs : float or ndarray
-        Phonon frequency in eV.
-    classical : bool
-        If True use classical statistics.
-        If False use quantum statistics.
+    x : ndarray or float
+        Phonon frequencies in THz.
+    t : ndarray or float
+        Temperatures in K. The shapes of x and t have to be broadcastable.
 
     Returns
     -------
-    float or ndarray
-        Mode heat capacity in eV/K.
+    ndarray or float
+        Phonon occupation numbers. At t=0, the t -> 0 limit is returned, which
+        is zero for a positive frequency, -1 for a negative frequency, and nan
+        at zero frequency.
+
+    Raises
+    ------
+    ValueError
+        If t is negative.
 
     """
-    if classical:
-        if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
-            return (
-                np.ones(shape=np.atleast_1d(freqs).shape + np.atleast_1d(temps).shape)
-                * get_physical_units().KB
-            )
-        else:
-            return get_physical_units().KB
-    else:
-        if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
-            x = np.divide.outer(freqs, get_physical_units().KB * temps).T
-        else:
-            x = freqs / (get_physical_units().KB * temps)
-        expVal = np.exp(x)
-        return get_physical_units().KB * x**2 * expVal / (expVal - 1.0) ** 2
+    freqs, temps = np.broadcast_arrays(
+        np.asarray(x, dtype="double"), np.asarray(t, dtype="double")
+    )
+    if (temps < 0).any():
+        raise ValueError(f"Temperature must not be negative, but {t} was given.")
+
+    n = np.where(freqs > 0, 0.0, np.where(freqs < 0, -1.0, np.nan))
+    is_finite_t = temps > 0
+    units = get_physical_units()
+    energy_ratio = (
+        np.abs(freqs[is_finite_t]) * units.THzToEv / (units.KB * temps[is_finite_t])
+    )
+    # exp(-y) / (1 - exp(-y)) equals 1 / (exp(y) - 1) for y >= 0, and exp(-y)
+    # does not overflow at low temperature. A negative frequency uses
+    # n(-y) = -1 - n(y), which keeps the argument of exp negative.
+    n_abs = np.exp(-energy_ratio) / -np.expm1(-energy_ratio)
+    n[is_finite_t] = np.where(freqs[is_finite_t] < 0, -1 - n_abs, n_abs)
+    return n[()]
 
 
 class GammaAcousticWarning(UserWarning):

@@ -10,7 +10,8 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy._lang import have_c_ext
-from phonopy.phonon.thermal_properties import ThermalProperties
+from phonopy.phonon.thermal_properties import ThermalProperties, bose_einstein_dist
+from phonopy.physical_units import get_physical_units
 
 temps = [
     0.000000,
@@ -142,3 +143,45 @@ def _test_thermal_properties(ph: Phonopy):
             (temps, fes, entropies, cvs), tp.thermal_properties, strict=True
         ):
             np.testing.assert_allclose(vals_ref, vals, atol=1e-5)
+
+
+def test_bose_einstein_dist_definition():
+    """Test values against the definition for both signs of frequency."""
+    freqs = np.array([0.01, 1.0, 5.0, -0.01, -1.0, -5.0])
+    units = get_physical_units()
+    expected = 1 / np.expm1(freqs * units.THzToEv / (units.KB * 300))
+    np.testing.assert_allclose(bose_einstein_dist(freqs, 300), expected, rtol=1e-12)
+
+
+def test_bose_einstein_dist_broadcast():
+    """Test shapes of frequency and temperature arguments."""
+    freqs = np.array([1.0, 2.0])
+    temps = np.array([0.0, 100.0, 300.0])
+    table = bose_einstein_dist(freqs[:, None], temps)
+    assert table.shape == (2, 3)
+    assert bose_einstein_dist(1.0, temps).shape == (3,)
+    assert np.ndim(bose_einstein_dist(1.0, 300.0)) == 0
+    for i, f in enumerate(freqs):
+        for j, t in enumerate(temps):
+            assert table[i, j] == pytest.approx(bose_einstein_dist(f, t))
+
+
+def test_bose_einstein_dist_low_temperature():
+    """Test that exp does not overflow when hbar omega / kB T is large."""
+    with np.errstate(over="raise", invalid="raise"):
+        assert bose_einstein_dist(20.0, 0.5) == 0
+        assert bose_einstein_dist(-20.0, 0.5) == -1
+
+
+def test_bose_einstein_dist_zero_temperature():
+    """Test the t -> 0 limit."""
+    np.testing.assert_array_equal(
+        bose_einstein_dist(np.array([1.0, -1.0, 0.0]), 0.0), [0, -1, np.nan]
+    )
+
+
+@pytest.mark.parametrize("temperature", [-1.0, np.array([300.0, -1.0])])
+def test_bose_einstein_dist_negative_temperature(temperature):
+    """Test that negative temperature is rejected."""
+    with pytest.raises(ValueError, match="Temperature"):
+        bose_einstein_dist(1.0, temperature)

@@ -6,14 +6,14 @@ from __future__ import annotations
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
-from phonopy.phonon.thermal_properties import GammaAcousticWarning
+from phonopy.phonon.thermal_properties import GammaAcousticWarning, bose_einstein_dist
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -41,6 +41,11 @@ class ThermalMotion:
         self._exclude_gamma_acoustic = exclude_gamma_acoustic
         if freq_min is None:
             self._fmin: float = 0.0
+        elif freq_min < 0:
+            raise ValueError(
+                "Thermal displacements are defined only for positive frequencies, "
+                f"but freq_min={freq_min} was given."
+            )
         else:
             self._fmin = freq_min
         if freq_max is None:
@@ -135,11 +140,12 @@ class ThermalMotion:
     def _get_Q2(
         self, freq: float, t: NDArray[np.double]
     ) -> NDArray[np.double]:  # freq in THz
+        population = np.asarray(bose_einstein_dist(freq, t))
         return (
             get_physical_units().Hbar
             * get_physical_units().EV
             / get_physical_units().Angstrom ** 2
-            * ((self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
+            * ((population + 0.5) / (freq * 1e12 * 2 * np.pi))
         )
 
     @property
@@ -184,25 +190,6 @@ class ThermalMotion:
         self._temperatures = np.arange(
             _t_min, _t_max + _t_step / 2.0, _t_step, dtype="double"
         )
-
-    def _get_population(
-        self,
-        freq: float,
-        t: Sequence[float] | NDArray[np.double],
-    ) -> NDArray[np.double]:  # freq in THz
-        """Return phonon population number."""
-        t_array = np.asarray(t, dtype="double")
-        vals = np.zeros_like(t_array, dtype="double")
-        condition = t_array > 1.0
-        vals[condition] = 1.0 / (
-            np.exp(
-                freq
-                * get_physical_units().THzToEv
-                / (get_physical_units().KB * t_array[condition])
-            )
-            - 1
-        )
-        return vals
 
 
 class ThermalDisplacements(ThermalMotion):
@@ -419,22 +406,9 @@ class ThermalDisplacementMatrices(ThermalMotion):
         """Return thermal displacement matrices in cif definition."""
         return self._disp_matrices_cif
 
-    def run(
-        self,
-        np_overflow: Literal["ignore", "warn", "raise", "call", "print", "log"]
-        | None = None,
-    ) -> None:
-        """Calculate thermal displacement matrices.
-
-        Parameters
-        ----------
-        np_overflow: str or None
-            Switch of error handling of numpy. 'raise' to see which phonon it is.
-
-        """
-        np.seterr(over=np_overflow)
+    def run(self) -> None:
+        """Calculate thermal displacement matrices."""
         self._get_disp_matrices()
-        np.seterr(over=None)
 
         if self._ANinv is not None:
             assert self._disp_matrices is not None
@@ -456,8 +430,8 @@ class ThermalDisplacementMatrices(ThermalMotion):
         for count, (freqs, eigvecs) in enumerate(self._iter_mesh):  # noqa B007
             assert eigvecs is not None
             valid_indices = self._get_valid_bands(count, freqs, eigvecs)
-            for i_band, (f, vec) in enumerate(
-                zip(freqs[valid_indices], (eigvecs.T)[valid_indices], strict=True)
+            for f, vec in zip(
+                freqs[valid_indices], (eigvecs.T)[valid_indices], strict=True
             ):
                 c = np.zeros((len(self._masses), 3, 3), dtype=dtype_complex, order="C")
                 for i, (v, m) in enumerate(
@@ -465,19 +439,8 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 ):
                     c[i] = np.outer(v, v.conj()) / m
 
-                # for i, t in enumerate(self._temperatures):
-                #     try:
-                #         disps[i] += self._get_Q2(f, t) * np.array(c)
-                #     except FloatingPointError as e:
-                #         # Probably, overflow in exp(freq / (KB * T))
-                #         print("%s: T=%.1f freq=%.2f (band #%d)" %
-                #               (e, t, f, i_band))
-                try:
-                    Q2 = np.array(self._get_Q2(f, self._temperatures), dtype="double")
-                    disps += Q2[:, None, None, None] * c[None, :, :, :]
-                except FloatingPointError as e:
-                    # Probably, overflow in exp(freq / (KB * T))
-                    print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
+                Q2 = np.array(self._get_Q2(f, self._temperatures), dtype="double")
+                disps += Q2[:, None, None, None] * c[None, :, :, :]
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         # Before the check, which a part of the acoustic modes at Gamma fails.

@@ -662,10 +662,22 @@ phonon.symmetrize_force_constants(level=1)
 ```
 
 **symfc projector**. Set `use_symfc_projector=True` to apply the
-symfc projector instead. Space-group, translational, and permutation
-symmetries are imposed simultaneously in a single shot, so no
-trade-off is made between them. The `level` keyword is not used in
-this mode.
+symfc projector instead. The symmetry operations of `phonon.symmetry`,
+translational, and permutation symmetries are imposed simultaneously
+in a single shot, so no trade-off is made between them. The `level`
+keyword is not used in this mode.
+
+Phonopy searches the symmetry operations of `phonon.symmetry` from the
+crystal structure. When the unit cell has magnetic moments, phonopy
+uses them in this search as well, and the search can find fewer
+operations. With magnetic moments, the projector imposes the space
+group operations extracted from the magnetic space group. For example,
+two atoms of the same element with different magnetic moments are not
+related by a symmetry operation, so the projector does not make their
+force constants equal.
+
+With `is_symmetry=False`, `phonon.symmetry` has only lattice
+translations, and the projector does not impose the space group.
 
 ```python
 phonon.symmetrize_force_constants(use_symfc_projector=True)

@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 import spglib
 import yaml
+from numpy.typing import NDArray
 
 from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import read_cell_yaml
@@ -343,6 +344,136 @@ def test_guess_primitive_matrix_Cr_fm_no_warning(convcell_cr: PhonopyAtoms):
     finally:
         convcell_cr.magnetic_moments = None
     np.testing.assert_allclose(abs(np.linalg.det(pmat)), 0.5, atol=1e-8)
+
+
+_bcc_primitive_matrix = 0.5 * np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]])
+
+
+def _get_bcc_pair(**kwargs) -> PhonopyAtoms:
+    """Return a cubic cell with two Cs atoms at the bcc sites."""
+    return PhonopyAtoms(
+        symbols=["Cs", "Cs"],
+        cell=np.eye(3) * 4.0,
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        **kwargs,
+    )
+
+
+def _get_bcc_primitive(unitcell: PhonopyAtoms) -> Primitive:
+    """Return the bcc primitive cell of the 2x2x2 supercell of unitcell."""
+    smat = np.diag([2, 2, 2])
+    supercell = get_supercell(unitcell, smat)
+    return get_primitive(supercell, np.linalg.inv(smat) @ _bcc_primitive_matrix)
+
+
+@pytest.mark.parametrize(
+    "magnetic_moments",
+    [
+        [1.0, -1.0],
+        [1.0, 1.0],
+        [1.0, -1.0 + 1e-6],
+        [[0, 0, 1.0], [0, 0, -1.0]],
+    ],
+)
+def test_get_primitive_magnetic_moments_kept_by_translations(magnetic_moments):
+    """The bcc lattice vectors keep or reverse all magnetic moments.
+
+    For [1, -1], the lattice vector (1/2, 1/2, 1/2) of the cubic cell reverses
+    every magnetic moment.  This is time reversal, so the primitive cell is
+    accepted.  The third case differs from it by less than symprec.
+
+    """
+    primitive = _get_bcc_primitive(_get_bcc_pair(magnetic_moments=magnetic_moments))
+    assert len(primitive) == 1
+
+
+def _get_ferrimagnetic_bcc() -> tuple[PhonopyAtoms, NDArray, NDArray]:
+    return (
+        _get_bcc_pair(magnetic_moments=[1.0, -2.0]),
+        np.diag([2, 2, 2]),
+        np.diag([0.5, 0.5, 0.5]) @ _bcc_primitive_matrix,
+    )
+
+
+def _get_noncollinear_ferrimagnetic_bcc() -> tuple[PhonopyAtoms, NDArray, NDArray]:
+    return (
+        _get_bcc_pair(magnetic_moments=[[0, 0, 1.0], [0, 1.0, 0]]),
+        np.diag([2, 2, 2]),
+        np.diag([0.5, 0.5, 0.5]) @ _bcc_primitive_matrix,
+    )
+
+
+def _get_mixed_sign_bcc() -> tuple[PhonopyAtoms, NDArray, NDArray]:
+    """Return a cell where (1/2, 1/2, 1/2) reverses Fe and keeps Co moments."""
+    unitcell = PhonopyAtoms(
+        symbols=["Fe", "Fe", "Co", "Co"],
+        cell=np.eye(3) * 4.0,
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5], [0.5, 0, 0], [0, 0.5, 0.5]],
+        magnetic_moments=[2.0, -2.0, 1.0, 1.0],
+    )
+    return (
+        unitcell,
+        np.diag([2, 2, 2]),
+        np.diag([0.5, 0.5, 0.5]) @ _bcc_primitive_matrix,
+    )
+
+
+def _get_three_cells() -> tuple[PhonopyAtoms, NDArray, NDArray]:
+    """Return magnetic moments (m, -m, -m) along three primitive cells.
+
+    Each atom has the opposite magnetic moment of the first atom, but the
+    lattice vector from the second to the third atom keeps the moment.
+
+    """
+    unitcell = PhonopyAtoms(
+        symbols=["Fe"] * 3,
+        cell=np.diag([3.0, 3.0, 9.0]),
+        scaled_positions=[[0, 0, 0], [0, 0, 1 / 3], [0, 0, 2 / 3]],
+        magnetic_moments=[1.0, -1.0, -1.0],
+    )
+    return unitcell, np.eye(3, dtype="int64"), np.diag([1, 1, 1 / 3])
+
+
+@pytest.mark.parametrize(
+    "get_cells",
+    [
+        _get_ferrimagnetic_bcc,
+        _get_noncollinear_ferrimagnetic_bcc,
+        _get_mixed_sign_bcc,
+        _get_three_cells,
+    ],
+)
+def test_get_primitive_magnetic_moments_broken_by_translation(get_cells):
+    """A lattice vector of the primitive cell breaks the magnetic moments."""
+    unitcell, smat, pmat = get_cells()
+    supercell = get_supercell(unitcell, smat)
+    with pytest.raises(ValueError, match="does not fit the magnetic moments"):
+        get_primitive(supercell, pmat)
+
+
+def test_get_primitive_merges_different_masses():
+    """Atoms with different masses are merged into one atom of the primitive cell.
+
+    Force constants do not depend on the masses, so the lattice vectors of the
+    primitive cell are translations of the force constants also when the masses
+    break them.  Band unfolding relies on this: Phonopy of a supercell with
+    mass disorder and primitive_matrix="auto" gives the force constants, and
+    Unfolding uses the masses of the supercell.
+
+    """
+    primitive = _get_bcc_primitive(_get_bcc_pair(masses=[100.0, 200.0]))
+    assert len(primitive) == 1
+
+
+def test_phonopy_primitive_matrix_breaks_magnetic_moments():
+    """Phonopy raises RuntimeError caused by the ValueError of Primitive."""
+    with pytest.raises(RuntimeError, match="PRIMITIVE_AXES") as excinfo:
+        Phonopy(
+            _get_bcc_pair(magnetic_moments=[1.0, -2.0]),
+            supercell_matrix=np.diag([2, 2, 2]),
+            primitive_matrix=_bcc_primitive_matrix,
+        )
+    assert isinstance(excinfo.value.__cause__, ValueError)
 
 
 @pytest.mark.parametrize("store_dense_svecs", [True, False])

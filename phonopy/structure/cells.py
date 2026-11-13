@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import dataclasses
+import textwrap
 import warnings
 from collections import Counter
 from collections.abc import Hashable, Sequence
@@ -28,6 +29,7 @@ from phonopy.structure.atoms import (
     _Species,
     build_species_table_from_mixtures,
 )
+from phonopy.structure.lattice_reduction import delaunay_reduce, niggli_reduce
 from phonopy.structure.mixture import build_mixtures_from_groups
 from phonopy.structure.snf import SNF3x3
 
@@ -335,6 +337,16 @@ class Primitive(PhonopyAtoms):
             Backend used by helpers that have a Rust port (currently the
             atomic-permutation matcher).  Default is "C".
 
+        Raises
+        ------
+        ValueError
+            With magnetic moments, each lattice vector of the primitive cell
+            has to move every atom onto an atom with the same magnetic moment,
+            or move every atom onto an atom with the opposite magnetic moment.
+            The opposite magnetic moments are those of time reversal, which
+            leaves the force constants unchanged.  ValueError is raised
+            otherwise.  Magnetic moments are regarded as equal within symprec.
+
         """
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
         self._symprec = symprec
@@ -473,6 +485,40 @@ class Primitive(PhonopyAtoms):
             supercell
         )
         self._atomic_permutations = self._get_atomic_permutations(supercell)
+        self._check_merged_magnetic_moments(supercell)
+
+    def _check_merged_magnetic_moments(self, supercell: PhonopyAtoms) -> None:
+        """Raise ValueError if a primitive translation breaks the magnetic moments.
+
+        Each lattice vector of the primitive cell has to move every atom onto
+        an atom with the same magnetic moment, or every atom onto an atom with
+        the opposite magnetic moment (time reversal).  All atoms are checked
+        for each lattice vector.  Checking only against the atom each atom is
+        merged into is not enough: magnetic moments (m, -m, -m) along three
+        cells give the opposite moment for each atom relative to the first
+        one, but the lattice vector between the second and third cells keeps
+        the moment.
+
+        """
+        magnetic_moments = supercell.magnetic_moments
+        if magnetic_moments is None:
+            return
+        moments = magnetic_moments.reshape(len(supercell), -1)
+        for perm in self._atomic_permutations:
+            images = moments[perm]
+            same = np.linalg.norm(images - moments, axis=1) <= self._symprec
+            opposite = np.linalg.norm(images + moments, axis=1) <= self._symprec
+            if not (same.all() or opposite.all()):
+                msg = [
+                    "The primitive cell does not fit the magnetic moments of "
+                    "the supercell.",
+                    "Each lattice vector of the primitive cell has to move every "
+                    "atom onto an atom with the same magnetic moment, or every atom "
+                    "onto an atom with the opposite magnetic moment (time reversal).",
+                    'Use primitive_matrix="auto" (PRIMITIVE_AXES = AUTO) or a '
+                    "primitive matrix of the magnetic structure.",
+                ]
+                raise ValueError("\n".join(textwrap.fill(m) for m in msg))
 
     def _create_primitive_cell(
         self,
@@ -1681,6 +1727,8 @@ def get_reduced_bases(
 ) -> NDArray[np.double]:
     """Search kinds of shortest basis vectors.
 
+    The reductions are those of phonopy.structure.lattice_reduction.
+
     Parameters
     ----------
     lattice : ndarray or list of list
@@ -1699,14 +1747,17 @@ def get_reduced_bases(
         shape=(3, 3)
         order='C'
 
+    Raises
+    ------
+    RuntimeError
+        When the reduction fails.
+
     """
     if method == "niggli":
-        red_cell = spglib.niggli_reduce(lattice, eps=tolerance)
+        reduced_lattice, _ = niggli_reduce(lattice, eps=tolerance)
     else:
-        red_cell = spglib.delaunay_reduce(lattice, eps=tolerance)
-    if red_cell is None:
-        raise RuntimeError(f"{method} reduction failed.")
-    return red_cell
+        reduced_lattice, _ = delaunay_reduce(lattice, eps=tolerance)
+    return reduced_lattice
 
 
 def get_smallest_vectors(

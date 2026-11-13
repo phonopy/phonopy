@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Literal
 
 import numpy as np
@@ -14,45 +15,29 @@ from phonopy.harmonic.dynmat_to_fc import (
     categorize_commensurate_points,
     get_commensurate_points_in_integers,
 )
+from phonopy.phonon.thermal_properties import (
+    bose_einstein_dist as _bose_einstein_dist,
+)
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 
 
 def bose_einstein_dist(
-    x: NDArray[np.double] | float, t: float
+    x: NDArray[np.double] | float, t: NDArray[np.double] | float
 ) -> NDArray[np.double] | float:
     """Return Bose-Einstein distribution.
 
-    Parameters
-    ----------
-    x : ndarray or float
-        Phonon frequencies in THz.
-    t : float
-        Temperature in K.
-
-    Returns
-    -------
-    ndarray or float
-        Phonon occupation numbers. At t=0, the t -> 0 limit is returned, which
-        is zero for a positive frequency, -1 for a negative frequency, and nan
-        at zero frequency.
-
-    Raises
-    ------
-    ValueError
-        If t is negative.
+    Deprecated. Use ``phonopy.phonon.thermal_properties.bose_einstein_dist``.
 
     """
-    if t < 0:
-        raise ValueError(f"Temperature must not be negative, but {t} was given.")
-    if t == 0:
-        # The expression below divides by zero at t=0.
-        n = np.where(x > 0, 0.0, np.where(x < 0, -1.0, np.nan))
-        return n if isinstance(x, np.ndarray) else n[()]
-    return 1.0 / (
-        np.exp(get_physical_units().THzToEv * x / (get_physical_units().KB * t)) - 1
+    warnings.warn(
+        "phonopy.phonon.random_displacements.bose_einstein_dist is deprecated. "
+        "Use phonopy.phonon.thermal_properties.bose_einstein_dist.",
+        DeprecationWarning,
+        stacklevel=2,
     )
+    return _bose_einstein_dist(x, t)
 
 
 class RandomDisplacements:
@@ -822,7 +807,7 @@ class RandomDisplacements:
         if self._dist_func == "classical":
             sigma = np.sqrt(T * self._unit_conversion_classical) / freqs
         else:
-            n = bose_einstein_dist(freqs, T)
+            n = _bose_einstein_dist(freqs, T)
             sigma = np.sqrt(self._unit_conversion / freqs * (0.5 + n))
         sigma = np.where(conditions, sigma, 0)
         return sigma, conditions
