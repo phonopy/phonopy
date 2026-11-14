@@ -73,3 +73,48 @@ def test_magmom_option_invalid(token: str):
     """Invalid token of --magmom option raises MagmomValueError."""
     with pytest.raises(MagmomValueError, match=re.escape(f'"{token}"')):
         _parse_magmom_option(f"1 {token}")
+
+
+_modulation_header_cases = [
+    ("2 2 2", [2, 2, 2], None),
+    ("2 2 2 0.01 0 0", [2, 2, 2], [0.01, 0.0, 0.0]),
+    ("-1 1 1 1 -1 1 1 1 -1", [-1, 1, 1, 1, -1, 1, 1, 1, -1], None),
+    (
+        "-1 1 1 1 -1 1 1 1 -1 0.01 0 0",
+        [-1, 1, 1, 1, -1, 1, 1, 1, -1],
+        [0.01, 0.0, 0.0],
+    ),
+]
+
+
+def _parse_modulation_conf_file(header: str, tmp_path: pathlib.Path) -> dict:
+    conf_filename = tmp_path / "phonopy.conf"
+    conf_filename.write_text(f"MODULATION = {header}, 0 1/2 1/2 1 2\n")
+    modulation = PhonopyConfParser(filename=conf_filename).settings.modulation
+    assert modulation is not None
+    return modulation
+
+
+@pytest.mark.parametrize("header,dimension,delta_q", _modulation_header_cases)
+def test_modulation_conf_file(
+    header: str, dimension: list[int], delta_q: list[float] | None, tmp_path
+):
+    """MODULATION header gives supercell dimension and optional delta_q."""
+    modulation = _parse_modulation_conf_file(header, tmp_path)
+    assert modulation["dimension"] == dimension
+    assert modulation.get("delta_q") == delta_q
+    assert modulation["modulations"] == [[[0.0, 0.5, 0.5], 0, 2.0, 0]]
+
+
+@pytest.mark.parametrize(
+    "header", ["2 2 2 0.01", "2 2 2 0.01 0 0 2", "-1 1 1 1 -1 1 1 1 -1 0.01 0 0 2"]
+)
+def test_modulation_conf_file_wrong_header(header: str, tmp_path):
+    """MODULATION header with a wrong number of values is rejected.
+
+    The header used to accept the derivative order of the dynamical matrix
+    after delta_q.  This value is no longer accepted.
+
+    """
+    with pytest.raises(SystemExit):
+        _parse_modulation_conf_file(header, tmp_path)

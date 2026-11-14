@@ -1851,26 +1851,23 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
     def _parse_conf_modulation(self, conf_modulation: str) -> None:
         modulation: dict[str, Any] = {}
         modulation["dimension"] = [1, 1, 1]
-        modulation["order"] = None
         mod_list = conf_modulation.split(",")
         header = mod_list[0].split()
-        if len(header) > 2 and len(mod_list) > 1:
+        # Supercell dimension (3 or 9 values), optionally followed by
+        # delta_q (3 values).
+        if len(header) in (3, 6, 9, 12) and len(mod_list) > 1:
             if len(header) > 8:
                 dimension = [int(x) for x in header[:9]]
                 modulation["dimension"] = dimension
-                if len(header) > 11:
+                if len(header) == 12:
                     delta_q = [float(x) for x in header[9:12]]
                     modulation["delta_q"] = delta_q
-                if len(header) == 13:
-                    modulation["order"] = int(header[12])
             else:
                 dimension = [int(x) for x in header[:3]]
                 modulation["dimension"] = dimension
-                if len(header) > 3:
+                if len(header) == 6:
                     delta_q = [float(x) for x in header[3:6]]
                     modulation["delta_q"] = delta_q
-                if len(header) == 7:
-                    modulation["order"] = int(header[6])
 
             vals = []
             for phonon_mode in mod_list[1:]:
