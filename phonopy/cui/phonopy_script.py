@@ -1610,7 +1610,6 @@ def _run_modulation(phonon: Phonopy, settings: PhonopySettings, log_level: int) 
     phonon_modes = mod_setting["modulations"]
     dimension = mod_setting["dimension"]
     delta_q = mod_setting.get("delta_q")
-    derivative_order = mod_setting["order"]
     num_band = len(phonon.primitive) * 3
 
     if log_level:
@@ -1648,7 +1647,6 @@ def _run_modulation(phonon: Phonopy, settings: PhonopySettings, log_level: int) 
         dimension,
         phonon_modes,
         delta_q=delta_q,
-        derivative_order=derivative_order,
         nac_q_direction=settings.nac_q_direction,
     )
     phonon.write_modulations()

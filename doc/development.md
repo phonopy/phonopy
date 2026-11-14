@@ -56,6 +56,11 @@ to a model where analyses return self-contained result objects and
 - The deprecation window is at most two major versions, e.g.,
   deprecated in v5.x and removed in v6.0. A deprecation may start
   earlier (already in v4.x) to extend the notice period.
+- Every place in the code and the tests that has to change when a
+  deprecated API is removed has a comment with the marker
+  `REMOVE-AT-V<N>`, where N is the major version of the removal, for
+  example `REMOVE-AT-V5`. `grep -rn REMOVE-AT-V5 phonopy test` then
+  lists all the places to change for v5.0.
 - Example: `Phonopy.copy` is deprecated in v4.x in favor of
   `Phonopy.replicate`, which constructs a new instance from the same
   init parameters without carrying over internal state.

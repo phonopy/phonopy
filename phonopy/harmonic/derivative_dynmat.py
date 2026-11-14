@@ -32,8 +32,6 @@ class DerivativeOfDynamicalMatrix:
     - The Python path covers no-NAC, Wang NAC, and Gonze-Lee NAC.  The
       Gonze-Lee branch evaluates the analytic dipole-dipole derivative
       (see ``dDdq/main.tex``) on top of the short-range part.
-    - Derivative order 2 is supported only by the Python path and only
-      for no-NAC and Wang NAC.
 
     Attributes
     ----------
@@ -87,11 +85,6 @@ class DerivativeOfDynamicalMatrix:
 
         self._ddm: NDArray[np.cdouble] | None = None
 
-        # Derivative order=2 can work only within the following conditions:
-        # 1. Second derivative of NAC is not considered.
-        # 2. Python implementation
-        self._derivative_order: int | None = None
-
     def run(
         self,
         q: Sequence[float] | NDArray[np.double],
@@ -109,8 +102,7 @@ class DerivativeOfDynamicalMatrix:
             Gamma.  Ignored when ``self._dynmat`` has no NAC.
         force_python : bool, optional, default=False
             Force the Python implementation regardless of ``self._lang``.
-            Mainly intended for testing and for derivative orders > 1
-            (which only the Python path supports).
+            Mainly intended for testing.
 
         """
         _q = np.array(q, dtype="double")
@@ -118,16 +110,10 @@ class DerivativeOfDynamicalMatrix:
             _q_direction = None
         else:
             _q_direction = np.array(q_direction, dtype="double")
-        if force_python or self._derivative_order is not None:
+        if force_python:
             self._run_py(_q, q_direction=_q_direction)
         else:
             self._run_compiled(_q, q_direction=_q_direction)
-
-    def set_derivative_order(self, order: int) -> None:
-        """Set order of derivative (must be 1 or 2)."""
-        if order not in (1, 2):
-            raise ValueError(f"derivative order must be 1 or 2 (got {order!r})")
-        self._derivative_order = order
 
     @property
     def d_dynamical_matrix(self) -> NDArray[np.cdouble] | None:
@@ -395,8 +381,6 @@ class DerivativeOfDynamicalMatrix:
         and the analytic dipole-dipole derivative is added on top (see
         ``_gonze_lee_d_recip_dipole_dipole``).
 
-        Derivative order 2 is supported only for no-NAC and Wang NAC.
-
         """
         fc, fc_nac, d_fc_nac, d_dd = self._prepare_py_inputs(q, q_direction)
 
@@ -405,9 +389,8 @@ class DerivativeOfDynamicalMatrix:
         multiplicity = self._multi
         num_patom = len(self._p2s_map)
         num_satom = len(self._s2p_map)
-        num_elem = 6 if self._derivative_order == 2 else 3
 
-        ddm = np.zeros((num_elem, 3 * num_patom, 3 * num_patom), dtype=np.cdouble)
+        ddm = np.zeros((3, 3 * num_patom, 3 * num_patom), dtype=np.cdouble)
 
         for i, j in np.ndindex(num_patom, num_patom):
             s_i = self._p2s_map[i]
@@ -417,7 +400,7 @@ class DerivativeOfDynamicalMatrix:
                 self._dynmat.normalization_masses[i]
                 * self._dynmat.normalization_masses[j]
             )
-            ddm_local = np.zeros((num_elem, 3, 3), dtype=np.cdouble)
+            ddm_local = np.zeros((3, 3, 3), dtype=np.cdouble)
 
             for k in range(num_satom):
                 if s_j != self._s2p_map[k]:
@@ -426,19 +409,19 @@ class DerivativeOfDynamicalMatrix:
                 multi = multiplicity[k, i]
                 vecs_multi = vecs[multi[1] : multi[1] + multi[0]]
                 phase_multi = np.exp(2j * np.pi * (vecs_multi @ q))
-                vecs_multi_cart = vecs_multi @ self._pcell.cell
-                coef = self._derivative_coef(vecs_multi_cart, num_elem)
+                # d/dq_l of exp(2*pi*i q.r) gives 2*pi*i * r_l (Cartesian).
+                coef = 2j * np.pi * (vecs_multi @ self._pcell.cell)
 
                 fc_elem = fc[fc_row, k]
                 if fc_nac is not None:
                     # Wang: add NAC term to FC before differentiating.
                     fc_elem = fc_elem + fc_nac[i, j]
 
-                # Sum over multi vectors at once: gives (num_elem,) scalars.
+                # Sum over multi vectors at once: gives (3,) scalars.
                 scalars = (coef.T @ phase_multi) / (mass * multi[0])
                 ddm_local += scalars[:, None, None] * fc_elem
 
-                if d_fc_nac is not None and num_elem == 3:
+                if d_fc_nac is not None:
                     # Wang: add the d/dq of the NAC correction.
                     ddm_local += d_fc_nac[:, i, j] * (
                         phase_multi.sum() / (mass * multi[0])
@@ -477,10 +460,6 @@ class DerivativeOfDynamicalMatrix:
         """
         if isinstance(self._dynmat, DynamicalMatrixGL):
             # Gonze-Lee: short-range FC + analytic Ewald derivative.
-            if self._derivative_order == 2:
-                raise NotImplementedError(
-                    "Derivative order 2 is not implemented for Gonze-Lee NAC."
-                )
             dm_gl = self._dynmat
             if dm_gl.short_range_force_constants is None:
                 dm_gl.make_Gonze_nac_dataset()
@@ -500,25 +479,6 @@ class DerivativeOfDynamicalMatrix:
                 "Python derivative path."
             )
         return self._force_constants, None, None, None
-
-    @staticmethod
-    def _derivative_coef(
-        vecs_cart: NDArray[np.double], num_elem: int
-    ) -> NDArray[np.cdouble]:
-        """Return per-multi-vector derivative coefficients.
-
-        Shape ``(M, num_elem)`` where M is the number of equivalent
-        shortest vectors.  For order 1, ``coef[m, l] = 2*pi*i * vec[m, l]``.
-        For order 2, the upper-triangular outer-product
-        ``(2*pi*i)^2 * vec ⊗ vec`` is packed in the order ``[xx, yy, zz,
-        yz, xz, xy]``.
-
-        """
-        coef1 = 2j * np.pi * vecs_cart
-        if num_elem == 3:
-            return coef1
-        outer = coef1[:, :, None] * coef1[:, None, :]  # (M, 3, 3)
-        return outer.reshape(len(coef1), 9)[:, [0, 4, 8, 5, 2, 1]]
 
     # --- Gonze-Lee NAC: analytical dD_DD/dq from the Ewald sum. ---
     # See dDdq/main.tex for the derivation; the formula is
