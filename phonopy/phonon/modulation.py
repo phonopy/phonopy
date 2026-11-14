@@ -10,7 +10,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    diagonalize_dynamical_matrices,
+    get_dynamical_matrices_at_qpoints,
+)
 from phonopy.interface.calculator import (
     StructureInfo,
     get_default_cell_filename,
@@ -45,9 +49,11 @@ class Modulation:
             if nac_q_direction is not None
             else None
         )
-        self._ddm = DerivativeOfDynamicalMatrix(
-            dynamical_matrix, lang=dynamical_matrix.lang
-        )
+        self._ddm: DerivativeOfDynamicalMatrix | None = None
+        if delta_q is not None:
+            self._ddm = DerivativeOfDynamicalMatrix(
+                dynamical_matrix, lang=dynamical_matrix.lang
+            )
 
         if factor is None:
             self._factor = get_physical_units().DefaultToTHz
@@ -68,19 +74,27 @@ class Modulation:
 
     def run(self) -> None:
         """Calculate modulations."""
+        if len(self._phonon_modes) == 0:
+            return
+
+        qpoints = np.array(
+            [ph_mode[0] for ph_mode in self._phonon_modes], dtype="double", order="C"
+        )
+        dynmats = get_dynamical_matrices_at_qpoints(
+            self._dm, qpoints, nac_q_direction=self._nac_q_direction
+        )
+        eigvals, eigvecs = diagonalize_dynamical_matrices(dynmats)
+        assert eigvecs is not None
+
         for i, ph_mode in enumerate(self._phonon_modes):
             q, band_index, amplitude, argument = ph_mode
-            eigvals, eigvecs = _get_eigenvectors(
-                q,
-                self._dm,
-                self._ddm,
-                perturbation=self._delta_q,
-                nac_q_direction=self._nac_q_direction,
-            )
-            u = self._get_displacements(eigvecs[:, band_index], q, amplitude, argument)
-            self._u[i] = u
-            self._eigvecs[i] = eigvecs[:, band_index]
-            self._eigvals[i] = eigvals[band_index]
+            eigvecs_at_q = eigvecs[i]
+            if self._delta_q is not None:
+                eigvecs_at_q = self._lift_degeneracy(q, eigvals[i], eigvecs_at_q)
+            eigvec = eigvecs_at_q[:, band_index]
+            self._u[i] = self._get_displacements(eigvec, q, amplitude, argument)
+            self._eigvecs[i] = eigvec
+            self._eigvals[i] = eigvals[i, band_index]
 
     @property
     def supercell(self) -> PhonopyAtoms:
@@ -181,6 +195,27 @@ class Modulation:
         cell.scaled_positions = scaled_positions
 
         return cell
+
+    def _lift_degeneracy(
+        self,
+        q: NDArray[np.double],
+        eigvals: NDArray[np.double],
+        eigvecs: NDArray[np.cdouble],
+    ) -> NDArray[np.cdouble]:
+        """Rotate degenerate eigenvectors by derivative of D along delta_q."""
+        assert self._ddm is not None
+        assert self._delta_q is not None
+        self._ddm.run(q)
+        ddm_vals = self._ddm.d_dynamical_matrix
+        assert ddm_vals is not None
+        direction = np.asarray(self._delta_q, dtype="double")
+        ddm_along_direction = (
+            direction[0] * ddm_vals[0]
+            + direction[1] * ddm_vals[1]
+            + direction[2] * ddm_vals[2]
+        ) / np.linalg.norm(direction)
+        _, rot_eigvecs = lift_degeneracy(eigvals, eigvecs, ddm_along_direction)
+        return rot_eigvecs
 
     def _get_dimension_3x3(self) -> NDArray[np.int64]:
         if len(self._dimension) == 3:
@@ -328,33 +363,3 @@ class Modulation:
         w.write("  positions:\n")
         for p in positions:
             w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
-
-
-def _get_eigenvectors(
-    q: NDArray[np.double],
-    dm: DynamicalMatrix,
-    ddm: DerivativeOfDynamicalMatrix,
-    perturbation: Sequence[float] | NDArray[np.double] | None = None,
-    nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
-) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
-    """Return degenerated eigenvalues and rotated eigenvalues."""
-    if isinstance(dm, DynamicalMatrixNAC):
-        dm.run(q, q_direction=nac_q_direction)
-    else:
-        dm.run(q)
-
-    assert dm.dynamical_matrix is not None
-    eigvals, eigvecs = np.linalg.eigh(dm.dynamical_matrix)
-    eigvals = eigvals.real  # type: ignore
-    if perturbation is None:
-        return eigvals, eigvecs
-
-    ddm.run(q)
-    ddm_vals = ddm.d_dynamical_matrix
-    assert ddm_vals is not None
-    d = np.asarray(perturbation, dtype="double")
-    norm = np.linalg.norm(d)
-    dD = (d[0] * ddm_vals[0] + d[1] * ddm_vals[1] + d[2] * ddm_vals[2]) / norm
-    _, rot_eigvecs = lift_degeneracy(eigvals, eigvecs, dD)
-
-    return eigvals, rot_eigvecs
