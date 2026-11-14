@@ -654,9 +654,14 @@ def symmetrize_force_constants_by_space_group(
     """
     rotations = symmetry.symmetry_operations["rotations"]
     fc = np.zeros_like(force_constants)
+    rotated_tensors = {}
     for r, perm in zip(rotations, symmetry.atomic_permutations, strict=True):
-        r_cart = similarity_transformation(lattice.T, r)
-        fc[np.ix_(perm, perm)] += r_cart @ force_constants @ r_cart.T
+        inverse = np.argsort(perm)
+        key = tuple(np.asarray(r).ravel())
+        if key not in rotated_tensors:
+            r_cart = similarity_transformation(lattice.T, r)
+            rotated_tensors[key] = r_cart @ force_constants @ r_cart.T
+        fc += rotated_tensors[key][np.ix_(inverse, inverse)]
     force_constants[:] = fc / len(rotations)
 
 
