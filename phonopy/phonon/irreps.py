@@ -11,8 +11,11 @@ import spglib
 from numpy.typing import NDArray
 from spglib import SpglibMagneticDataset
 
-from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    diagonalize_dynamical_matrices,
+    get_dynamical_matrices_at_qpoints,
+)
 from phonopy.phonon.character_table import CharTableEntry, RotationRep, character_table
 from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
 from phonopy.phonon.symmetry_adapted_modes import SymmetryAdaptedModes
@@ -112,9 +115,6 @@ class IrReps:
             self._degenerate_sets = get_degenerate_sets(
                 self._freqs, cutoff=_degeneracy_tolerance
             )
-        self._ddm = DerivativeOfDynamicalMatrix(
-            dynamical_matrix, lang=dynamical_matrix.lang
-        )
 
         self._transformation_matrix: NDArray[np.double]
         self._conventional_rotations: NDArray[np.int64]
@@ -145,7 +145,6 @@ class IrReps:
             self._conventional_rotations,
         ) = self._get_conventional_rotations()
         self._ground_matrices = self._get_ground_matrix()
-        self._ddm.run(self._qpoint)
         self._irreps = self._get_irreps()
         self._characters, self._irrep_dims = self._get_characters()
 
@@ -223,15 +222,15 @@ class IrReps:
         nac_q_direction: NDArray[np.double] | None,
         factor: float,
     ) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
-        dm = dynamical_matrix
-        if isinstance(dm, DynamicalMatrixNAC):
-            dm.run(self._qpoint, q_direction=nac_q_direction)
-        else:
-            dm.run(self._qpoint)
-        assert dm.dynamical_matrix is not None
-        eig_vals, eig_vecs = np.linalg.eigh(dm.dynamical_matrix)
-        freqs = np.sqrt(abs(eig_vals)) * np.sign(eig_vals) * factor
-        return freqs, eig_vecs
+        dynmats = get_dynamical_matrices_at_qpoints(
+            dynamical_matrix,
+            self._qpoint.reshape(1, 3),
+            nac_q_direction=nac_q_direction,
+        )
+        eig_vals, eig_vecs = diagonalize_dynamical_matrices(dynmats)
+        assert eig_vecs is not None
+        freqs = np.sqrt(abs(eig_vals[0])) * np.sign(eig_vals[0]) * factor
+        return freqs, eig_vecs[0]
 
     def _get_rotations_at_q(self) -> tuple[NDArray[np.int64], NDArray[np.double]]:
         """Return little group of q."""
