@@ -531,6 +531,7 @@ class ThermalProperties(ThermalPropertiesBase):
         taken from the ``lang`` argument passed at construction.
 
         """
+        # REMOVE-AT-V5
         if t_step is not None or t_max is not None or t_min is not None:
             warnings.warn(
                 "keywords for this method are depreciated. "

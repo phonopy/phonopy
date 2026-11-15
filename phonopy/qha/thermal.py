@@ -215,6 +215,7 @@ def compute_electronic_contributions_from_states(
         Electronic entropy in eV/K. shape=(temperatures, volumes)
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "compute_electronic_contributions_from_states() is deprecated. Use "
         "compute_electronic_thermal_properties_from_states(), which returns "

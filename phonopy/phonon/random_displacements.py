@@ -31,6 +31,7 @@ def bose_einstein_dist(
     Deprecated. Use ``phonopy.phonon.thermal_properties.bose_einstein_dist``.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "phonopy.phonon.random_displacements.bose_einstein_dist is deprecated. "
         "Use phonopy.phonon.thermal_properties.bose_einstein_dist.",

@@ -1102,6 +1102,7 @@ def get_default_physical_units(
     interface_mode: str | None = None,
 ) -> CalculatorPhysicalUnits:
     """Replace get_calculator_get_physical_units()."""
+    # REMOVE-AT-V5
     warnings.warn(
         (
             "get_default_physical_units is deprecated. "

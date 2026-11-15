@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from phonopy import PhonopyQHA
+from phonopy import PhonopyQHA  # REMOVE-AT-V6
 
 current_dir = Path(__file__).resolve().parent
 

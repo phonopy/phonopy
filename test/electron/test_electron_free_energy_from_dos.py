@@ -337,6 +337,7 @@ def test_window_must_contain_samples():
         thermal_properties_from_dos(energies, dos, 1.0, [0.0, 300.0], FERMI, window=0.1)
 
 
+# REMOVE-AT-V5
 def test_deprecated_free_energy_from_dos_needs_zero_kelvin_first():
     """Test that the deprecated tuple form still refuses a grid without 0 K.
 

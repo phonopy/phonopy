@@ -92,6 +92,7 @@ class PhonopyQHA:
             Show log or not.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             (
                 "PhonopyQHA is deprecated and will be removed in a future "

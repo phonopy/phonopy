@@ -247,6 +247,7 @@ def compute_free_energy_by_tetrahedron(
         (len(temperatures),).
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "compute_free_energy_by_tetrahedron() is deprecated. Use "
         "compute_thermal_properties_by_tetrahedron(), whose free_energy and "
@@ -358,6 +359,7 @@ def free_energy_from_dos(
         (len(temperatures),).
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "free_energy_from_dos() is deprecated. Use thermal_properties_from_dos(), "
         "whose free_energy, entropy and chemical_potential fields hold the same "

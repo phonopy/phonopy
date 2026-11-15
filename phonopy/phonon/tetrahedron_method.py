@@ -27,6 +27,7 @@ def get_tetrahedra_relative_grid_address(
     Deprecated. Use get_tetrahedra_relative_gr_grid_address.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "get_tetrahedra_relative_grid_address is deprecated. "
         "Use get_tetrahedra_relative_gr_grid_address instead.",

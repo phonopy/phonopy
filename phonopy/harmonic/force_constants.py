@@ -598,6 +598,7 @@ def set_tensor_symmetry_PJ(
         Symmetry of the supercell.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "set_tensor_symmetry_PJ is deprecated. "
         "Use symmetrize_force_constants_by_space_group instead.",

@@ -528,6 +528,7 @@ class ConfParser(Generic[TSettings]):
         if "use_rust" in arg_list and args.use_rust:
             import warnings
 
+            # REMOVE-AT-V5
             warnings.warn(
                 "--rust is a deprecated no-op in phonopy v4; the Rust backend "
                 "is now the default. Pass --legacy-backend to opt back into "

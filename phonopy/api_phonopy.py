@@ -1107,6 +1107,7 @@ class Phonopy:
             None (use the Phonopy instance's ``log_level``).
 
         """
+        # REMOVE-AT-V5
         if forces is not None:
             warnings.warn(
                 (
@@ -1363,6 +1364,7 @@ class Phonopy:
             ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_dynamical_matrix_at_q() is deprecated. Use "
             "run_qpoints([q], with_dynamical_matrices=True); the returned "
@@ -1400,6 +1402,7 @@ class Phonopy:
             of the returned ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_frequencies() is deprecated. Use run_qpoints([q]); the "
             "returned QpointsPhonon object provides frequencies[0].",
@@ -1452,6 +1455,7 @@ class Phonopy:
             returned ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_frequencies_with_eigenvectors() is deprecated. Use "
             "run_qpoints([q], with_eigenvectors=True); the returned "
@@ -1588,6 +1592,7 @@ class Phonopy:
             Use the ``band_structure`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_band_structure_dict() is deprecated. Use the band_structure "
             "property to access the BandStructure result object; its "
@@ -1893,6 +1898,7 @@ class Phonopy:
             Use the ``mesh`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_mesh_dict() is deprecated. Use the mesh property to access "
             "the Mesh result object; its qpoints, weights, frequencies, "
@@ -2047,6 +2053,7 @@ class Phonopy:
             Use the ``qpoints`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_qpoints_dict() is deprecated. Use the qpoints property to "
             "access the Qpoints result object; its frequencies, eigenvectors, "
@@ -2185,6 +2192,7 @@ class Phonopy:
             Use the ``total_dos`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_total_dos_dict() is deprecated. Use the total_dos property "
             "to access the TotalDos result object; its frequency_points and "
@@ -2209,6 +2217,7 @@ class Phonopy:
             ``total_dos.run_debye_frequency(num_atoms)`` instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "set_Debye_frequency() is deprecated. After run_total_dos(), call "
             "total_dos.run_debye_frequency(num_atoms) and read "
@@ -2228,6 +2237,7 @@ class Phonopy:
             Use ``total_dos.debye_frequency`` instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_Debye_frequency() is deprecated. Use the total_dos property "
             "and read its debye_frequency attribute instead.",
@@ -2437,6 +2447,7 @@ class Phonopy:
             Use the ``projected_dos`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_projected_dos_dict() is deprecated. Use the projected_dos "
             "property to access the ProjectedDos result object; its "
@@ -2633,6 +2644,7 @@ class Phonopy:
             Use the ``thermal_properties`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_thermal_properties_dict() is deprecated. Use the "
             "thermal_properties property to access the ThermalProperties "
@@ -2799,6 +2811,7 @@ class Phonopy:
             Use the ``thermal_displacements`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_thermal_displacements_dict() is deprecated. Use the "
             "thermal_displacements property to access the ThermalDisplacements"
@@ -2912,6 +2925,7 @@ class Phonopy:
             Use the ``thermal_displacement_matrices`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_thermal_displacement_matrices_dict() is deprecated. Use the "
             "thermal_displacement_matrices property to access the "
@@ -3083,6 +3097,7 @@ class Phonopy:
             of the ``modulation`` property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_modulated_supercells() is deprecated. Use the "
             "modulated_supercells attribute of the Modulation object "
@@ -3112,6 +3127,7 @@ class Phonopy:
             of the ``modulation`` property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_modulations_and_supercell() is deprecated. Use the "
             "modulations and supercell attributes of the Modulation object "
@@ -3214,6 +3230,7 @@ class Phonopy:
             Use :meth:`run_irreps` instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "set_irreps() is deprecated. Use run_irreps() instead.",
             DeprecationWarning,
@@ -3251,6 +3268,7 @@ class Phonopy:
             ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_group_velocity_at_q() is deprecated. Use "
             "run_qpoints([q], with_group_velocities=True); the returned "
@@ -3318,6 +3336,7 @@ class Phonopy:
             property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_moment() is deprecated. Use the moment attribute of the "
             "PhononMoment object returned by run_moment() or of the moment "
@@ -3457,6 +3476,7 @@ class Phonopy:
             ``dynamic_structure_factor`` property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_dynamic_structure_factor() is deprecated. Use the qpoints "
             "and dynamic_structure_factors attributes of the "
@@ -3744,6 +3764,7 @@ class Phonopy:
         constants and NAC parameters.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "Phonopy.copy is deprecated. Use Phonopy.replicate instead. "
             "Note that neither method carries over internal state such "

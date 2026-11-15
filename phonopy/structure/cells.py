@@ -1629,6 +1629,7 @@ def isclose(
         Whether two cells agree upto lattice translation of each atom.
 
     """
+    # REMOVE-AT-V5
     if with_arbitrary_order:
         warnings.warn(
             "isclose(..., with_arbitrary_order=True) is deprecated. Use "

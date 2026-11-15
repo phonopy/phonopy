@@ -236,6 +236,7 @@ def test_get_FORCE_SETS_lines_type2_roundtrip():
     np.testing.assert_allclose(dataset2["forces"], dataset["forces"], atol=1e-7)
 
 
+# REMOVE-AT-V5
 def test_parse_FORCE_SETS_natom_as_first_argument(tmp_path, monkeypatch):
     """The number of atoms as the first argument is deprecated but works."""
     natom = int((cwd / "FORCE_SETS_NaCl").read_text().split()[0])
@@ -246,6 +247,7 @@ def test_parse_FORCE_SETS_natom_as_first_argument(tmp_path, monkeypatch):
     assert dataset["natom"] == natom
 
 
+# REMOVE-AT-V5
 @pytest.mark.parametrize("from_strings", [False, True])
 def test_parse_FORCE_SETS_to_type2_is_deprecated(from_strings: bool):
     """to_type2 still works with DeprecationWarning, and no warning without it."""
@@ -513,6 +515,7 @@ def test_is_file_phonopy_yaml_scalar(tmp_path):
     assert is_file_phonopy_yaml(filename) is False
 
 
+# REMOVE-AT-V5
 def test_is_file_phonopy_yaml_keyword_is_deprecated_and_ignored():
     """Keyword issues DeprecationWarning and does not change the result.
 

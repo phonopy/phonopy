@@ -837,6 +837,7 @@ def get_vasp_structure_lines(
 
     """
     _is_vasp4 = is_vasp4
+    # REMOVE-AT-V5
     if is_vasp5 is False:
         warnings.warn(
             "is_vasp5 parameter is deprecated. "
@@ -845,6 +846,7 @@ def get_vasp_structure_lines(
             stacklevel=2,
         )
         _is_vasp4 = True
+    # REMOVE-AT-V5
     if direct is False:
         warnings.warn(
             "direct=False is not supported. ", DeprecationWarning, stacklevel=2
