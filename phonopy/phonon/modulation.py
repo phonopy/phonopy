@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import TextIO
 
 import numpy as np
 from numpy.typing import NDArray
@@ -270,7 +269,9 @@ class Modulation:
             Default is "modulation.yaml".
 
         """
-        self._write_yaml(filename=filename)
+        lines = self._get_yaml_lines()
+        with open(filename, "w") as w:
+            w.write("\n".join(lines) + "\n")
 
     def _get_cell_with_modulation(
         self, modulation: NDArray[np.cdouble]
@@ -389,79 +390,69 @@ class Modulation:
         e = np.array(eigvals, dtype="double")
         return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
 
-    def _write_yaml(self, filename: str | os.PathLike = "modulation.yaml") -> None:
-        with open(filename, "w") as w:
-            self._write_yaml_to(w)
+    def _get_yaml_lines(self) -> list[str]:
+        from phonopy import __version__
 
-    def _write_yaml_to(self, w: TextIO) -> None:
-        w.write("primitive_cell:\n")
-        self._write_cell_yaml(self._primitive, w)
-        w.write("supercell:\n")
-        w.write("  dimension:\n")
+        lines = ["phonopy:", f'  version: "{__version__}"']
+        lines.append("primitive_cell:")
+        lines += self._get_cell_yaml_lines(self._primitive)
+        lines.append("supercell:")
+        lines.append("  dimension:")
         for v in self._supercell.supercell_matrix:
-            w.write("  - [ %d, %d, %d ]\n" % tuple(v))
-        self._write_cell_yaml(self._supercell, w)
+            lines.append("  - [ %d, %d, %d ]" % tuple(v))
+        lines += self._get_cell_yaml_lines(self._supercell)
         inv_lattice = np.linalg.inv(self._supercell.cell.T)
 
-        w.write("modulations:\n")
+        lines.append("modulations:")
         for u, mode in zip(self._u, self._phonon_modes, strict=True):
             q = mode[0]
-            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-            w.write("  band: %d\n" % (mode[1] + 1))
-            w.write("  amplitude: %f\n" % mode[2])
-            w.write("  phase: %f\n" % mode[3])
-            w.write("  displacements:\n")
+            lines.append("- q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(q))
+            lines.append("  band: %d" % (mode[1] + 1))
+            lines.append("  amplitude: %f" % mode[2])
+            lines.append("  phase: %f" % mode[3])
+            lines.append("  displacements:")
             for i, p in enumerate(u):
                 for val, axis in zip(p, ("x", "y", "z"), strict=True):
-                    w.write(
-                        "  - [ %20.15f, %20.15f ] # %d %s (%f)\n"
+                    lines.append(
+                        "  - [ %20.15f, %20.15f ] # %d %s (%f)"
                         % (val.real, val.imag, i + 1, axis, abs(val))
                     )
-            w.write("  fractional_displacements:\n")
+            lines.append("  fractional_displacements:")
             for i, p in enumerate(np.dot(u, inv_lattice.T)):
                 for val, axis in zip(p, ("a", "b", "c"), strict=True):
-                    w.write(
-                        "  - [ %20.15f, %20.15f ] # %d %s\n"
+                    lines.append(
+                        "  - [ %20.15f, %20.15f ] # %d %s"
                         % (val.real, val.imag, i + 1, axis)
                     )
 
-        w.write("phonon:\n")
+        lines.append("phonon:")
         freqs = self._eigvals_to_frequencies(self._eigvals)
         for eigvec, freq, mode in zip(
             self._eigvecs, freqs, self._phonon_modes, strict=True
         ):
-            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(mode[0]))
-            w.write("  band: %d\n" % (mode[1] + 1))
-            w.write("  amplitude: %f\n" % mode[2])
-            w.write("  phase: %f\n" % mode[3])
-            w.write("  frequency: %15.10f\n" % freq)
-            w.write("  eigenvector:\n")
+            lines.append("- q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(mode[0]))
+            lines.append("  band: %d" % (mode[1] + 1))
+            lines.append("  amplitude: %f" % mode[2])
+            lines.append("  phase: %f" % mode[3])
+            lines.append("  frequency: %15.10f" % freq)
+            lines.append("  eigenvector:")
             for j, vec_atom in enumerate(eigvec.reshape(-1, 3)):
-                w.write("  - # atom %d\n" % (j + 1))
+                lines.append("  - # atom %d" % (j + 1))
                 for val in vec_atom:
-                    w.write(
-                        "    - [ %17.14f, %17.14f ] # %f\n"
+                    lines.append(
+                        "    - [ %17.14f, %17.14f ] # %f"
                         % (val.real, val.imag, np.angle(val, deg=True))
                     )
 
-    def _write_cell_yaml(self, cell: PhonopyAtoms, w: TextIO) -> None:
-        lattice = cell.cell
-        positions = cell.scaled_positions
-        masses = cell.masses
-        assert masses is not None
-        symbols = cell.symbols
-        w.write("  atom_info:\n")
-        for m, s in zip(masses, symbols, strict=True):
-            w.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
+        return lines
 
+    def _get_cell_yaml_lines(self, cell: PhonopyAtoms) -> list[str]:
         # Reciprocal basis vectors are the columns of inv(lattice).
-        reciprocal_lattice = np.linalg.inv(lattice).T
-        w.write("  reciprocal_lattice:\n")
+        reciprocal_lattice = np.linalg.inv(cell.cell).T
+        lines = ["  reciprocal_lattice:"]
         for vec, axis in zip(reciprocal_lattice, ("a*", "b*", "c*"), strict=True):
-            w.write("  - [ %12.8f, %12.8f, %12.8f ] # %2s\n" % (tuple(vec) + (axis,)))
-        w.write("  real_lattice:\n")
-        for vec in lattice:
-            w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % tuple(vec))
-        w.write("  positions:\n")
-        for p in positions:
-            w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
+            lines.append(
+                "  - [ %12.8f, %12.8f, %12.8f ] # %2s" % (tuple(vec) + (axis,))
+            )
+        lines += ["  " + line for line in cell.get_yaml_lines()]
+        return lines

@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import yaml
 
+import phonopy
 from phonopy import Phonopy
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
 from phonopy.phonon.degeneracy import degenerate_sets
@@ -191,16 +192,22 @@ def test_modulation_write_yaml(ph_nacl: Phonopy, tmp_path: pathlib.Path):
     with open(filename) as f:
         data = yaml.safe_load(f)
 
+    assert data["phonopy"]["version"] == phonopy.__version__
     supercell = mod.supercell
     np.testing.assert_array_equal(data["supercell"]["dimension"], dim)
-    np.testing.assert_allclose(
-        data["supercell"]["positions"], supercell.scaled_positions, atol=1e-14
-    )
-    masses = [atom["mass"] for atom in data["supercell"]["atom_info"]]
-    np.testing.assert_allclose(masses, supercell.masses, atol=1e-5)
     for key, cell in (("primitive_cell", ph.primitive), ("supercell", supercell)):
-        lattice = np.array(data[key]["real_lattice"])
+        lattice = np.array(data[key]["lattice"])
         np.testing.assert_allclose(lattice, cell.cell, atol=1e-14)
+        points = data[key]["points"]
+        assert [point["symbol"] for point in points] == cell.symbols
+        np.testing.assert_allclose(
+            [point["coordinates"] for point in points],
+            cell.scaled_positions,
+            atol=1e-14,
+        )
+        np.testing.assert_allclose(
+            [point["mass"] for point in points], cell.masses, atol=1e-6
+        )
         reciprocal_lattice = np.array(data[key]["reciprocal_lattice"])
         np.testing.assert_allclose(reciprocal_lattice @ lattice.T, np.eye(3), atol=1e-7)
 
