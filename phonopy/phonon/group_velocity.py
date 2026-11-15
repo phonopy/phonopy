@@ -88,6 +88,16 @@ class GroupVelocity:
             self._ddm = None
 
         self._symmetry = symmetry
+        if symmetry is not None:
+            # Rotations of q in reduced coordinates and of v in Cartesian.
+            self._reciprocal_ops = symmetry.reciprocal_operations
+            self._reciprocal_ops_cart = np.array(
+                [
+                    similarity_transformation(self._reciprocal_lattice, r)
+                    for r in self._reciprocal_ops
+                ],
+                dtype="double",
+            )
         if frequency_factor_to_THz is None:
             self._factor = get_physical_units().DefaultToTHz
         else:
@@ -127,11 +137,15 @@ class GroupVelocity:
             self._directions[0] = np.dot(self._reciprocal_lattice, perturbation)
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
-        gv = [
-            self._calculate_group_velocity_at_q(q)
-            for q in np.array(q_points, dtype="double")
-        ]
-        self._group_velocities = np.array(gv, dtype="double", order="C")
+        qpoints = np.array(q_points, dtype="double")
+        gv = np.array(
+            [self._calculate_group_velocity_at_q(q) for q in qpoints],
+            dtype="double",
+            order="C",
+        )
+        if self._symmetry is not None and len(qpoints) > 0:
+            gv = self._symmetrize_group_velocities(gv, qpoints)
+        self._group_velocities = gv
 
     @property
     def q_length(self) -> float | None:
@@ -172,29 +186,30 @@ class GroupVelocity:
             else:
                 gv[i, :] = 0
 
-        if self._symmetry is None:
-            return gv
-        else:
-            return self._symmetrize_group_velocity(gv, q)
+        return gv
 
-    def _symmetrize_group_velocity(
-        self, gv: NDArray[np.double], q: NDArray[np.double]
+    def _symmetrize_group_velocities(
+        self, gv: NDArray[np.double], qpoints: NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Symmetrize obtained group velocities using site symmetries."""
-        rotations = []
+        """Symmetrize group velocities by the little group of each q-point.
+
+        This is done after the loop over q-points, which calls rayon-parallel
+        kernels of phonors, so that BLAS is not called in that loop.
+
+        gv : shape=(qpoints, bands, 3)
+        qpoints : shape=(qpoints, 3)
+
+        """
+        q_in_BZ = qpoints - np.rint(qpoints)
+        r_cart_mean = np.array([self._get_r_cart_mean(q) for q in q_in_BZ])
+        return gv @ r_cart_mean.transpose(0, 2, 1)
+
+    def _get_r_cart_mean(self, q: NDArray[np.double]) -> NDArray[np.double]:
+        """Return the mean of the Cartesian rotations that satisfy R q = q."""
         assert self._symmetry is not None
-        for r in self._symmetry.reciprocal_operations:
-            q_in_BZ = q - np.rint(q)
-            diff = q_in_BZ - np.dot(r, q_in_BZ)
-            if (np.abs(diff) < self._symmetry.tolerance).all():
-                rotations.append(r)
-
-        gv_sym = np.zeros_like(gv)
-        for r in rotations:
-            r_cart = similarity_transformation(self._reciprocal_lattice, r)
-            gv_sym += np.dot(r_cart, gv.T).T
-
-        return gv_sym / len(rotations)
+        diff = q - self._reciprocal_ops @ q
+        is_little = (np.abs(diff) < self._symmetry.tolerance).all(axis=1)
+        return self._reciprocal_ops_cart[is_little].mean(axis=0)
 
     def _get_dD(self, q: NDArray[np.double]) -> list[NDArray[np.cdouble]]:
         """Compute derivative or finite difference of dynamcial matrices."""
