@@ -2994,6 +2994,9 @@ class Phonopy:
         phonon_modes: Sequence,
         delta_q: Sequence[float] | NDArray[np.double] | None = None,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
+        degeneracy_lifting_direction: Sequence[float]
+        | NDArray[np.double]
+        | None = None,
     ) -> Modulation:
         """Generate atomic displacements of phonon modes.
 
@@ -3015,12 +3018,23 @@ class Phonopy:
             The first element is a list representing the q-point in
             reduced coordinates. The remaining elements are the band
             index (starting with 0), amplitude, and phase factor.
+        delta_q : array_like, optional
+            Deprecated.  Use ``degeneracy_lifting_direction``.  This is the
+            same direction in Cartesian coordinates.
         nac_q_direction : array_like
             q-point direction from Gamma-point in fractional coordinates
             of reciprocal basis vectors. Only the direction is used, i.e.,
             ``q_direction / norm(q_direction)`` is computed and used. This
             parameter is activated only at q=(0, 0, 0).
             ``shape=(3,)``, ``dtype='double'``.
+        degeneracy_lifting_direction : array_like, optional
+            Direction in reduced coordinates of the reciprocal lattice used to
+            choose eigenvectors of degenerate bands.  In each degenerate
+            subspace, the eigenvectors are rotated to diagonalize the
+            derivative of the dynamical matrix along this direction.  Bands
+            that this derivative does not split are left as returned by the
+            eigensolver.  Only the direction is used.  When None, no rotation
+            is made.  ``shape=(3,)``.
 
         Returns
         -------
@@ -3033,13 +3047,29 @@ class Phonopy:
             msg = "Dynamical matrix has not yet built."
             raise RuntimeError(msg)
 
+        if delta_q is not None:
+            # REMOVE-AT-V5: delta_q is removed.
+            if degeneracy_lifting_direction is not None:
+                raise ValueError(
+                    "delta_q and degeneracy_lifting_direction cannot be given together."
+                )
+            warnings.warn(
+                "delta_q is deprecated. Use degeneracy_lifting_direction, which "
+                "is in reduced coordinates of the reciprocal lattice.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            degeneracy_lifting_direction = self._primitive.cell @ np.array(
+                delta_q, dtype="double"
+            )
+
         self._modulation = Modulation(
             self._dynamical_matrix,
             dimension,
             phonon_modes,
-            delta_q=delta_q,
             nac_q_direction=nac_q_direction,
             factor=self._unit_conversion_factor,
+            degeneracy_lifting_direction=degeneracy_lifting_direction,
         )
         self._modulation.run()
         return self._modulation

@@ -11,6 +11,7 @@ import phonopy
 from phonopy import Phonopy
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
 from phonopy.phonon.degeneracy import degenerate_sets
+from phonopy.phonon.modulation import Modulation
 from phonopy.structure.atoms import PhonopyAtoms
 
 lattice_NaCl222 = [
@@ -82,61 +83,113 @@ def test_modulation_properties(ph_nacl: Phonopy, helper_methods):
     assert mod.eigenvectors.shape == (2, len(ph.primitive) * 3)
 
 
-# Eigenvectors of Si at W, q=(1/4, 3/4, 1/2), rotated by delta_q=[1, 2, 3].
-# Each row is one band, with the phase of each band fixed arbitrarily.
+# Eigenvectors of Si at W, q=(1/4, 3/4, 1/2), rotated along [1, 2, 3] in
+# reduced coordinates of the reciprocal lattice.  Each row is one band, with
+# the phase of each band fixed arbitrarily.
 freqs_Si_W = [5.7905215, 5.7905215, 11.10314312, 11.10314312, 13.79304175, 13.79304175]
 eigvecs_Si_W = [
     [
-        0.14617063 - 0.29234125j,
-        -0.29234125 - 0.14617063j,
+        0.29234125 - 0.14617063j,
+        -0.14617063 - 0.29234125j,
         0.53510885,
         -0.32684746,
         -0.32684746j,
-        -0.23930795 + 0.4786159j,
+        -0.4786159 + 0.23930795j,
     ],
     [
-        -0.14617063 + 0.29234125j,
-        0.29234125 + 0.14617063j,
+        -0.29234125 + 0.14617063j,
+        0.14617063 + 0.29234125j,
         0.53510885,
         -0.32684746,
         -0.32684746j,
-        0.23930795 - 0.4786159j,
+        0.4786159 - 0.23930795j,
     ],
-    [0.5, 0.5j, 0, -0.2236068 - 0.4472136j, -0.4472136 + 0.2236068j, 0],
-    [0.5, 0.5j, 0, 0.2236068 + 0.4472136j, 0.4472136 - 0.2236068j, 0],
     [
-        0.16921627 - 0.33843255j,
-        -0.33843255 - 0.16921627j,
+        0.5,
+        0.5j,
+        0,
+        -0.4472136 - 0.2236068j,
+        -0.2236068 + 0.4472136j,
+        0,
+    ],
+    [
+        0.5,
+        0.5j,
+        0,
+        0.4472136 + 0.2236068j,
+        0.2236068 - 0.4472136j,
+        0,
+    ],
+    [
+        0.33843255 - 0.16921627j,
+        -0.16921627 - 0.33843255j,
         0.46223211,
         0.37837909,
         0.37837909j,
-        0.20671648 - 0.41343297j,
+        0.41343297 - 0.20671648j,
     ],
     [
-        -0.16921627 + 0.33843255j,
-        0.33843255 + 0.16921627j,
+        -0.33843255 + 0.16921627j,
+        0.16921627 + 0.33843255j,
         0.46223211,
         0.37837909,
         0.37837909j,
-        -0.20671648 + 0.41343297j,
+        -0.41343297 + 0.20671648j,
     ],
 ]
 
 
+modes_Si_W = [[[0.25, 0.75, 0.5], band, 1, 0] for band in range(6)]
+
+
 def test_modulation_lifted_degeneracy(ph_si: Phonopy):
-    """Test eigenvectors of degenerate modes rotated by delta_q.
+    """Test eigenvectors of degenerate modes rotated along a direction.
 
     At W of Si, every pair of degenerate bands is split at first order
-    along delta_q=[1, 2, 3], so the rotated eigenvectors are unique up to
-    a phase factor of each band and do not depend on the eigensolver.
+    along [1, 2, 3], so the rotated eigenvectors are unique up to a phase
+    factor of each band and do not depend on the eigensolver.
 
     """
-    ph = ph_si
-    q = [0.25, 0.75, 0.5]
-    modes = [[q, band, 1, 0] for band in range(6)]
-    mod = ph.run_modulations([1, 1, 1], modes, delta_q=[1, 2, 3])
+    mod = ph_si.run_modulations(
+        [1, 1, 1], modes_Si_W, degeneracy_lifting_direction=[1, 2, 3]
+    )
     np.testing.assert_allclose(mod.frequencies, freqs_Si_W, atol=1e-6)
-    for vec, vec_ref in zip(mod.eigenvectors, eigvecs_Si_W, strict=True):
+    _assert_equal_up_to_phase(mod.eigenvectors, eigvecs_Si_W)
+
+
+# REMOVE-AT-V5: delta_q is removed.
+def test_modulation_delta_q_deprecated(ph_si: Phonopy):
+    """Test delta_q, the deprecated direction in Cartesian coordinates."""
+    ph = ph_si
+    delta_q = np.linalg.inv(ph.primitive.cell) @ [1, 2, 3]
+    with pytest.warns(DeprecationWarning):
+        mod = ph.run_modulations([1, 1, 1], modes_Si_W, delta_q=delta_q)
+    _assert_equal_up_to_phase(mod.eigenvectors, eigvecs_Si_W)
+
+    with pytest.warns(DeprecationWarning):
+        mod = Modulation(ph.dynamical_matrix, [1, 1, 1], modes_Si_W, delta_q=delta_q)
+    mod.run()
+    _assert_equal_up_to_phase(mod.eigenvectors, eigvecs_Si_W)
+
+    with pytest.raises(ValueError):
+        ph.run_modulations(
+            [1, 1, 1],
+            modes_Si_W,
+            delta_q=delta_q,
+            degeneracy_lifting_direction=[1, 2, 3],
+        )
+    with pytest.raises(ValueError):
+        Modulation(
+            ph.dynamical_matrix,
+            [1, 1, 1],
+            modes_Si_W,
+            delta_q=delta_q,
+            degeneracy_lifting_direction=[1, 2, 3],
+        )
+
+
+def _assert_equal_up_to_phase(vecs, vecs_ref):
+    for vec, vec_ref in zip(vecs, vecs_ref, strict=True):
         phase = np.vdot(vec_ref, vec)
         phase /= abs(phase)
         np.testing.assert_allclose(vec / phase, vec_ref, atol=1e-6)
@@ -144,7 +197,11 @@ def test_modulation_lifted_degeneracy(ph_si: Phonopy):
 
 @pytest.mark.parametrize("q", [[0.25, 0.75, 0.5], [0, 0.5, 0.5]])
 def test_modulation_eigenvectors(ph_si: Phonopy, q: list[float]):
-    """Test eigenvectors of Si without delta_q by rotation-invariant properties."""
+    """Test eigenvectors of Si without lifting degeneracy.
+
+    Rotation-invariant properties are tested.
+
+    """
     _assert_modulation_eigenvectors(ph_si, q)
 
 
