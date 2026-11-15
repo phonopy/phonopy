@@ -371,12 +371,13 @@ def _add_init_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="Set displacements parallel to axes",
     )
+    # REMOVE-AT-V5
     parser.add_argument(
         "--trigonal",
         dest="is_trigonal_displacements",
         action="store_true",
         default=None,
-        help="Set displacements of all trigonal axes ",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--wien2k-p1",

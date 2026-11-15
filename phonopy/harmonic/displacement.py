@@ -124,7 +124,7 @@ def get_least_displacements(
     symmetry: Symmetry,
     is_plusminus: Literal["auto"] | bool = "auto",
     is_diagonal: bool = True,
-    is_trigonal: bool = False,
+    is_trigonal: bool = False,  # REMOVE-AT-V5
     log_level: int = 0,
 ) -> list[list[int]]:
     """Return a set of displacements.
@@ -175,7 +175,7 @@ def get_least_displacements(
 def get_displacement(
     site_symmetry: NDArray[np.int64],
     directions: NDArray[np.int64] = directions_diag,
-    is_trigonal: bool = False,
+    is_trigonal: bool = False,  # REMOVE-AT-V5
     log_level: int = 0,
 ) -> list[NDArray[np.int64]]:
     """Return displacement directions for one atom."""
@@ -195,6 +195,7 @@ def get_displacement(
             )
             print(site_symmetry[sitesym_num])
 
+        # REMOVE-AT-V5
         if is_trigonal:
             disps_new = [disps[0]]
             if _is_trigonal_axis(site_symmetry[sitesym_num]):
@@ -271,6 +272,7 @@ def is_minus_displacement(
     return is_minus
 
 
+# REMOVE-AT-V5
 def _is_trigonal_axis(r: NDArray[np.int64]) -> bool:
     """Check three folded rotation.
 
@@ -422,7 +424,7 @@ def generate_systematic_displacements(
     distance: float | None = None,
     is_plusminus: Literal["auto"] | bool = "auto",
     is_diagonal: bool = True,
-    is_trigonal: bool = False,
+    is_trigonal: bool = False,  # REMOVE-AT-V5
     log_level: int = 0,
 ) -> Type1DisplacementDataset:
     """Return a dataset of systematic finite-difference displacements.
@@ -451,7 +453,7 @@ def generate_systematic_displacements(
         True, displacements may be off the basis vectors if doing so reduces
         the number of displacements by symmetry. Default is True.
     is_trigonal : bool, optional
-        Exists only for testing purposes. Default is False.
+        Developer only. Default is False.
     log_level : int, optional
         Verbosity of the site-symmetry report. Default is 0.
 

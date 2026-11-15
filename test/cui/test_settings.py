@@ -120,3 +120,13 @@ def test_modulation_conf_file_direction(
     with pytest.raises(SystemExit):
         _parse_modulation_conf_file(header, tmp_path)
     assert "degeneracy_lifting_direction" in capsys.readouterr().out
+
+
+# REMOVE-AT-V5
+@pytest.mark.parametrize("conf,expected", [("", None), ("TRIGONAL = .TRUE.\n", True)])
+def test_trigonal_conf_file(conf: str, expected: bool | None, tmp_path):
+    """TRIGONAL tag is None unless given, so that no warning is emitted."""
+    conf_filename = tmp_path / "phonopy.conf"
+    conf_filename.write_text(f"DIM = 1 1 1\n{conf}")
+    settings = PhonopyConfParser(filename=conf_filename).settings
+    assert settings.is_trigonal_displacement is expected

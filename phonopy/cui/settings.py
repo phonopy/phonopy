@@ -107,7 +107,7 @@ class Settings:
         self.is_symmetry: bool = True
         self.is_tetrahedron_method: bool = True
         self.is_time_reversal_symmetry: bool = True
-        self.is_trigonal_displacement: bool = False
+        self.is_trigonal_displacement: bool | None = None  # REMOVE-AT-V5
         self.magnetic_moments: list[float] | None = None
         self.masses: list[float] | None = None
         self.site_mixture: list[float] | None = None
@@ -353,6 +353,7 @@ class ConfParser(Generic[TSettings]):
             if args.is_plusminus_displacements:
                 self._confs["pm"] = ".true."
 
+        # REMOVE-AT-V5
         if "is_trigonal_displacements" in arg_list:
             if args.is_trigonal_displacements:
                 self._confs["trigonal"] = ".true."
@@ -914,6 +915,7 @@ class ConfParser(Generic[TSettings]):
                 val = float(confs["tmin"])
                 self._set_parameter("tmin", val)
 
+            # REMOVE-AT-V5
             if conf_key == "trigonal":
                 if confs["trigonal"].lower() == ".false.":
                     self._set_parameter("is_trigonal_displacement", False)
@@ -1067,6 +1069,7 @@ class ConfParser(Generic[TSettings]):
             settings.is_time_reversal_symmetry = params["is_time_reversal_symmetry"]
 
         # Trigonal displacement
+        # REMOVE-AT-V5
         if "is_trigonal_displacement" in params:
             settings.is_trigonal_displacement = params["is_trigonal_displacement"]
 

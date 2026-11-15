@@ -2374,7 +2374,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             distance=displacement_distance,
             is_plusminus=settings.is_plusminus_displacement,
             is_diagonal=settings.is_diagonal_displacement,
-            is_trigonal=settings.is_trigonal_displacement,
+            is_trigonal=settings.is_trigonal_displacement,  # REMOVE-AT-V5
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
             max_distance=settings.displacement_distance_max,
