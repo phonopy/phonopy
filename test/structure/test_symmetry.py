@@ -162,7 +162,7 @@ def test_symmetrize_borns_and_epsilon_tio2(ph_tio2: Phonopy):
 
 def test_symmetrize_force_constants_by_space_group(ph_nacl: Phonopy):
     """Test running symmetrize_force_constants_by_space_group."""
-    ph = ph_nacl.copy()
+    ph = ph_nacl.replicate()
     assert ph_nacl.force_constants is not None
     ph.force_constants = ph_nacl.force_constants.copy()
     ph.symmetrize_force_constants_by_space_group()
@@ -170,7 +170,7 @@ def test_symmetrize_force_constants_by_space_group(ph_nacl: Phonopy):
 
 def test_set_force_constants_zero_with_radius(ph_nacl: Phonopy):
     """Test running set_force_constants_zero_with_radius."""
-    ph = ph_nacl.copy()
+    ph = ph_nacl.replicate()
     assert ph_nacl.force_constants is not None
     ph.force_constants = ph_nacl.force_constants.copy()
     ph.set_force_constants_zero_with_radius(5.0)
