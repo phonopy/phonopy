@@ -2,6 +2,7 @@
 """Tests for displacements."""
 
 import itertools
+import warnings
 from typing import Literal
 
 import numpy as np
@@ -363,3 +364,14 @@ def test_tipn3(ph_tipn3: Phonopy):
         [40, -0.006370194270018462, -0.006021020526083804, -0.00481330829956917],
     ]
     np.testing.assert_allclose(ph.displacements, disp_gen, atol=1e-8)
+
+
+# REMOVE-AT-V5
+def test_is_trigonal_deprecated(ph_si: Phonopy):
+    """Test is_trigonal warns, and the default does not."""
+    ph = ph_si.replicate()
+    with pytest.warns(DeprecationWarning, match="is_trigonal"):
+        ph.generate_displacements(is_trigonal=True)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        ph.generate_displacements()

@@ -861,7 +861,7 @@ class Phonopy:
         distance: float | None = None,
         is_plusminus: Literal["auto"] | bool = "auto",
         is_diagonal: bool = True,
-        is_trigonal: bool = False,
+        is_trigonal: bool | None = None,
         number_of_snapshots: int | Literal["auto"] | None = None,
         random_seed: int | None = None,
         temperature: float | None = None,
@@ -907,7 +907,7 @@ class Phonopy:
             Systematic displacements only. When False, displace only along
             basis vectors. Default is True.
         is_trigonal : bool, optional
-            Exists only for testing purposes. Default is False.
+            Deprecated.  Developer only.  Default is None.
         number_of_snapshots : int, "auto", or None, optional
             Number of supercells with random displacements. When ``"auto"``,
             it is estimated with symfc. None selects systematic
@@ -943,6 +943,14 @@ class Phonopy:
             Default is None, corresponding to ``'symmetric'``.
 
         """
+        if is_trigonal is not None:
+            # REMOVE-AT-V5
+            warnings.warn(
+                "is_trigonal of generate_displacements is deprecated. It is a "
+                "developer-only parameter.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if distance_sampling == "atom" and max_distance is None:
             raise ValueError('distance_sampling="atom" requires max_distance.')
         if number_of_snapshots is not None and (
@@ -1002,7 +1010,7 @@ class Phonopy:
                 distance=distance,
                 is_plusminus=is_plusminus,
                 is_diagonal=is_diagonal,
-                is_trigonal=is_trigonal,
+                is_trigonal=bool(is_trigonal),  # REMOVE-AT-V5
                 log_level=self._log_level,
             )
 
