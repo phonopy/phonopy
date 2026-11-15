@@ -31,7 +31,39 @@ PHASE_REFERENCE_RTOL = 1e-8
 
 
 class Modulation:
-    """Class to create atomic displacements."""
+    """Atomic displacements along phonon modes in a supercell.
+
+    The complex displacement of atom j in the supercell for one phonon mode is
+
+        u_j = A / sqrt(N * m_j) * exp(i * phi) * e_j * exp(2 * pi * i * q . r_j),
+
+    where A is the amplitude, phi is the phase, N is the number of atoms in
+    the supercell, m_j is the mass of atom j, e_j is the part of the
+    eigenvector for atom j, and r_j is the position of atom j in reduced
+    coordinates of the primitive cell.  The phase phi is measured from the
+    reference element chosen by ``_get_phase_factor``.  Modulated supercells
+    are made from the real part of u_j.
+
+    Attributes
+    ----------
+    supercell : PhonopyAtoms
+        Supercell without modulations.
+    modulations : ndarray
+        Complex displacements u_j in Cartesian coordinates, one set per phonon
+        mode.  Zeros before ``run()`` is called.
+        ``shape=(modes, supercell atoms, 3)``, ``dtype=np.cdouble``.
+    modulated_supercells : list[PhonopyAtoms]
+        Supercells modulated by each phonon mode.
+    modulated_supercell : PhonopyAtoms
+        Supercell modulated by the sum of all phonon modes.
+    frequencies : ndarray
+        Frequencies of the phonon modes, in THz with the default ``factor``.
+        ``shape=(modes,)``, ``dtype=np.double``.
+    eigenvectors : ndarray
+        Eigenvectors of the phonon modes.
+        ``shape=(modes, primitive atoms * 3)``, ``dtype=np.cdouble``.
+
+    """
 
     def __init__(
         self,
@@ -42,7 +74,37 @@ class Modulation:
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
         factor: float | None = None,
     ) -> None:
-        """Init method."""
+        """Init method.
+
+        Parameters
+        ----------
+        dynamical_matrix : DynamicalMatrix
+            Dynamical matrix of the primitive cell.
+        dimension : array_like
+            Supercell matrix with respect to the primitive cell.
+            ``shape=(3,)``, ``(9,)`` or ``(3, 3)``.
+        phonon_modes : sequence
+            Each element is ``(q, band_index, amplitude, phase)`` of one phonon
+            mode.  ``q`` is in reduced coordinates of the reciprocal lattice,
+            ``band_index`` starts from 0 in ascending order of frequency, and
+            ``phase`` is in degrees.
+        delta_q : array_like, optional
+            Direction used to choose eigenvectors of degenerate bands.  In each
+            degenerate subspace, the eigenvectors are rotated to diagonalize the
+            derivative of the dynamical matrix along this direction.  The
+            components are taken as Cartesian, and only the direction is used.
+            When None, the eigenvectors are those from the eigensolver.
+            ``shape=(3,)``.
+        nac_q_direction : array_like, optional
+            Direction of q from the Gamma point in reduced coordinates of the
+            reciprocal lattice, used for the non-analytical term correction at
+            q=(0, 0, 0).  ``shape=(3,)``.
+        factor : float, optional
+            Factor to convert the square root of eigenvalues of the dynamical
+            matrix to frequencies in THz.  Default is the value for the default
+            units of phonopy.
+
+        """
         self._dm = dynamical_matrix
         self._primitive = dynamical_matrix.primitive
         self._phonon_modes = phonon_modes
@@ -65,15 +127,14 @@ class Modulation:
             self._factor = factor
         dim = self._get_dimension_3x3()
         self._supercell = get_supercell(self._primitive, dim)
-        complex_dtype = np.cdouble
         self._u = np.zeros(
             (len(self._phonon_modes), len(self._supercell), 3),
-            dtype=complex_dtype,
+            dtype=np.cdouble,
             order="C",
         )
         self._eigvals = np.zeros(len(self._phonon_modes), dtype="double")
         self._eigvecs = np.zeros(
-            (len(self._phonon_modes), len(self._primitive) * 3), dtype=complex_dtype
+            (len(self._phonon_modes), len(self._primitive) * 3), dtype=np.cdouble
         )
 
     def run(self) -> None:
@@ -156,7 +217,24 @@ class Modulation:
         interface_mode: str | None = None,
         optional_structure_info: StructureInfo | None = None,
     ) -> None:
-        """Write supercells with modulations."""
+        """Write supercells with modulations.
+
+        With the default cell filename ``POSCAR`` of VASP, the files are
+        ``MPOSCAR-001``, ``MPOSCAR-002``, ... for the phonon modes,
+        ``MPOSCAR`` for the sum of all phonon modes, and ``MPOSCAR-orig``
+        without modulations.
+
+        Parameters
+        ----------
+        interface_mode : str, optional
+            Calculator interface such as 'vasp', 'qe', ...  Default is None,
+            which is equivalent to 'vasp'.
+        optional_structure_info : StructureInfo, optional
+            Calculator-specific information returned by
+            ``read_crystal_structure``, such as the pseudopotential filenames
+            of QE.  Default is None.
+
+        """
         base_fname = get_default_cell_filename(interface_mode)
 
         for i, cell in enumerate(self.modulated_supercells):
@@ -183,7 +261,14 @@ class Modulation:
         )
 
     def write_yaml(self, filename: str | os.PathLike = "modulation.yaml") -> None:
-        """Write modulations to file in yaml."""
+        """Write modulations to file in yaml.
+
+        Parameters
+        ----------
+        filename : str or os.PathLike, optional
+            Default is "modulation.yaml".
+
+        """
         self._write_yaml(filename=filename)
 
     def _get_cell_with_modulation(
