@@ -150,13 +150,12 @@ class Modulation:
         )
         eigvals, eigvecs = diagonalize_dynamical_matrices(dynmats)
         assert eigvecs is not None
+        if self._delta_q is not None:
+            eigvecs = self._lift_degeneracy(qpoints, eigvals, eigvecs)
 
         for i, ph_mode in enumerate(self._phonon_modes):
             q, band_index, amplitude, argument = ph_mode
-            eigvecs_at_q = eigvecs[i]
-            if self._delta_q is not None:
-                eigvecs_at_q = self._lift_degeneracy(q, eigvals[i], eigvecs_at_q)
-            eigvec = eigvecs_at_q[:, band_index]
+            eigvec = eigvecs[i][:, band_index]
             self._u[i] = self._get_displacements(eigvec, q, amplitude, argument)
             self._eigvecs[i] = eigvec
             self._eigvals[i] = eigvals[i, band_index]
@@ -286,21 +285,45 @@ class Modulation:
 
     def _lift_degeneracy(
         self,
-        q: NDArray[np.double],
+        qpoints: NDArray[np.double],
         eigvals: NDArray[np.double],
         eigvecs: NDArray[np.cdouble],
     ) -> NDArray[np.cdouble]:
-        """Rotate degenerate eigenvectors by derivative of D along delta_q."""
+        """Rotate degenerate eigenvectors by derivative of D along delta_q.
+
+        Parameters
+        ----------
+        qpoints : ndarray
+            ``shape=(num_qpoints, 3)``.
+        eigvals : ndarray
+            ``shape=(num_qpoints, num_band)``.
+        eigvecs : ndarray
+            Eigenvectors in columns, ``shape=(num_qpoints, num_band, num_band)``.
+
+        """
         assert self._ddm is not None
         assert self._delta_q is not None
-        self._ddm.run(q)
-        ddm_vals = self._ddm.d_dynamical_matrix
-        assert ddm_vals is not None
         direction = np.asarray(self._delta_q, dtype="double")
-        ddm_along_direction = derivative_along_direction(
-            ddm_vals, direction
-        ) / np.linalg.norm(direction)
-        _, rot_eigvecs = lift_degeneracy(eigvals, eigvecs, ddm_along_direction)
+        norm = np.linalg.norm(direction)
+
+        # Derivatives are computed in a loop separate from the one below,
+        # which calls BLAS, because the derivative kernel of phonors runs
+        # with rayon threads.
+        ddms_along_direction = []
+        for q in qpoints:
+            self._ddm.run(q)
+            ddm_vals = self._ddm.d_dynamical_matrix
+            assert ddm_vals is not None
+            ddms_along_direction.append(
+                derivative_along_direction(ddm_vals, direction) / norm
+            )
+
+        freqs = self._eigvals_to_frequencies(eigvals)
+        rot_eigvecs = np.empty_like(eigvecs)
+        for i, ddm_along_direction in enumerate(ddms_along_direction):
+            _, rot_eigvecs[i] = lift_degeneracy(
+                freqs[i], eigvecs[i], ddm_along_direction
+            )
         return rot_eigvecs
 
     def _get_dimension_3x3(self) -> NDArray[np.int64]:
