@@ -129,9 +129,9 @@ class DynamicalMatrix:
             DM^H) / 2.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
-        lang : Literal["C", "Rust"], optional, default="C"
+        lang : Literal["C", "Rust"], optional, default="Rust"
             Backend implementation for compute-heavy kernels. "Rust" selects
-            the experimental phonors backend.
+            the phonors backend and "C" the C extension.
 
         """
         self._scell = supercell
@@ -355,7 +355,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
-        lang : Literal["C", "Rust"], optional, default="C"
+        lang : Literal["C", "Rust"], optional, default="Rust"
             Backend implementation for compute-heavy kernels.
 
         """
@@ -511,7 +511,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
-        lang : Literal["C", "Rust"], optional, default="C"
+        lang : Literal["C", "Rust"], optional, default="Rust"
             Backend implementation for compute-heavy kernels.
 
         """
@@ -1000,7 +1000,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
-        lang : Literal["C", "Rust"], optional, default="C"
+        lang : Literal["C", "Rust"], optional, default="Rust"
             Backend implementation for compute-heavy kernels.
 
         """

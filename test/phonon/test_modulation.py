@@ -188,6 +188,20 @@ def test_modulation_delta_q_deprecated(ph_si: Phonopy):
         )
 
 
+def test_modulation_dimension(ph_si: Phonopy):
+    """Test the three forms of dimension and the error for a wrong length."""
+    dm = ph_si.dynamical_matrix
+    smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
+    for dim in (smat, np.ravel(smat)):
+        mod = Modulation(dm, dim, modes_Si_W)
+        np.testing.assert_array_equal(mod.supercell.supercell_matrix, smat)
+    mod = Modulation(dm, [1, 2, 3], modes_Si_W)
+    np.testing.assert_array_equal(mod.supercell.supercell_matrix, np.diag([1, 2, 3]))
+    for dim in ([2, 2], [1, 1, 1, 1]):
+        with pytest.raises(ValueError):
+            Modulation(dm, dim, modes_Si_W)
+
+
 def _assert_equal_up_to_phase(vecs, vecs_ref):
     for vec, vec_ref in zip(vecs, vecs_ref, strict=True):
         phase = np.vdot(vec_ref, vec)

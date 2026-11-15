@@ -356,18 +356,12 @@ class Modulation:
 
     def _get_dimension_3x3(self) -> NDArray[np.int64]:
         if len(self._dimension) == 3:
-            dim = np.diag(self._dimension)
-        elif len(self._dimension) == 9:
-            dim = np.reshape(self._dimension, (3, 3))
-        else:
-            dim = np.array(self._dimension)
-        if dim.shape == (3, 3):
-            dim = np.array(dim, dtype="int64")
-        else:
-            print("Dimension is incorrectly set. Unit cell is used.")
-            dim = np.eye(3, dtype="int64")
-
-        return dim
+            return np.diag(self._dimension)
+        if len(self._dimension) == 9:
+            return self._dimension.reshape(3, 3)
+        raise ValueError(
+            f"dimension must have 3 or 9 elements, but has {len(self._dimension)}."
+        )
 
     def _get_displacements(
         self,

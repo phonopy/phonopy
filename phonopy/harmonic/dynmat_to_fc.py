@@ -250,7 +250,7 @@ class DynmatToForceConstants:
             section of this class.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate force constants from dynamical matrix.
-        lang : Literal["C", "Rust"], optional, default="C"
+        lang : Literal["C", "Rust"], optional, default="Rust"
             Backend implementation for the inverse transformation.
 
         """
