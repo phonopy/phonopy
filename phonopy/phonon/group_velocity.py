@@ -9,7 +9,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    diagonalize_dynamical_matrices,
+    get_dynamical_matrices_at_qpoints,
+)
 from phonopy.phonon.degeneracy import (
     delta_dynamical_matrix,
     derivative_along_direction,
@@ -138,12 +142,27 @@ class GroupVelocity:
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
         qpoints = np.array(q_points, dtype="double")
+        if len(qpoints) == 0:
+            self._group_velocities = np.array([], dtype="double")
+            return
+
+        dynmats = get_dynamical_matrices_at_qpoints(self._dynmat, qpoints)
+        eigvals, eigvecs = diagonalize_dynamical_matrices(
+            dynmats, lang=self._dynmat.lang
+        )
+        assert eigvecs is not None
+        freqs = np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
         gv = np.array(
-            [self._calculate_group_velocity_at_q(q) for q in qpoints],
+            [
+                self._calculate_group_velocity_at_q(q, freqs_at_q, eigvecs_at_q)
+                for q, freqs_at_q, eigvecs_at_q in zip(
+                    qpoints, freqs, eigvecs, strict=True
+                )
+            ],
             dtype="double",
             order="C",
         )
-        if self._symmetry is not None and len(qpoints) > 0:
+        if self._symmetry is not None:
             gv = self._symmetrize_group_velocities(gv, qpoints)
         self._group_velocities = gv
 
@@ -162,14 +181,11 @@ class GroupVelocity:
         return self._group_velocities
 
     def _calculate_group_velocity_at_q(
-        self, q: NDArray[np.double]
+        self,
+        q: NDArray[np.double],
+        freqs: NDArray[np.double],
+        eigvecs: NDArray[np.cdouble],
     ) -> NDArray[np.double]:
-        self._dynmat.run(q)
-        dm = self._dynmat.dynamical_matrix
-        assert dm is not None
-        eigvals, eigvecs = np.linalg.eigh(dm)
-        eigvals = eigvals.real  # type: ignore
-        freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
         gv = np.zeros((len(freqs), 3), dtype="double", order="C")
 
         # Degenerate eigenvectors are rotated by the derivative along
