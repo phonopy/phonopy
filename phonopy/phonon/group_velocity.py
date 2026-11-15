@@ -73,15 +73,8 @@ class GroupVelocity:
         self._reciprocal_lattice: NDArray[np.double] = np.linalg.inv(
             self._reciprocal_lattice_inv
         )  # type: ignore
-        self._q_length = q_length
-
-        self._ddm: DerivativeOfDynamicalMatrix | None
-        if self._q_length is None:
-            self._ddm = DerivativeOfDynamicalMatrix(
-                dynamical_matrix, lang=dynamical_matrix.lang
-            )
-        else:
-            self._ddm = None
+        self._ddm: DerivativeOfDynamicalMatrix | None = None
+        self.q_length = q_length
 
         self._symmetry = symmetry
         if frequency_factor_to_THz is None:
@@ -131,12 +124,16 @@ class GroupVelocity:
 
     @property
     def q_length(self) -> float | None:
-        """Setter an getter of q_length."""
+        """Finite-difference step, or None to use analytical derivatives."""
         return self._q_length
 
     @q_length.setter
     def q_length(self, q_length: float | None) -> None:
         self._q_length = q_length
+        if q_length is None and self._ddm is None:
+            self._ddm = DerivativeOfDynamicalMatrix(
+                self._dynmat, lang=self._dynmat.lang
+            )
 
     @property
     def group_velocities(self) -> NDArray[np.double] | None:
