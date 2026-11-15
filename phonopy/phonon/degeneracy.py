@@ -39,6 +39,25 @@ def degenerate_sets(
     Out: [[0], [1, 2], [3], [4]]
 
     """
+    freqs = np.asarray(freqs)
+    if len(freqs) == 0:
+        return []
+    gaps = np.diff(freqs)
+    if (gaps >= 0).all():
+        # In ascending order, a set ends where the gap to the next value is
+        # cutoff or more.  This gives the same sets as
+        # _degenerate_sets_in_any_order.
+        bounds = (np.flatnonzero(gaps >= cutoff) + 1).tolist()
+        starts = [0, *bounds]
+        ends = [*bounds, len(freqs)]
+        return [list(range(s, e)) for s, e in zip(starts, ends, strict=True)]
+    return _degenerate_sets_in_any_order(freqs, cutoff)
+
+
+def _degenerate_sets_in_any_order(
+    freqs: NDArray[np.double], cutoff: float
+) -> list[list[int]]:
+    """Return degenerate sets of frequencies in any order."""
     indices = []
     done = []
     for i in range(len(freqs)):
@@ -139,11 +158,13 @@ def lift_degeneracy(
         shape=(num_band, num_band)
 
     """
-    rot_eigvecs = np.zeros_like(eigvecs)
-    eigvals_pert = np.zeros_like(freqs)
+    dDdq_eig = eigvecs.T.conj() @ dDdq @ eigvecs
+    eigvals_pert = dDdq_eig.diagonal().real.copy()
+    rot_eigvecs = eigvecs.copy()
     for deg in degenerate_sets(freqs):
-        block = eigvecs[:, deg].T.conj() @ dDdq @ eigvecs[:, deg]
-        eigvals_pert[deg], u = np.linalg.eigh(block)
+        if len(deg) == 1:
+            continue
+        eigvals_pert[deg], u = np.linalg.eigh(dDdq_eig[np.ix_(deg, deg)])
         rot_eigvecs[:, deg] = eigvecs[:, deg] @ u
     return eigvals_pert, rot_eigvecs
 
