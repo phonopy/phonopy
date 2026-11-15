@@ -613,6 +613,7 @@ def test_isclose(ph_nacl: Phonopy):
     assert not isclose(scell, pcell)
 
 
+# REMOVE-AT-V5
 def test_isclose_with_arbitrary_order(
     nacl_unitcell_order1: PhonopyAtoms, nacl_unitcell_order2: PhonopyAtoms
 ):

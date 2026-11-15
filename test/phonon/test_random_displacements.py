@@ -1697,6 +1697,7 @@ def _mass_sand(matrix, mass):
     return ((matrix * mass).T * mass).T
 
 
+# REMOVE-AT-V5
 def test_bose_einstein_dist_deprecated():
     """Test the deprecated location of bose_einstein_dist."""
     with pytest.warns(DeprecationWarning, match="thermal_properties"):

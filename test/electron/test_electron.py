@@ -252,6 +252,7 @@ def test_Al():
     assert np.abs(_entropy - 0.00959209) < 1e-6
     assert np.abs(_energy - 10.76680671) < 1e-6
 
+    # REMOVE-AT-V5
     with pytest.warns(DeprecationWarning, match="get_free_energy_at_T"):
         temperatures, free_energies = get_free_energy_at_T(
             0, 1000, 10, eigvals, weights, n_electrons
@@ -648,6 +649,7 @@ def test_fermi_energy_survives_hdf5_round_trip(tmp_path):
     assert read_back[1].fermi_energy is None
 
 
+# REMOVE-AT-V5
 def test_the_old_qha_modules_still_import():
     """Test that the modules left in phonopy.qha re-export every old name.
 

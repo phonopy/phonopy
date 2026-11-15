@@ -22,6 +22,7 @@ from phonopy.electron.tetrahedron import (  # noqa: F401
     resolve_energy_window,
 )
 
+# REMOVE-AT-V5
 warnings.warn(
     "phonopy.qha.electron is deprecated. Use phonopy.electron.states, "
     "phonopy.electron.tetrahedron and phonopy.electron.kpoint_sum instead.",

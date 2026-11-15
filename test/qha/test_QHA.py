@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from phonopy import PhonopyQHA
+from phonopy import PhonopyQHA  # REMOVE-AT-V6
 from phonopy.physical_units import get_physical_units
 
 current_dir = Path(__file__).resolve().parent
@@ -493,6 +493,7 @@ def test_qha_plot_units(qha_si: PhonopyQHA) -> None:
     assert "GPa" in PhonopyQHA.bulk_modulus_temperature.__doc__
 
 
+# REMOVE-AT-V6
 def test_phonopy_qha_deprecation_warning() -> None:
     """PhonopyQHA emits DeprecationWarning on instantiation."""
     with pytest.warns(DeprecationWarning, match="PhonopyQHA is deprecated"):

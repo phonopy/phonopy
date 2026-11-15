@@ -12,7 +12,7 @@ from phonopy import Phonopy
 
 def test_nacl(ph_nacl: Phonopy):
     """Test displacements of NaCl 2x2x2."""
-    ph = ph_nacl.copy()
+    ph = ph_nacl.replicate()
     disp_ref = [[0, 0.01, 0.0, 0.0], [32, 0.01, 0.0, 0.0]]
     np.testing.assert_allclose(ph_nacl.displacements, disp_ref, atol=1e-8)
     ph.generate_displacements()
@@ -21,7 +21,7 @@ def test_nacl(ph_nacl: Phonopy):
 
 def test_si(ph_si: Phonopy):
     """Test displacements of Si."""
-    ph = ph_si.copy()
+    ph = ph_si.replicate()
     disp_ref = [[0, 0.0, 0.0070710678118655, 0.0070710678118655]]
     np.testing.assert_allclose(ph_si.displacements, disp_ref, atol=1e-8)
     ph.generate_displacements()
@@ -30,7 +30,7 @@ def test_si(ph_si: Phonopy):
 
 def test_sno2(ph_sno2: Phonopy):
     """Test displacements of SnO2."""
-    ph = ph_sno2.copy()
+    ph = ph_sno2.replicate()
     disp_ref = [
         [0, 0.01, 0.0, 0.0],
         [0, -0.01, 0.0, 0.0],
@@ -50,7 +50,7 @@ def test_sno2(ph_sno2: Phonopy):
 
 def test_tio2(ph_tio2: Phonopy):
     """Test displacements of TiO2."""
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
     ph.generate_displacements()
     disp_gen = [
         [0, 0.0060687317141537135, 0.0060687317141537135, 0.0051323474905008],
@@ -76,7 +76,7 @@ def test_tio2_random_disp(
     Currently default displacement distance = 0.01.
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
     ph.generate_displacements(
         number_of_snapshots=number_of_snapshots,
         distance=distance,
@@ -104,7 +104,7 @@ def test_tio2_random_disp_rd_auto_estimation_factor(ph_tio2: Phonopy):
     number_estimation_factor=NUM)
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
     ph.generate_displacements(number_of_snapshots="auto")
     assert len(ph.displacements) == 4
 
@@ -125,7 +125,7 @@ def test_tio2_random_disp_with_random_dist(
     ph_tio2: Phonopy, min_distance: float | None
 ):
     """Test random displacements with random distance of TiO2."""
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
 
     if min_distance is not None and min_distance > 0.1:
         with pytest.raises(RuntimeError):
@@ -154,7 +154,7 @@ def test_tio2_random_disp_with_random_dist_defualt(
     Combination of default distance and max_distance.
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
 
     n_snapshots = 100
     ph.generate_displacements(
@@ -175,7 +175,7 @@ def test_tio2_random_disp_with_random_max_distance(ph_tio2: Phonopy):
     Combination of distance and max_distance parameters.
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
 
     n_snapshots = 100
     ph.generate_displacements(
@@ -196,7 +196,7 @@ def test_tio2_random_disp_distance_sampling_atom(ph_tio2: Phonopy):
     unlike the per-supercell draw no weight piles up at `distance`.
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
 
     n_snapshots = 20
     ph.generate_displacements(
@@ -228,7 +228,7 @@ def test_tio2_random_disp_distance_sampling_atom(ph_tio2: Phonopy):
 
 def test_tio2_random_disp_atom_sampling_requires_max_distance(ph_tio2: Phonopy):
     """Test that per-atom random distance is rejected without max_distance."""
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
 
     with pytest.raises(ValueError):
         ph.generate_displacements(number_of_snapshots=2, distance_sampling="atom")
@@ -241,7 +241,7 @@ def test_tio2_random_disp_rejects_unknown_distance_sampling(ph_tio2: Phonopy):
     so the unknown value is rejected instead of being read as per-supercell.
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
 
     with pytest.raises(ValueError):
         ph.generate_displacements(
@@ -258,7 +258,7 @@ def test_tio2_random_disp_per_supercell_unchanged(ph_tio2: Phonopy):
     change the displacements a given seed produces.
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
     ph.generate_displacements(
         number_of_snapshots=3, distance=0.01, max_distance=0.1, random_seed=1
     )
@@ -274,7 +274,7 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy):
     Displacements of last 4 supercells are minus of those of first 4 supercells.
 
     """
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
     disp_ref = [
         [0, 0.01, 0.0, 0.0],
         [0, 0.0, 0.01, 0.0],
@@ -292,7 +292,7 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy):
 
 def test_tio2_random_distances(ph_tio2: Phonopy):
     """Test random distance displacements with random directions of TiO2."""
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
     n_snapshots = 100
     ph.generate_displacements(
         number_of_snapshots=n_snapshots,
@@ -308,7 +308,7 @@ def test_tio2_random_distances(ph_tio2: Phonopy):
 
 def test_zr3n4(ph_zr3n4: Phonopy):
     """Test displacements of Zr3N4."""
-    ph = ph_zr3n4.copy()
+    ph = ph_zr3n4.replicate()
     disp_ref = [
         [0, 0.01, 0.0, 0.0],
         [0, -0.01, 0.0, 0.0],
@@ -328,7 +328,7 @@ def test_zr3n4(ph_zr3n4: Phonopy):
 
 def test_tipn3(ph_tipn3: Phonopy):
     """Test displacements of Zr3N4."""
-    ph = ph_tipn3.copy()
+    ph = ph_tipn3.replicate()
     disp_ref = [
         [0, 0.01, 0.0, 0.0],
         [0, 0.0, 0.01, 0.0],

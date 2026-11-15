@@ -159,6 +159,7 @@ class DynamicalMatrix:
 
     def is_nac(self) -> bool:
         """Return bool if NAC is considered or not."""
+        # REMOVE-AT-V5
         warnings.warn(
             "is_nac() is deprecated. Use isinstance(dm, DynamicalMatrixNAC) instead.",
             DeprecationWarning,

@@ -6,7 +6,7 @@ from importlib.metadata import version as _package_version
 
 from phonopy.api_gruneisen import PhonopyGruneisen
 from phonopy.api_phonopy import Phonopy
-from phonopy.api_qha import PhonopyQHA
+from phonopy.api_qha import PhonopyQHA  # REMOVE-AT-V6
 from phonopy.cui.load import load
 from phonopy.qha.anisotropic import AnisotropicQHAResult, run_anisotropic_qha
 from phonopy.qha.qha import QHAResult, run_qha
@@ -23,7 +23,7 @@ __all__ = [
     "AnisotropicQHAResult",
     "PhonopyGruneisen",
     "Phonopy",
-    "PhonopyQHA",
+    "PhonopyQHA",  # REMOVE-AT-V6
     "QHAResult",
     "load",
     "run_anisotropic_qha",
