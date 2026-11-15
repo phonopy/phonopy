@@ -454,8 +454,10 @@ class Modulation:
         for m, s in zip(masses, symbols, strict=True):
             w.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
 
+        # Reciprocal basis vectors are the columns of inv(lattice).
+        reciprocal_lattice = np.linalg.inv(lattice).T
         w.write("  reciprocal_lattice:\n")
-        for vec, axis in zip(np.linalg.inv(lattice), ("a*", "b*", "c*"), strict=True):
+        for vec, axis in zip(reciprocal_lattice, ("a*", "b*", "c*"), strict=True):
             w.write("  - [ %12.8f, %12.8f, %12.8f ] # %2s\n" % (tuple(vec) + (axis,)))
         w.write("  real_lattice:\n")
         for vec in lattice:

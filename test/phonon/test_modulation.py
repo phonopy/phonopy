@@ -181,7 +181,9 @@ def test_modulation_independent_of_eigenvector_phase(
 def test_modulation_write_yaml(ph_nacl: Phonopy, tmp_path: pathlib.Path):
     """Test that modulation.yaml has the values of the Modulation attributes."""
     ph = ph_nacl
-    dim = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
+    # The lattice matrix of this supercell is not symmetric, so that rows and
+    # columns of its inverse are different.
+    dim = [[1, 1, 0], [0, 1, 1], [1, 0, 1]]
     modes = [[[0, 0.5, 0.5], 2, 2, 0], [[0, 0.5, 0.5], 4, 1.5, 90]]
     mod = ph.run_modulations(dim, modes)
     filename = tmp_path / "modulation.yaml"
@@ -196,6 +198,11 @@ def test_modulation_write_yaml(ph_nacl: Phonopy, tmp_path: pathlib.Path):
     )
     masses = [atom["mass"] for atom in data["supercell"]["atom_info"]]
     np.testing.assert_allclose(masses, supercell.masses, atol=1e-5)
+    for key, cell in (("primitive_cell", ph.primitive), ("supercell", supercell)):
+        lattice = np.array(data[key]["real_lattice"])
+        np.testing.assert_allclose(lattice, cell.cell, atol=1e-14)
+        reciprocal_lattice = np.array(data[key]["reciprocal_lattice"])
+        np.testing.assert_allclose(reciprocal_lattice @ lattice.T, np.eye(3), atol=1e-7)
 
     for i, (mode, mod_data, ph_data) in enumerate(
         zip(modes, data["modulations"], data["phonon"], strict=True)
