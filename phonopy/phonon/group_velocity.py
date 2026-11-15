@@ -10,7 +10,11 @@ from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
-from phonopy.phonon.degeneracy import degenerate_sets, delta_dynamical_matrix
+from phonopy.phonon.degeneracy import (
+    delta_dynamical_matrix,
+    derivative_along_direction,
+    lift_degeneracy,
+)
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -153,13 +157,14 @@ class GroupVelocity:
         eigvals = eigvals.real  # type: ignore
         freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
         gv = np.zeros((len(freqs), 3), dtype="double", order="C")
-        deg_sets = degenerate_sets(freqs)
 
+        # Degenerate eigenvectors are rotated by the derivative along
+        # self._directions[0] so that their group velocities along the
+        # other directions are well defined.
         ddms = self._get_dD(np.array(q))
-        pos = 0
-        for deg in deg_sets:
-            gv[pos : pos + len(deg)] = self._perturb_D(ddms, eigvecs[:, deg])
-            pos += len(deg)
+        _, rot_eigvecs = lift_degeneracy(freqs, eigvecs, ddms[0])
+        for i, ddm in enumerate(ddms[1:]):
+            gv[:, i] = (rot_eigvecs.conj() * (ddm @ rot_eigvecs)).sum(axis=0).real
 
         for i, f in enumerate(freqs):
             if f > self._cutoff_frequency:
@@ -204,13 +209,9 @@ class GroupVelocity:
         self._ddm.run(q)
         ddm = self._ddm.d_dynamical_matrix
         assert ddm is not None
-        ddm_dirs = []
-        for dq in self._directions:
-            ddm_dir = np.zeros(ddm.shape[1:], dtype="cdouble", order="C")
-            for j in range(3):
-                ddm_dir += dq[j] * ddm[j]
-            ddm_dirs.append(ddm_dir)
-        return ddm_dirs
+        return [
+            derivative_along_direction(ddm, direction) for direction in self._directions
+        ]
 
     def _get_dD_FD(
         self,
@@ -229,27 +230,3 @@ class GroupVelocity:
         dq = self._dynmat.primitive.cell @ dq_cart
         ddm = delta_dynamical_matrix(q, dq, self._dynmat) / self._q_length / 2
         return ddm
-
-    def _perturb_D(
-        self, ddms: list[NDArray[np.cdouble]], eigsets: NDArray[np.cdouble]
-    ) -> NDArray[np.double]:
-        """Treat degeneracy.
-
-        Group velocities are calculated using analytical continuation using
-        specified directions (self._directions) in reciprocal space.
-
-        ddms : array-like
-            List of delta (derivative or finite difference) of dynamical
-            matrices along several q-directions for perturbation.
-        eigsets : array-like
-            List of phonon eigenvectors of degenerate bands.
-
-        """
-        _, eigvecs = np.linalg.eigh(eigsets.T.conj() @ ddms[0] @ eigsets)
-
-        gv = []
-        rot_eigsets = np.dot(eigsets, eigvecs)
-        for ddm in ddms[1:]:
-            gv.append(np.diag(rot_eigsets.T.conj() @ ddm @ rot_eigsets).real)  # type: ignore
-
-        return np.transpose(gv)

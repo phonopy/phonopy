@@ -20,7 +20,7 @@ from phonopy.interface.calculator import (
     get_default_cell_filename,
     write_crystal_structure,
 )
-from phonopy.phonon.degeneracy import lift_degeneracy
+from phonopy.phonon.degeneracy import derivative_along_direction, lift_degeneracy
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
@@ -297,10 +297,8 @@ class Modulation:
         ddm_vals = self._ddm.d_dynamical_matrix
         assert ddm_vals is not None
         direction = np.asarray(self._delta_q, dtype="double")
-        ddm_along_direction = (
-            direction[0] * ddm_vals[0]
-            + direction[1] * ddm_vals[1]
-            + direction[2] * ddm_vals[2]
+        ddm_along_direction = derivative_along_direction(
+            ddm_vals, direction
         ) / np.linalg.norm(direction)
         _, rot_eigvecs = lift_degeneracy(eigvals, eigvecs, ddm_along_direction)
         return rot_eigvecs

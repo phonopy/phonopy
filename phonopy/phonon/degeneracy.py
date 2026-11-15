@@ -148,6 +148,30 @@ def lift_degeneracy(
     return eigvals_pert, rot_eigvecs
 
 
+def derivative_along_direction(
+    d_dynmat: NDArray[np.cdouble],
+    direction: NDArray[np.double],
+) -> NDArray[np.cdouble]:
+    """Return derivative of dynamical matrix along a direction.
+
+    Parameters
+    ----------
+    d_dynmat :
+        Derivatives of dynamical matrix with respect to Cartesian components
+        of q, as given by ``DerivativeOfDynamicalMatrix.d_dynamical_matrix``.
+        shape=(3, num_band, num_band)
+    direction :
+        Direction in Cartesian coordinates. It is not normalized here.
+        shape=(3,)
+
+    """
+    return (
+        direction[0] * d_dynmat[0]
+        + direction[1] * d_dynmat[1]
+        + direction[2] * d_dynmat[2]
+    )
+
+
 def delta_dynamical_matrix(
     q: NDArray[np.double],
     delta_q: NDArray[np.double],
