@@ -1853,21 +1853,16 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
         modulation["dimension"] = [1, 1, 1]
         mod_list = conf_modulation.split(",")
         header = mod_list[0].split()
-        # Supercell dimension (3 or 9 values), optionally followed by
-        # delta_q (3 values).
-        if len(header) in (3, 6, 9, 12) and len(mod_list) > 1:
-            if len(header) > 8:
-                dimension = [int(x) for x in header[:9]]
-                modulation["dimension"] = dimension
-                if len(header) == 12:
-                    delta_q = [float(x) for x in header[9:12]]
-                    modulation["delta_q"] = delta_q
-            else:
-                dimension = [int(x) for x in header[:3]]
-                modulation["dimension"] = dimension
-                if len(header) == 6:
-                    delta_q = [float(x) for x in header[3:6]]
-                    modulation["delta_q"] = delta_q
+        # Supercell dimension (3 or 9 values).  A direction of 3 values used
+        # to be accepted after it.
+        if len(header) in (6, 12) and len(mod_list) > 1:
+            self.setting_error(
+                "A direction after the supercell dimension in MODULATION tag is "
+                "no longer accepted. Use degeneracy_lifting_direction of "
+                "Phonopy.run_modulations instead."
+            )
+        if len(header) in (3, 9) and len(mod_list) > 1:
+            modulation["dimension"] = [int(x) for x in header]
 
             vals = []
             for phonon_mode in mod_list[1:]:

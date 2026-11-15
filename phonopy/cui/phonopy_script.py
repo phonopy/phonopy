@@ -1609,7 +1609,6 @@ def _run_modulation(phonon: Phonopy, settings: PhonopySettings, log_level: int) 
     assert mod_setting is not None
     phonon_modes = mod_setting["modulations"]
     dimension = mod_setting["dimension"]
-    delta_q = mod_setting.get("delta_q")
     num_band = len(phonon.primitive) * 3
 
     if log_level:
@@ -1646,7 +1645,6 @@ def _run_modulation(phonon: Phonopy, settings: PhonopySettings, log_level: int) 
     phonon.run_modulations(
         dimension,
         phonon_modes,
-        delta_q=delta_q,
         nac_q_direction=settings.nac_q_direction,
     )
     phonon.write_modulations()
