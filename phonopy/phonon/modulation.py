@@ -25,6 +25,10 @@ from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 
+# Relative tolerance to find elements of the largest magnitude, among which
+# the first one is used as the reference of the phase of modulations.
+PHASE_REFERENCE_RTOL = 1e-8
+
 
 class Modulation:
     """Class to create atomic displacements."""
@@ -261,10 +265,39 @@ class Modulation:
     def _get_phase_factor(
         self, modulation: NDArray[np.cdouble], argument: float
     ) -> np.cdouble:
-        u = np.ravel(modulation)
-        index_max_elem = np.argmax(abs(u))
-        max_elem = u[index_max_elem]
-        phase_for_zero = max_elem / abs(max_elem)
+        """Return the phase factor that fixes the phase of a modulation.
+
+        Atoms related by lattice translations have displacements of equal
+        magnitude.  Among the elements of ``modulation.ravel()`` of the largest
+        magnitude, the first one is used as the reference element, instead of
+        the one chosen by rounding errors, so that the result does not depend
+        on the phase of the eigenvector.
+
+        Parameters
+        ----------
+        modulation : ndarray
+            Complex displacements of the atoms in the supercell before the
+            phase is fixed.  The first index is the atom in the supercell, and
+            the second index is the Cartesian component.
+            ``shape=(supercell atoms, 3)``, ``dtype=np.cdouble``.
+        argument : float
+            Complex argument of the reference element after the
+            multiplication, in degrees.
+
+        Returns
+        -------
+        np.cdouble
+            Phase factor ``exp(i * pi * argument / 180) / (u_ref / |u_ref|)``,
+            where ``u_ref`` is the reference element.  The magnitude of the
+            phase factor is 1.
+
+        """
+        u = modulation.ravel()
+        abs_u = np.abs(u)
+        index = np.isclose(
+            abs_u, abs_u.max(), rtol=PHASE_REFERENCE_RTOL, atol=0
+        ).nonzero()[0][0]
+        phase_for_zero = u[index] / abs_u[index]
         phase_factor = np.exp(1j * np.pi * argument / 180) / phase_for_zero
 
         return phase_factor

@@ -149,6 +149,32 @@ def test_modulation_eigenvectors_nac_q_direction(ph_nacl: Phonopy):
     _assert_modulation_eigenvectors(ph_nacl, [0, 0, 0], nac_q_direction=[1, 0, 0])
 
 
+@pytest.mark.parametrize(
+    "ph_name,q", [("ph_si", [0.25, 0.75, 0.5]), ("ph_nacl", [0, 0.5, 0.5])]
+)
+def test_modulation_independent_of_eigenvector_phase(
+    ph_name: str, q: list[float], request: pytest.FixtureRequest
+):
+    """Test that displacements do not depend on the phase of eigenvectors.
+
+    The magnitudes of displacements of atoms related by lattice translations
+    are equal, so the element of the largest magnitude is not unique.  The
+    phase of the displacements has to be fixed regardless of which of them
+    is the largest by rounding errors.
+
+    """
+    ph: Phonopy = request.getfixturevalue(ph_name)
+    num_band = len(ph.primitive) * 3
+    modes = [[q, band, 2, 0] for band in range(num_band)]
+    mod = ph.run_modulations([2, 2, 2], modes)
+    qpoint = np.array(q, dtype="double")
+    for vec in mod.eigenvectors:
+        u_ref = mod._get_displacements(vec, qpoint, 2, 0)
+        for theta in np.linspace(0, 2 * np.pi, 12, endpoint=False):
+            u = mod._get_displacements(vec * np.exp(1j * theta), qpoint, 2, 0)
+            np.testing.assert_allclose(u, u_ref, atol=1e-12)
+
+
 def _assert_modulation_eigenvectors(
     ph: Phonopy, q: list[float], nac_q_direction: list[float] | None = None
 ):
