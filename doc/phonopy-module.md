@@ -287,9 +287,10 @@ bs.write_yaml()  # file output
 bs.plot(ax)  # draw into a matplotlib Axes
 ```
 
-Internal machinery such as `DynamicalMatrix` and `GroupVelocity` is
-not a result object; those are stateful calculators wrapped by the
-`run_*` methods and are not part of the supported data-access API.
+Internal machinery such as `DynamicalMatrix`, `GroupVelocity` and
+`VelocityMatrix` is not a result object; those are stateful calculators
+wrapped by the `run_*` methods or used by other packages such as
+phono3py, and are not part of the supported data-access API.
 
 The result objects and their main data attributes:
 
