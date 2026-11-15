@@ -149,8 +149,7 @@ class QlmFl:
         self.alat = float(hlist[idx + 1])
 
         idx = hlist.index("plat=")
-        self.plat = np.array(hlist[idx + 1 : idx + 10], dtype=float)
-        self.plat.shape = 3, 3
+        self.plat = np.array(hlist[idx + 1 : idx + 10], dtype=float).reshape(3, 3)
 
         nl = 0
         positions = []
