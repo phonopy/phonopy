@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Tests for Modulation."""
 
+import pathlib
+
 import numpy as np
 import pytest
+import yaml
 
 from phonopy import Phonopy
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
@@ -173,6 +176,50 @@ def test_modulation_independent_of_eigenvector_phase(
         for theta in np.linspace(0, 2 * np.pi, 12, endpoint=False):
             u = mod._get_displacements(vec * np.exp(1j * theta), qpoint, 2, 0)
             np.testing.assert_allclose(u, u_ref, atol=1e-12)
+
+
+def test_modulation_write_yaml(ph_nacl: Phonopy, tmp_path: pathlib.Path):
+    """Test that modulation.yaml has the values of the Modulation attributes."""
+    ph = ph_nacl
+    dim = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
+    modes = [[[0, 0.5, 0.5], 2, 2, 0], [[0, 0.5, 0.5], 4, 1.5, 90]]
+    mod = ph.run_modulations(dim, modes)
+    filename = tmp_path / "modulation.yaml"
+    mod.write_yaml(filename)
+    with open(filename) as f:
+        data = yaml.safe_load(f)
+
+    supercell = mod.supercell
+    np.testing.assert_array_equal(data["supercell"]["dimension"], dim)
+    np.testing.assert_allclose(
+        data["supercell"]["positions"], supercell.scaled_positions, atol=1e-14
+    )
+    masses = [atom["mass"] for atom in data["supercell"]["atom_info"]]
+    np.testing.assert_allclose(masses, supercell.masses, atol=1e-5)
+
+    for i, (mode, mod_data, ph_data) in enumerate(
+        zip(modes, data["modulations"], data["phonon"], strict=True)
+    ):
+        for d in (mod_data, ph_data):
+            np.testing.assert_allclose(d["q-position"], mode[0], atol=1e-7)
+            assert d["band"] == mode[1] + 1
+            assert d["amplitude"] == pytest.approx(mode[2])
+            assert d["phase"] == pytest.approx(mode[3])
+        disps = np.array(mod_data["displacements"])
+        disps = (disps[:, 0] + 1j * disps[:, 1]).reshape(-1, 3)
+        np.testing.assert_allclose(disps, mod.modulations[i], atol=1e-14)
+        frac_disps = np.array(mod_data["fractional_displacements"])
+        frac_disps = (frac_disps[:, 0] + 1j * frac_disps[:, 1]).reshape(-1, 3)
+        np.testing.assert_allclose(
+            frac_disps,
+            mod.modulations[i] @ np.linalg.inv(supercell.cell),
+            atol=1e-14,
+        )
+        assert ph_data["frequency"] == pytest.approx(mod.frequencies[i], abs=1e-9)
+        eigvec = np.array(ph_data["eigenvector"]).reshape(-1, 2)
+        np.testing.assert_allclose(
+            eigvec[:, 0] + 1j * eigvec[:, 1], mod.eigenvectors[i], atol=1e-13
+        )
 
 
 def _assert_modulation_eigenvectors(

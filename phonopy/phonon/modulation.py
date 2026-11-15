@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
+from typing import TextIO
 
 import numpy as np
 from numpy.typing import NDArray
@@ -203,7 +204,7 @@ class Modulation:
         return self._eigvecs
 
     def get_modulated_supercells(self) -> list[PhonopyAtoms]:
-        """Return modulations."""
+        """Return supercells modulated by respective phonon modes."""
         return self.modulated_supercells
 
     def get_modulations_and_supercell(
@@ -274,12 +275,9 @@ class Modulation:
     def _get_cell_with_modulation(
         self, modulation: NDArray[np.cdouble]
     ) -> PhonopyAtoms:
-        lattice = self._supercell.cell
-        positions = self._supercell.positions
-        positions += modulation.real
-        scaled_positions = np.dot(positions, np.linalg.inv(lattice))
-        for p in scaled_positions:
-            p -= np.floor(p)
+        positions = self._supercell.positions + modulation.real
+        scaled_positions = positions @ np.linalg.inv(self._supercell.cell)
+        scaled_positions -= np.floor(scaled_positions)
         cell = self._supercell.copy()
         cell.scaled_positions = scaled_positions
 
@@ -328,20 +326,18 @@ class Modulation:
         amplitude: float,
         argument: float,
     ) -> NDArray[np.cdouble]:
-        m = self._supercell.masses
-        assert m is not None
-        s2u_map = self._supercell.s2u_map
+        masses = self._supercell.masses
+        assert masses is not None
         u2u_map = self._supercell.u2u_map
-        s2uu_map = [u2u_map[x] for x in s2u_map]
-        spos = self._supercell.scaled_positions
-        dim = self._supercell.supercell_matrix
-        coefs = np.exp(2j * np.pi * np.dot(np.dot(spos, dim.T), q)) / np.sqrt(m)
-        u = []
-        for i, coef in enumerate(coefs):
-            eig_index = s2uu_map[i] * 3
-            u.append(eigvec[eig_index : eig_index + 3] * coef)
-
-        u = np.array(u) / np.sqrt(len(m))
+        # Index of the atom in the primitive cell for each atom in the supercell.
+        primitive_indices = [u2u_map[i] for i in self._supercell.s2u_map]
+        # Positions in reduced coordinates of the primitive cell.
+        positions = (
+            self._supercell.scaled_positions @ self._supercell.supercell_matrix.T
+        )
+        coefs = np.exp(2j * np.pi * (positions @ q)) / np.sqrt(masses)
+        u = eigvec.reshape(-1, 3)[primitive_indices] * coefs[:, None]
+        u /= np.sqrt(len(masses))
         phase_factor = self._get_phase_factor(u, argument)
         u *= phase_factor * amplitude
 
@@ -394,16 +390,15 @@ class Modulation:
         return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
 
     def _write_yaml(self, filename: str | os.PathLike = "modulation.yaml") -> None:
-        w = open(filename, "w")
-        primitive = self._dm.primitive
-        num_atom = len(primitive)
+        with open(filename, "w") as w:
+            self._write_yaml_to(w)
 
+    def _write_yaml_to(self, w: TextIO) -> None:
         w.write("primitive_cell:\n")
-        self._write_cell_yaml(primitive, w)
+        self._write_cell_yaml(self._primitive, w)
         w.write("supercell:\n")
-        dim = self._get_dimension_3x3()
         w.write("  dimension:\n")
-        for v in dim:
+        for v in self._supercell.supercell_matrix:
             w.write("  - [ %d, %d, %d ]\n" % tuple(v))
         self._write_cell_yaml(self._supercell, w)
         inv_lattice = np.linalg.inv(self._supercell.cell.T)
@@ -417,29 +412,18 @@ class Modulation:
             w.write("  phase: %f\n" % mode[3])
             w.write("  displacements:\n")
             for i, p in enumerate(u):
-                w.write(
-                    "  - [ %20.15f, %20.15f ] # %d x (%f)\n"
-                    % (p[0].real, p[0].imag, i + 1, abs(p[0]))
-                )
-                w.write(
-                    "  - [ %20.15f, %20.15f ] # %d y (%f)\n"
-                    % (p[1].real, p[1].imag, i + 1, abs(p[1]))
-                )
-                w.write(
-                    "  - [ %20.15f, %20.15f ] # %d z (%f)\n"
-                    % (p[2].real, p[2].imag, i + 1, abs(p[2]))
-                )
+                for val, axis in zip(p, ("x", "y", "z"), strict=True):
+                    w.write(
+                        "  - [ %20.15f, %20.15f ] # %d %s (%f)\n"
+                        % (val.real, val.imag, i + 1, axis, abs(val))
+                    )
             w.write("  fractional_displacements:\n")
             for i, p in enumerate(np.dot(u, inv_lattice.T)):
-                w.write(
-                    "  - [ %20.15f, %20.15f ] # %d a\n" % (p[0].real, p[0].imag, i + 1)
-                )
-                w.write(
-                    "  - [ %20.15f, %20.15f ] # %d b\n" % (p[1].real, p[1].imag, i + 1)
-                )
-                w.write(
-                    "  - [ %20.15f, %20.15f ] # %d c\n" % (p[2].real, p[2].imag, i + 1)
-                )
+                for val, axis in zip(p, ("a", "b", "c"), strict=True):
+                    w.write(
+                        "  - [ %20.15f, %20.15f ] # %d %s\n"
+                        % (val.real, val.imag, i + 1, axis)
+                    )
 
         w.write("phonon:\n")
         freqs = self._eigvals_to_frequencies(self._eigvals)
@@ -452,16 +436,15 @@ class Modulation:
             w.write("  phase: %f\n" % mode[3])
             w.write("  frequency: %15.10f\n" % freq)
             w.write("  eigenvector:\n")
-            for j in range(num_atom):
+            for j, vec_atom in enumerate(eigvec.reshape(-1, 3)):
                 w.write("  - # atom %d\n" % (j + 1))
-                for k in (0, 1, 2):
-                    val = eigvec[j * 3 + k]
+                for val in vec_atom:
                     w.write(
                         "    - [ %17.14f, %17.14f ] # %f\n"
                         % (val.real, val.imag, np.angle(val, deg=True))
                     )
 
-    def _write_cell_yaml(self, cell: PhonopyAtoms, w) -> None:
+    def _write_cell_yaml(self, cell: PhonopyAtoms, w: TextIO) -> None:
         lattice = cell.cell
         positions = cell.scaled_positions
         masses = cell.masses
@@ -475,9 +458,8 @@ class Modulation:
         for vec, axis in zip(np.linalg.inv(lattice), ("a*", "b*", "c*"), strict=True):
             w.write("  - [ %12.8f, %12.8f, %12.8f ] # %2s\n" % (tuple(vec) + (axis,)))
         w.write("  real_lattice:\n")
-        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
-        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
-        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
+        for vec in lattice:
+            w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % tuple(vec))
         w.write("  positions:\n")
         for p in positions:
             w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
