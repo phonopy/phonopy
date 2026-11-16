@@ -50,8 +50,7 @@ class VelocityMatrix(GroupVelocity):
         self._ddm: DerivativeOfDynamicalMatrix | None
         self._factor: float
         self._cutoff_frequency: float
-        self._directions: NDArray[np.double]
-        self._perturbation: NDArray[np.double] | None = None
+        self._lifting_direction: NDArray[np.double]
 
         GroupVelocity.__init__(
             self,
@@ -73,6 +72,9 @@ class VelocityMatrix(GroupVelocity):
         | Sequence[NDArray[np.double]]
         | NDArray[np.double],
         perturbation: Sequence[float] | NDArray[np.double] | None = None,
+        degeneracy_lifting_direction: Sequence[float]
+        | NDArray[np.double]
+        | None = None,
     ) -> None:
         """Run group velocity matrix calculate at q-points.
 
@@ -83,17 +85,19 @@ class VelocityMatrix(GroupVelocity):
         ----------
         q_points : array-like
             List of q-points such as [[0, 0, 0], [0.1, 0.2, 0.3], ...].
-        perturbation : array-like
-            Direction in fractional coordinates of reciprocal space.
+        perturbation : array-like, optional
+            Deprecated.  Use ``degeneracy_lifting_direction``.
+        degeneracy_lifting_direction : array-like, optional
+            Direction in reduced coordinates of the reciprocal lattice used to
+            choose eigenvectors of degenerate bands.  See ``GroupVelocity.run``.
 
         """
-        self._perturbation = perturbation  # type: ignore[assignment]
-        if perturbation is None:
-            # Give an random direction to break symmetry
-            self._directions[0] = np.array([1, 2, 3])
-        else:
-            self._directions[0] = self._reciprocal_lattice @ perturbation
-        self._directions[0] /= np.linalg.norm(self._directions[0])
+        degeneracy_lifting_direction = self._handle_deprecated_perturbation(
+            perturbation, degeneracy_lifting_direction
+        )
+        self._lifting_direction = self._get_lifting_direction(
+            degeneracy_lifting_direction
+        )
         _q_points = np.asarray(q_points, dtype="double")
         vm = [self._calculate_velocity_matrix_at_q(q) for q in _q_points]
         self._velocity_matrices = np.array(vm, dtype="cdouble", order="C")
@@ -135,11 +139,11 @@ class VelocityMatrix(GroupVelocity):
         eigvals, eigvecs = np.linalg.eigh(dm)
         eigvals = eigvals.real  # type: ignore
         freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
-        ddms = self._get_dD(q)
+        dD_lifting, dD_cart = self._get_dD(q)
 
         rot_eigvecs = np.zeros_like(eigvecs)
         for deg in degenerate_sets(freqs):
-            rot_eigvecs[:, deg] = self._rot_eigsets(ddms[0], eigvecs[:, deg])
+            rot_eigvecs[:, deg] = self._rot_eigsets(dD_lifting, eigvecs[:, deg])
         mask = freqs > self._cutoff_frequency
         scale = np.zeros_like(freqs)
         scale[mask] = 1 / np.sqrt(2 * freqs[mask])
@@ -147,9 +151,9 @@ class VelocityMatrix(GroupVelocity):
 
         vm = np.zeros((3,) + eigvecs.shape, dtype="cdouble", order="C")
         # projector = self._get_projector(q)
-        # for i, ddm in enumerate(np.einsum("ij,jkl->ikl", projector, ddms[1:])):
-        for i, ddm in enumerate(ddms[1:]):
-            vm[i] = rot_eigvecs.T.conj() @ ddm @ rot_eigvecs
+        # for i, dD in enumerate(np.einsum("ij,jkl->ikl", projector, dD_cart)):
+        for i, dD in enumerate(dD_cart):
+            vm[i] = rot_eigvecs.T.conj() @ dD @ rot_eigvecs
 
         return self._hermitian_velocity_matrix(vm) * self._factor**2
 
@@ -165,7 +169,7 @@ class VelocityMatrix(GroupVelocity):
         """Treat degeneracy.
 
         Eigenvectors of degenerates bands in eigsets are rotated to make
-        the velocity analytical in a specified direction (self._directions[0]).
+        the velocity analytical in a specified direction (self._lifting_direction).
 
         Parameters
         ----------

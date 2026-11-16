@@ -2,6 +2,7 @@
 """Tests for group velocity calculation."""
 
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.group_velocity import GroupVelocity
@@ -125,3 +126,43 @@ def test_gv_si_little_group(ph_si: Phonopy):
     gv.run([[0.1, 0, 0], [0.5, 0.25, 0.75]])
     np.testing.assert_allclose(gv.group_velocities[0], gv_gl, atol=1e-5)
     np.testing.assert_allclose(gv.group_velocities[1], gv_w, atol=1e-5)
+
+
+def test_gv_si_degeneracy_lifting_direction(ph_si: Phonopy):
+    """Test degeneracy_lifting_direction of GroupVelocity.run by Si.
+
+    The q-point is on Gamma-L, where transverse bands are doubly degenerate.
+    Without symmetrization, their group velocities depend on the lifting
+    direction, as the test asserts, and analytical and finite-difference
+    derivatives have to agree for the same direction.
+
+    """
+    q_points = [[0.1, 0.1, 0.1]]
+    gv = GroupVelocity(ph_si.dynamical_matrix)
+    gv.run(q_points, degeneracy_lifting_direction=[1, 0, 0])
+    gv_100 = gv.group_velocities
+    gv.run(q_points, degeneracy_lifting_direction=[0, 1, 0])
+    gv_010 = gv.group_velocities
+    assert gv_100 is not None and gv_010 is not None
+    assert not np.allclose(gv_100, gv_010, atol=1e-2)
+
+    gv_fd = GroupVelocity(ph_si.dynamical_matrix, q_length=1e-5)
+    gv_fd.run(q_points, degeneracy_lifting_direction=[1, 0, 0])
+    np.testing.assert_allclose(gv_fd.group_velocities, gv_100, atol=1e-4)
+
+
+def test_gv_si_perturbation_is_deprecated(ph_si: Phonopy):
+    """Test that perturbation of GroupVelocity.run is a deprecated alias."""
+    q_points = [[0.1, 0.1, 0.1]]
+    gv = GroupVelocity(ph_si.dynamical_matrix)
+    gv.run(q_points, degeneracy_lifting_direction=[1, 0, 0])
+    gv_ref = gv.group_velocities
+    gv.run(q_points)
+    assert not np.allclose(gv.group_velocities, gv_ref, atol=1e-2)
+
+    with pytest.warns(DeprecationWarning, match="degeneracy_lifting_direction"):
+        gv.run(q_points, perturbation=[1, 0, 0])
+    np.testing.assert_array_equal(gv.group_velocities, gv_ref)
+
+    with pytest.raises(ValueError, match="cannot be given together"):
+        gv.run(q_points, perturbation=[1, 0, 0], degeneracy_lifting_direction=[1, 0, 0])
