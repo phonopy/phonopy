@@ -155,11 +155,14 @@ class GroupVelocity:
             return
 
         freqs, eigvecs = self._get_frequencies_and_eigenvectors(qpoints)
+        dD_lifting, dD_cart = self._get_dD(qpoints)
         gv = np.array(
             [
-                self._calculate_group_velocity_at_q(q, freqs_at_q, eigvecs_at_q)
-                for q, freqs_at_q, eigvecs_at_q in zip(
-                    qpoints, freqs, eigvecs, strict=True
+                self._calculate_group_velocity_at_q(
+                    freqs_at_q, eigvecs_at_q, dD_lifting_at_q, dD_cart_at_q
+                )
+                for freqs_at_q, eigvecs_at_q, dD_lifting_at_q, dD_cart_at_q in zip(
+                    freqs, eigvecs, dD_lifting, dD_cart, strict=True
                 )
             ],
             dtype="double",
@@ -212,16 +215,21 @@ class GroupVelocity:
 
     def _calculate_group_velocity_at_q(
         self,
-        q: NDArray[np.double],
         freqs: NDArray[np.double],
         eigvecs: NDArray[np.cdouble],
+        dD_lifting: NDArray[np.cdouble],
+        dD_cart: NDArray[np.cdouble],
     ) -> NDArray[np.double]:
+        """Return group velocities at a q-point.
+
+        dD_lifting and dD_cart are those of ``_get_dD`` at this q-point.
+
+        """
         gv = np.zeros((len(freqs), 3), dtype="double", order="C")
 
         # Degenerate eigenvectors are rotated by the derivative along
         # self._lifting_direction so that their group velocities along the
         # Cartesian directions are well defined.
-        dD_lifting, dD_cart = self._get_dD(np.array(q))
         _, rot_eigvecs = lift_degeneracy(freqs, eigvecs, dD_lifting)
         for i, dD in enumerate(dD_cart):
             gv[:, i] = (rot_eigvecs.conj() * (dD @ rot_eigvecs)).sum(axis=0).real
@@ -238,9 +246,6 @@ class GroupVelocity:
         self, gv: NDArray[np.double], qpoints: NDArray[np.double]
     ) -> NDArray[np.double]:
         """Symmetrize group velocities by the little group of each q-point.
-
-        This is done after the loop over q-points, which calls rayon-parallel
-        kernels of phonors, so that BLAS is not called in that loop.
 
         gv : shape=(qpoints, bands, 3)
         qpoints : shape=(qpoints, 3)
@@ -299,39 +304,63 @@ class GroupVelocity:
         return direction / np.linalg.norm(direction)
 
     def _get_dD(
-        self, q: NDArray[np.double]
+        self, qpoints: NDArray[np.double]
     ) -> tuple[NDArray[np.cdouble], NDArray[np.cdouble]]:
-        """Compute derivative or finite difference of dynamcial matrices.
+        """Compute derivatives or finite differences of dynamcial matrices.
+
+        The arrays of all q-points are allocated at once.  This is done
+        before the loop over q-points that calls BLAS, so that kernels of
+        phonors are not called in that loop.
+
+        Parameters
+        ----------
+        qpoints : ndarray
+            q-points in reduced coordinates.
+            shape=(num_qpoints, 3)
 
         Returns
         -------
         dD_lifting : ndarray
-            Derivative along self._lifting_direction.
-            shape=(num_band, num_band)
+            Derivatives along self._lifting_direction.
+            shape=(num_qpoints, num_band, num_band)
         dD_cart : ndarray
             Derivatives with respect to Cartesian components of q.
-            shape=(3, num_band, num_band)
+            shape=(num_qpoints, 3, num_band, num_band)
 
         """
         if self._q_length is None:
-            return self._get_dD_analytical(q)
-        dD_lifting = self._get_dD_FD(q, self._lifting_direction)
+            return self._get_dD_analytical(qpoints)
+        return self._get_dD_FD_at_qpoints(qpoints)
+
+    def _get_dD_FD_at_qpoints(
+        self, qpoints: NDArray[np.double]
+    ) -> tuple[NDArray[np.cdouble], NDArray[np.cdouble]]:
+        """Compute finite differences of dynamcial matrices at q-points."""
+        dD_lifting = np.array(
+            [self._get_dD_FD(q, self._lifting_direction) for q in qpoints],
+            dtype="cdouble",
+            order="C",
+        )
         dD_cart = np.array(
-            [self._get_dD_FD(q, direction) for direction in np.eye(3)],
+            [
+                [self._get_dD_FD(q, direction) for direction in np.eye(3)]
+                for q in qpoints
+            ],
             dtype="cdouble",
             order="C",
         )
         return dD_lifting, dD_cart
 
     def _get_dD_analytical(
-        self, q: NDArray[np.double]
+        self, qpoints: NDArray[np.double]
     ) -> tuple[NDArray[np.cdouble], NDArray[np.cdouble]]:
-        """Compute derivative of dynamcial matrices."""
+        """Compute derivatives of dynamcial matrices at q-points."""
         assert self._ddm is not None
-        self._ddm.run(q)
-        dD_cart = self._ddm.d_dynamical_matrix
-        assert dD_cart is not None
-        dD_lifting = derivative_along_direction(dD_cart, self._lifting_direction)
+        dD_cart = self._ddm.run_at_qpoints(qpoints)
+        # derivative_along_direction takes the Cartesian axis first.
+        dD_lifting = derivative_along_direction(
+            dD_cart.transpose(1, 0, 2, 3), self._lifting_direction
+        )
         return dD_lifting, dD_cart
 
     def _get_dD_FD(
