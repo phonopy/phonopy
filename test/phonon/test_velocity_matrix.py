@@ -2,6 +2,7 @@
 """Tests for VelocityMatrix."""
 
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.grid import BZGrid
@@ -39,3 +40,35 @@ def test_velocity_matrices_are_not_projected(ph_si: Phonopy):
     assert not np.allclose(expected_diagonal, projected)
     np.testing.assert_allclose(velocity.velocity_matrices[0], expected, atol=1e-10)
     np.testing.assert_allclose(velocity.group_velocities[0], projected, atol=1e-10)
+
+
+def test_velocity_matrices_degeneracy_lifting_direction(ph_si: Phonopy):
+    """Test degeneracy_lifting_direction of VelocityMatrix.run by Si.
+
+    The q-point is on Gamma-L, where transverse bands are doubly degenerate,
+    so that velocity matrices depend on the lifting direction, as the test
+    asserts. ``perturbation`` is a deprecated alias.
+
+    """
+    bz_grid = BZGrid(
+        [9, 9, 9],
+        lattice=ph_si.primitive.cell,
+        symmetry_dataset=ph_si.primitive_symmetry.dataset,
+    )
+    velocity = VelocityMatrix(
+        ph_si.dynamical_matrix,
+        rotations_cartesian=bz_grid.rotations_cartesian,
+        reciprocal_operations=bz_grid.reciprocal_operations,
+    )
+    q_points = [[0.1, 0.1, 0.1]]
+
+    velocity.run(q_points, degeneracy_lifting_direction=[1, 0, 0])
+    vm_100 = velocity.velocity_matrices
+    velocity.run(q_points, degeneracy_lifting_direction=[0, 1, 0])
+    vm_010 = velocity.velocity_matrices
+    assert vm_100 is not None and vm_010 is not None
+    assert not np.allclose(vm_100, vm_010, atol=1e-2)
+
+    with pytest.warns(DeprecationWarning, match="degeneracy_lifting_direction"):
+        velocity.run(q_points, perturbation=[1, 0, 0])
+    np.testing.assert_array_equal(velocity.velocity_matrices, vm_100)
