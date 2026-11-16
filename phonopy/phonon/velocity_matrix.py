@@ -89,7 +89,18 @@ class VelocityMatrix(GroupVelocity):
             degeneracy_lifting_direction
         )
         _q_points = np.asarray(q_points, dtype="double")
-        vm = [self._calculate_velocity_matrix_at_q(q) for q in _q_points]
+        if len(_q_points) == 0:
+            self._velocity_matrices = np.array([], dtype="cdouble")
+            self._group_velocities = np.array([], dtype="double")
+            return
+
+        freqs, eigvecs = self._get_frequencies_and_eigenvectors(_q_points)
+        vm = [
+            self._calculate_velocity_matrix_at_q(q, freqs_at_q, eigvecs_at_q)
+            for q, freqs_at_q, eigvecs_at_q in zip(
+                _q_points, freqs, eigvecs, strict=True
+            )
+        ]
         self._velocity_matrices = np.array(vm, dtype="cdouble", order="C")
         self._group_velocities = np.array(
             [
@@ -121,14 +132,11 @@ class VelocityMatrix(GroupVelocity):
         return self._group_velocities
 
     def _calculate_velocity_matrix_at_q(
-        self, q: NDArray[np.double]
+        self,
+        q: NDArray[np.double],
+        freqs: NDArray[np.double],
+        eigvecs: NDArray[np.cdouble],
     ) -> NDArray[np.cdouble]:
-        self._dynmat.run(q)
-        dm = self._dynmat.dynamical_matrix
-        assert dm is not None
-        eigvals, eigvecs = np.linalg.eigh(dm)
-        eigvals = eigvals.real  # type: ignore
-        freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
         dD_lifting, dD_cart = self._get_dD(q)
 
         # Degenerate eigenvectors are rotated by the derivative along

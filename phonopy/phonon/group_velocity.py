@@ -154,12 +154,7 @@ class GroupVelocity:
             self._group_velocities = np.array([], dtype="double")
             return
 
-        dynmats = get_dynamical_matrices_at_qpoints(self._dynmat, qpoints)
-        eigvals, eigvecs = diagonalize_dynamical_matrices(
-            dynmats, lang=self._dynmat.lang
-        )
-        assert eigvecs is not None
-        freqs = np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
+        freqs, eigvecs = self._get_frequencies_and_eigenvectors(qpoints)
         gv = np.array(
             [
                 self._calculate_group_velocity_at_q(q, freqs_at_q, eigvecs_at_q)
@@ -187,6 +182,33 @@ class GroupVelocity:
     def group_velocities(self) -> NDArray[np.double] | None:
         """Return group velocities."""
         return self._group_velocities
+
+    def _get_frequencies_and_eigenvectors(
+        self, qpoints: NDArray[np.double]
+    ) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
+        """Return frequencies and eigenvectors at q-points.
+
+        Dynamical matrices at all q-points are built and diagonalized at
+        once.
+
+        Returns
+        -------
+        freqs : ndarray
+            Frequencies in THz. Imaginary frequencies are given as negative
+            values.
+            shape=(num_qpoints, num_band), dtype='double'
+        eigvecs : ndarray
+            Eigenvectors in columns.
+            shape=(num_qpoints, num_band, num_band), dtype='cdouble'
+
+        """
+        dynmats = get_dynamical_matrices_at_qpoints(self._dynmat, qpoints)
+        eigvals, eigvecs = diagonalize_dynamical_matrices(
+            dynmats, lang=self._dynmat.lang
+        )
+        assert eigvecs is not None
+        freqs = np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
+        return freqs, eigvecs
 
     def _calculate_group_velocity_at_q(
         self,
