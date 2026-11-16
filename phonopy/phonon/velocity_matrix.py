@@ -8,9 +8,8 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
-from phonopy.phonon.degeneracy import degenerate_sets
+from phonopy.phonon.degeneracy import lift_degeneracy
 from phonopy.phonon.group_velocity import GroupVelocity
 
 LITTLE_GROUP_TOLERANCE = 1e-5
@@ -44,14 +43,6 @@ class VelocityMatrix(GroupVelocity):
         their orders are corresponding.
 
         """
-        self._dynmat: DynamicalMatrix
-        self._reciprocal_lattice: NDArray[np.double]
-        self._q_length: float | None = None
-        self._ddm: DerivativeOfDynamicalMatrix | None
-        self._factor: float
-        self._cutoff_frequency: float
-        self._lifting_direction: NDArray[np.double]
-
         GroupVelocity.__init__(
             self,
             dynamical_matrix,
@@ -64,7 +55,6 @@ class VelocityMatrix(GroupVelocity):
         self._rotations_cartesian = rotations_cartesian
 
         self._velocity_matrices: NDArray[np.cdouble] | None = None
-        self._group_velocities = None
 
     def run(
         self,
@@ -141,17 +131,15 @@ class VelocityMatrix(GroupVelocity):
         freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
         dD_lifting, dD_cart = self._get_dD(q)
 
-        rot_eigvecs = np.zeros_like(eigvecs)
-        for deg in degenerate_sets(freqs):
-            rot_eigvecs[:, deg] = self._rot_eigsets(dD_lifting, eigvecs[:, deg])
+        # Degenerate eigenvectors are rotated by the derivative along
+        # self._lifting_direction.
+        _, rot_eigvecs = lift_degeneracy(freqs, eigvecs, dD_lifting)
         mask = freqs > self._cutoff_frequency
         scale = np.zeros_like(freqs)
         scale[mask] = 1 / np.sqrt(2 * freqs[mask])
         rot_eigvecs *= scale
 
         vm = np.zeros((3,) + eigvecs.shape, dtype="cdouble", order="C")
-        # projector = self._get_projector(q)
-        # for i, dD in enumerate(np.einsum("ij,jkl->ikl", projector, dD_cart)):
         for i, dD in enumerate(dD_cart):
             vm[i] = rot_eigvecs.T.conj() @ dD @ rot_eigvecs
 
@@ -162,36 +150,6 @@ class VelocityMatrix(GroupVelocity):
     ) -> NDArray[np.cdouble]:
         vm = (vm + vm.transpose(0, 2, 1).conj()) / 2
         return vm
-
-    def _rot_eigsets(
-        self, ddm: NDArray[np.cdouble], eigsets: NDArray[np.cdouble]
-    ) -> NDArray[np.cdouble]:
-        """Treat degeneracy.
-
-        Eigenvectors of degenerates bands in eigsets are rotated to make
-        the velocity analytical in a specified direction (self._lifting_direction).
-
-        Parameters
-        ----------
-        ddm : ndarray
-            Delta (derivative or finite difference) of dynamical
-            matrix along a specified q-direction for perturbation.
-            shape=(num_band, num_band), dtype=complex
-        eigsets : ndarray
-            List of phonon eigenvectors of degenerate bands.
-            shape=(num_band, num_degenerates), dtype=complex
-
-        Returns
-        -------
-        rot_eigvecs : ndarray
-            Rotated eigenvectors.
-            shape=(num_band, num_degenerates), dtype=complex
-
-        """
-        _, eigvecs = np.linalg.eigh(eigsets.T.conj() @ ddm @ eigsets)
-        rot_eigsets = eigsets @ eigvecs
-
-        return rot_eigsets
 
     def _get_projector(self, q: NDArray[np.double]) -> NDArray[np.double]:
         """Return little group rotations at q."""
@@ -210,19 +168,3 @@ class VelocityMatrix(GroupVelocity):
                 projector += r_cart
                 order += 1
         return projector / order
-
-    def _get_little_group(self, q: NDArray[np.double]) -> list[NDArray[np.double]]:
-        """Return little group rotations at q."""
-        assert (
-            self._reciprocal_operations is not None
-            and self._rotations_cartesian is not None
-        )
-        rotations = []
-        for r, r_cart in zip(
-            self._reciprocal_operations, self._rotations_cartesian, strict=True
-        ):
-            q_in_BZ = q - np.rint(q)
-            diff = q_in_BZ - r @ q_in_BZ
-            if (np.abs(diff) < LITTLE_GROUP_TOLERANCE).all():
-                rotations.append(r_cart)
-        return rotations
