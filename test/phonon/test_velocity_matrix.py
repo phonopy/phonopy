@@ -336,3 +336,49 @@ def test_velocity_matrices_block_sums_zr3n4_H(ph_zr3n4: Phonopy):
     traces = np.einsum("ijaa->ij", block_sums)
     np.testing.assert_allclose(traces.imag, 0, atol=1e-8)
     np.testing.assert_allclose(traces.real, block_sums_zr3n4_H, rtol=0, atol=1e-3)
+
+
+@pytest.mark.parametrize("q_length", [None, 1e-5])
+def test_velocity_matrices_many_qpoints(ph_si: Phonopy, q_length: float | None):
+    """Test that VelocityMatrix.run at many q-points agrees with one by one.
+
+    Derivatives of dynamical matrices of all q-points are computed before
+    the loop over q-points. The products V^a_ss' conj(V^b_ss') are compared,
+    because they do not depend on the phases of eigenvectors. They differ
+    among the q-points, as the test asserts, so that results stored in a
+    wrong order are detected. The first two q-points have degenerate bands.
+
+    """
+    assert ph_si.dynamical_matrix is not None
+    bz_grid = BZGrid(
+        [4, 4, 4],
+        lattice=ph_si.primitive.cell,
+        symmetry_dataset=ph_si.primitive_symmetry.dataset,
+    )
+    velocity = VelocityMatrix(
+        ph_si.dynamical_matrix,
+        q_length=q_length,
+        rotations_cartesian=bz_grid.rotations_cartesian,
+        reciprocal_operations=bz_grid.reciprocal_operations,
+    )
+    q_points = [[0.1, 0.1, 0.1], [0.5, 0.25, 0.75], [0.1, 0.2, 0.3]]
+    velocity.run(q_points)
+    assert velocity.velocity_matrices is not None
+    assert velocity.group_velocities is not None
+    assert velocity.velocity_matrices.shape == (3, 3, 6, 6)
+    vm_at_once = velocity.velocity_matrices
+    products_at_once = np.einsum("qaij,qbij->qijab", vm_at_once, vm_at_once.conj())
+    gv_at_once = velocity.group_velocities
+    for i, j in ((0, 1), (0, 2), (1, 2)):
+        assert not np.allclose(products_at_once[i], products_at_once[j], atol=1)
+
+    for i, q_point in enumerate(q_points):
+        velocity.run([q_point])
+        assert velocity.velocity_matrices is not None
+        assert velocity.group_velocities is not None
+        vm = velocity.velocity_matrices[0]
+        products = np.einsum("aij,bij->ijab", vm, vm.conj())
+        np.testing.assert_allclose(products_at_once[i], products, rtol=0, atol=1e-6)
+        np.testing.assert_allclose(
+            gv_at_once[i], velocity.group_velocities[0], rtol=0, atol=1e-8
+        )

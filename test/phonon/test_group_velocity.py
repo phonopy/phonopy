@@ -166,3 +166,30 @@ def test_gv_si_perturbation_is_deprecated(ph_si: Phonopy):
 
     with pytest.raises(ValueError, match="cannot be given together"):
         gv.run(q_points, perturbation=[1, 0, 0], degeneracy_lifting_direction=[1, 0, 0])
+
+
+@pytest.mark.parametrize("q_length", [None, 1e-5])
+def test_gv_si_many_qpoints(ph_si: Phonopy, q_length: float | None):
+    """Test that GroupVelocity.run at many q-points agrees with one by one.
+
+    Derivatives of dynamical matrices of all q-points are computed before
+    the loop over q-points. The group velocities differ among the q-points,
+    as the test asserts, so that results stored in a wrong order are
+    detected. The first two q-points have degenerate bands.
+
+    """
+    q_points = [[0.1, 0.1, 0.1], [0.5, 0.25, 0.75], [0.1, 0.2, 0.3]]
+    gv = GroupVelocity(ph_si.dynamical_matrix, q_length=q_length)
+    gv.run(q_points)
+    gv_at_once = gv.group_velocities
+    assert gv_at_once is not None
+    assert gv_at_once.shape == (3, 6, 3)
+    for i, j in ((0, 1), (0, 2), (1, 2)):
+        assert not np.allclose(gv_at_once[i], gv_at_once[j], atol=1e-2)
+
+    for i, q_point in enumerate(q_points):
+        gv.run([q_point])
+        assert gv.group_velocities is not None
+        np.testing.assert_allclose(
+            gv_at_once[i], gv.group_velocities[0], rtol=0, atol=1e-8
+        )

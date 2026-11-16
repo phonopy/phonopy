@@ -95,10 +95,13 @@ class VelocityMatrix(GroupVelocity):
             return
 
         freqs, eigvecs = self._get_frequencies_and_eigenvectors(_q_points)
+        dD_lifting, dD_cart = self._get_dD(_q_points)
         vm = [
-            self._calculate_velocity_matrix_at_q(q, freqs_at_q, eigvecs_at_q)
-            for q, freqs_at_q, eigvecs_at_q in zip(
-                _q_points, freqs, eigvecs, strict=True
+            self._calculate_velocity_matrix_at_q(
+                freqs_at_q, eigvecs_at_q, dD_lifting_at_q, dD_cart_at_q
+            )
+            for freqs_at_q, eigvecs_at_q, dD_lifting_at_q, dD_cart_at_q in zip(
+                freqs, eigvecs, dD_lifting, dD_cart, strict=True
             )
         ]
         self._velocity_matrices = np.array(vm, dtype="cdouble", order="C")
@@ -133,12 +136,16 @@ class VelocityMatrix(GroupVelocity):
 
     def _calculate_velocity_matrix_at_q(
         self,
-        q: NDArray[np.double],
         freqs: NDArray[np.double],
         eigvecs: NDArray[np.cdouble],
+        dD_lifting: NDArray[np.cdouble],
+        dD_cart: NDArray[np.cdouble],
     ) -> NDArray[np.cdouble]:
-        dD_lifting, dD_cart = self._get_dD(q)
+        """Return velocity matrices at a q-point.
 
+        dD_lifting and dD_cart are those of ``_get_dD`` at this q-point.
+
+        """
         # Degenerate eigenvectors are rotated by the derivative along
         # self._lifting_direction.
         _, rot_eigvecs = lift_degeneracy(freqs, eigvecs, dD_lifting)
