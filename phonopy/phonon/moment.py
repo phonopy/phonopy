@@ -84,12 +84,6 @@ class PhononMoment:
                     projection = np.abs(eigvec) ** 2
                     norm0 += w * projection
                     moment += freq**order * w * projection
-        self._moment = (
-            np.array(
-                [
-                    np.sum((moment / norm0)[i * 3 : (i + 1) * 3])
-                    for i in range(len(moment) // 3)
-                ]
-            )
-            / 3
-        )
+        atom_moment = moment.reshape(-1, 3).sum(axis=1)
+        atom_norm = norm0.reshape(-1, 3).sum(axis=1)
+        self._moment = atom_moment / atom_norm
