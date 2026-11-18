@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Unreleased
+
+- phonopy.load accepts a NumPy primitive matrix when reading a YAML file (PR #1119).
+
 ## Nov-06-2026: Version 4.10.0
 
 - Bug fix: `phonopy.load` and
