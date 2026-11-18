@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import pathlib
 import re
+import sys
 
 import pytest
 
-from phonopy.cui.phonopy_argparse import get_init_parser
+from phonopy.cui.phonopy_argparse import fix_deprecated_option_names, get_init_parser
 from phonopy.cui.settings import PhonopyConfParser, parse_magmom
 from phonopy.exception import MagmomValueError
 
@@ -130,3 +131,29 @@ def test_trigonal_conf_file(conf: str, expected: bool | None, tmp_path):
     conf_filename.write_text(f"DIM = 1 1 1\n{conf}")
     settings = PhonopyConfParser(filename=conf_filename).settings
     assert settings.is_trigonal_displacement is expected
+
+
+def test_option_names_with_empty_argument():
+    """Empty argument values are preserved when old option names are converted."""
+    argv = ["phonopy", "", "--band_points=101", "file_name.yaml", "--band-labels", ""]
+    assert fix_deprecated_option_names(argv) == ["--band_points"]
+    assert argv == [
+        "phonopy",
+        "",
+        "--band-points=101",
+        "file_name.yaml",
+        "--band-labels",
+        "",
+    ]
+
+
+def test_init_parser_with_empty_argv_value(monkeypatch):
+    """Construct the parser when the caller used pytest -k with an empty value."""
+    monkeypatch.setattr(sys, "argv", ["pytest", "-k", ""])
+    parser, deprecated = get_init_parser()
+    assert deprecated == []
+    assert parser.parse_args(["--dim", "2", "2", "2"]).supercell_dimension == [
+        "2",
+        "2",
+        "2",
+    ]

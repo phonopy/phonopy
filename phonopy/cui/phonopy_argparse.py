@@ -46,7 +46,7 @@ def fix_deprecated_option_names(argv: list[str]) -> list[str]:
     """Replace underscore in command option name by hyphen."""
     deprecated = []
     for i, v in enumerate(argv[1:]):
-        if v[0] == "-":
+        if v.startswith("-"):
             tag = v.split("=")[0]
             if "_" in tag:
                 correct_tag = tag.replace("_", "-")
