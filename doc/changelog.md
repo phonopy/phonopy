@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Unreleased
+
+- Phonopy.replicate preserves distinguish_symbol_index in symmetry searches (PR #PRNUM).
+
 ## Nov-06-2026: Version 4.10.0
 
 - Bug fix: `phonopy.load` and
