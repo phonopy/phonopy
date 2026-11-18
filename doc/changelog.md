@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Unreleased
+
+- Empty command-line argument values no longer crash parser construction (PR #1118).
+
 ## Nov-06-2026: Version 4.10.0
 
 - Bug fix: `phonopy.load` and
