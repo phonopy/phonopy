@@ -247,7 +247,11 @@ def load(
         # When the caller leaves primitive_matrix at the default "auto",
         # a value stored in the yaml takes priority (preserves the cell
         # transformation that was used originally).
-        if primitive_matrix == "auto" and phpy_yaml.primitive_matrix is not None:
+        if (
+            isinstance(primitive_matrix, str)
+            and primitive_matrix == "auto"
+            and phpy_yaml.primitive_matrix is not None
+        ):
             pmat = phpy_yaml.primitive_matrix
         else:
             pmat = primitive_matrix

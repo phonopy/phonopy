@@ -3,6 +3,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import phonopy
@@ -34,3 +35,29 @@ def test_unit_conversion_factor_QE():
     )
     assert ph.calculator == "qe"
     assert ph.unit_conversion_factor == pytest.approx(108.9707718)
+
+
+@pytest.mark.parametrize("as_array", [False, True])
+def test_load_yaml_with_primitive_matrix(as_array: bool):
+    """An explicit matrix overrides the primitive transformation saved in YAML."""
+    filename = cwd / ".." / "phonopy_disp_NaCl.yaml"
+    matrix = np.eye(3)
+    explicit = matrix if as_array else matrix.tolist()
+    ph = phonopy.load(filename, primitive_matrix=explicit, produce_fc=False)
+    np.testing.assert_allclose(ph.primitive_matrix, matrix)
+    np.testing.assert_allclose(ph.primitive.cell, ph.unitcell.cell)
+    assert len(ph.primitive) == len(ph.unitcell) == 8
+
+    default = phonopy.load(filename, produce_fc=False)
+    assert len(default.primitive) == 2
+
+
+def test_load_yaml_numpy_primitive_matrix_frequencies(ph_si):
+    """A matrix taken from a calculation can be supplied when reloading it."""
+    ph = phonopy.load(
+        cwd / ".." / "phonopy_params_Si.yaml", primitive_matrix=ph_si.primitive_matrix
+    )
+    qpoints = [[0.13, 0.17, 0.19], [0.1, 0.2, 0.3]]
+    actual = ph.run_qpoints(qpoints).frequencies
+    expected = ph_si.run_qpoints(qpoints).frequencies
+    np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-12)
