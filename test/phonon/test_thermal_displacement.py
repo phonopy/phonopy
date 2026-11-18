@@ -411,3 +411,31 @@ def test_ThermalDisplacementMatrices_write_cif(
     for i, parts in enumerate(aniso_lines):
         vals = np.array([float(x) for x in parts[1:]])
         np.testing.assert_allclose(np.abs(vals), np.abs(_cif_ref[i]), atol=1e-4)
+
+
+@pytest.mark.parametrize("use_iter_mesh", [False, True])
+@pytest.mark.parametrize("freq_max", [None, 5.0, 1e-10])
+def test_projected_displacements_from_matrices(ph_sno2, use_iter_mesh, freq_max):
+    """Projected displacements equal the same projection of the full tensors."""
+    ph_sno2.init_mesh(
+        [3, 3, 3],
+        with_eigenvectors=True,
+        is_mesh_symmetry=False,
+        use_iter_mesh=use_iter_mesh,
+    )
+    settings = {
+        "temperatures": [0, 0.5, 300, 1000],
+        "freq_max": freq_max,
+        "exclude_gamma_acoustic": True,
+    }
+    direction = [1, 2, 3]
+    td = ph_sno2.run_thermal_displacements(direction=direction, **settings)
+    tdm = ph_sno2.run_thermal_displacement_matrices(**settings)
+    cartesian = np.array(direction) @ ph_sno2.primitive.cell
+    cartesian /= np.linalg.norm(cartesian)
+    expected = np.einsum(
+        "i,taij,j->ta", cartesian, tdm.thermal_displacement_matrices, cartesian
+    )
+    np.testing.assert_allclose(
+        td.thermal_displacements, expected, rtol=1e-12, atol=1e-14
+    )

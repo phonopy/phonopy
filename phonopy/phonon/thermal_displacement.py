@@ -38,6 +38,7 @@ class ThermalMotion:
     ) -> None:
         """Init method."""
         self._iter_mesh = iter_mesh
+        self._gamma_index = iter_mesh.gamma_index
         self._exclude_gamma_acoustic = exclude_gamma_acoustic
         if freq_min is None:
             self._fmin: float = 0.0
@@ -98,7 +99,7 @@ class ThermalMotion:
         valid = freqs > self._fmin
         if self._fmax is not None:
             valid &= freqs < self._fmax
-        if i_q == self._iter_mesh.gamma_index:
+        if i_q == self._gamma_index:
             acoustic = np.argsort(np.abs(freqs))[:3]
             if self._exclude_gamma_acoustic:
                 valid[acoustic] = False
@@ -138,7 +139,7 @@ class ThermalMotion:
         )
 
     def _get_Q2(
-        self, freq: float, t: NDArray[np.double]
+        self, freq: float | NDArray[np.double], t: NDArray[np.double]
     ) -> NDArray[np.double]:  # freq in THz
         population = np.asarray(bose_einstein_dist(freq, t))
         return (
@@ -278,8 +279,9 @@ class ThermalDisplacements(ThermalMotion):
 
             valid_indices = self._get_valid_bands(count, fs, vecs)
 
-            for f, v2 in zip(fs[valid_indices], vecs2[valid_indices], strict=True):
-                disps += np.outer(self._get_Q2(f, temps), v2)
+            freqs = fs[valid_indices, None]
+            Q2 = self._get_Q2(freqs, temps[None, :])
+            disps += Q2.T @ vecs2[valid_indices]
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._displacements = disps / (count + 1)
