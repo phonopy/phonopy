@@ -3835,6 +3835,7 @@ class Phonopy:
             group_velocity_delta_q=self._gv_delta_q,
             symprec=self._symprec,
             is_symmetry=self._is_symmetry,
+            distinguish_symbol_index=self._distinguish_symbol_index,
             use_SNF_supercell=self._use_SNF_supercell,
             calculator=self._calculator,
             log_level=_log_level,

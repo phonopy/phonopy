@@ -11,6 +11,7 @@ import pytest
 import phonopy
 from phonopy import Phonopy
 from phonopy.interface.pypolymlp import PypolymlpParams
+from phonopy.interface.qe import read_pwscf
 from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.structure.cells import isclose
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -500,3 +501,28 @@ def test_Phonopy_calculator_QE():
         calculator="qe",
     )
     assert ph.unit_conversion_factor == pytest.approx(108.9707718)
+
+
+@pytest.mark.parametrize("distinguish", [False, True])
+def test_replicate_preserves_symbol_distinction(distinguish: bool):
+    """Replicating a QE setup preserves its independently displaced species."""
+    filename = Path(__file__).parent.parent / "interface" / "NaCl-pwscf-Xn.in"
+    cell, _ = read_pwscf(filename)
+    ph = Phonopy(
+        cell, [1, 1, 1], primitive_matrix="P", distinguish_symbol_index=distinguish
+    )
+    replica = ph.replicate()
+    np.testing.assert_array_equal(
+        replica.symmetry.get_map_atoms(), ph.symmetry.get_map_atoms()
+    )
+    for key in ("rotations", "translations"):
+        np.testing.assert_allclose(
+            replica.symmetry.symmetry_operations[key],
+            ph.symmetry.symmetry_operations[key],
+        )
+    ph.generate_displacements(distance=0.01)
+    replica.generate_displacements(distance=0.01)
+    expected = [0, 2, 4, 6] if distinguish else [0, 4]
+    assert [d["number"] for d in ph.dataset["first_atoms"]] == expected
+    assert [d["number"] for d in replica.dataset["first_atoms"]] == expected
+    assert replica.force_constants is None
