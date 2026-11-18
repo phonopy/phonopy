@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- Thermal displacements evaluate mode populations together at each q-point and reuse the Gamma index (PR #PRNUM).
+- Thermal displacements evaluate mode populations together at each q-point and reuse the Gamma index (PR #1121).
 
 ## Nov-06-2026: Version 4.10.0
 
