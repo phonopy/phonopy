@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- Phonopy.replicate preserves distinguish_symbol_index in symmetry searches (PR #PRNUM).
+- Phonopy.replicate preserves distinguish_symbol_index in symmetry searches (PR #1120).
 
 ## Nov-06-2026: Version 4.10.0
 
