@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Unreleased
+
+- Thermal displacements evaluate mode populations together at each q-point and reuse the Gamma index (PR #PRNUM).
+
 ## Nov-06-2026: Version 4.10.0
 
 - Bug fix: `phonopy.load` and
