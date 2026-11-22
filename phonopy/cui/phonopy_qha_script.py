@@ -147,6 +147,7 @@ def main(**argparse_control: PhonopyQHAMockArgs) -> None:
         # if args.efe_file:
         #     print("--efe option can't be used with -b option")
         #     sys.exit(1)
+        # REMOVE-AT-V6: use run_qha instead of PhonopyQHA.
         bulk_modulus = PhonopyQHA(
             volumes,
             electronic_energies=electronic_energies,
@@ -257,6 +258,7 @@ def main(**argparse_control: PhonopyQHAMockArgs) -> None:
     ##########################
     # Analyzing and plotting #
     ##########################
+    # REMOVE-AT-V6: use run_qha instead of PhonopyQHA.
     phonopy_qha = PhonopyQHA(
         volumes=volumes[indices],
         electronic_energies=electronic_energies,

@@ -205,6 +205,7 @@ def test_temperatures_without_zero_kelvin_give_the_same_values():
         )
 
 
+# REMOVE-AT-V5
 def test_deprecated_tuple_functions_return_the_same_values():
     """Test that the deprecated tuple functions warn and agree with the new ones."""
     temperatures = np.array([0.0, 300.0, 1000.0])

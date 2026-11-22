@@ -32,8 +32,6 @@ class DerivativeOfDynamicalMatrix:
     - The Python path covers no-NAC, Wang NAC, and Gonze-Lee NAC.  The
       Gonze-Lee branch evaluates the analytic dipole-dipole derivative
       (see ``dDdq/main.tex``) on top of the short-range part.
-    - Derivative order 2 is supported only by the Python path and only
-      for no-NAC and Wang NAC.
 
     Attributes
     ----------
@@ -87,11 +85,6 @@ class DerivativeOfDynamicalMatrix:
 
         self._ddm: NDArray[np.cdouble] | None = None
 
-        # Derivative order=2 can work only within the following conditions:
-        # 1. Second derivative of NAC is not considered.
-        # 2. Python implementation
-        self._derivative_order: int | None = None
-
     def run(
         self,
         q: Sequence[float] | NDArray[np.double],
@@ -109,8 +102,7 @@ class DerivativeOfDynamicalMatrix:
             Gamma.  Ignored when ``self._dynmat`` has no NAC.
         force_python : bool, optional, default=False
             Force the Python implementation regardless of ``self._lang``.
-            Mainly intended for testing and for derivative orders > 1
-            (which only the Python path supports).
+            Mainly intended for testing.
 
         """
         _q = np.array(q, dtype="double")
@@ -118,16 +110,76 @@ class DerivativeOfDynamicalMatrix:
             _q_direction = None
         else:
             _q_direction = np.array(q_direction, dtype="double")
-        if force_python or self._derivative_order is not None:
+        if force_python:
             self._run_py(_q, q_direction=_q_direction)
         else:
             self._run_compiled(_q, q_direction=_q_direction)
 
-    def set_derivative_order(self, order: int) -> None:
-        """Set order of derivative (must be 1 or 2)."""
-        if order not in (1, 2):
-            raise ValueError(f"derivative order must be 1 or 2 (got {order!r})")
-        self._derivative_order = order
+    def run_at_qpoints(
+        self,
+        qpoints: Sequence[Sequence[float]] | NDArray[np.double],
+        q_direction: Sequence[float] | NDArray[np.double] | None = None,
+        force_python: bool = False,
+    ) -> NDArray[np.cdouble]:
+        """Return derivatives of dynamical matrices at many q-points.
+
+        With the Rust backend, all q-points are computed by one call of a
+        kernel that is parallelized over q-points.  With the C backend or
+        ``force_python=True``, the calculation at one q-point is repeated.
+        ``run`` is the better choice for a few q-points with a large cell,
+        because its kernel is parallelized over pairs of atoms.
+
+        The array of all q-points is allocated at once.  Its size is
+        ``len(qpoints) * 3 * num_band**2 * 16`` bytes.
+
+        ``d_dynamical_matrix`` is not changed by this method.
+
+        Parameters
+        ----------
+        qpoints : array_like
+            Reduced q-point coordinates.
+            shape=(num_qpoints, 3), dtype='double'
+        q_direction : array_like or None, optional
+            Reduced q-direction used to evaluate the non-analytical term.
+            It is used in the same way as in ``run`` at every q-point.
+        force_python : bool, optional, default=False
+            Force the Python implementation regardless of ``self._lang``.
+            Mainly intended for testing.
+
+        Returns
+        -------
+        ndarray
+            Derivatives of dynamical matrices with respect to q.
+            shape=(num_qpoints, 3, num_band, num_band), dtype='cdouble',
+            where num_band = num_patom * 3.
+
+        """
+        _qpoints = np.array(qpoints, dtype="double", order="C")
+        if _qpoints.ndim != 2 or _qpoints.shape[1] != 3:
+            raise ValueError(
+                f"Shape of qpoints must be (num_qpoints, 3), not {_qpoints.shape}."
+            )
+        if q_direction is None:
+            _q_direction = None
+        else:
+            _q_direction = np.array(q_direction, dtype="double")
+
+        if self._lang == "Rust" and not force_python:
+            return self._run_rust_at_qpoints(_qpoints, _q_direction)
+
+        num_band = len(self._p2s_map) * 3
+        ddms = np.zeros((len(_qpoints), 3, num_band, num_band), dtype=np.cdouble)
+        ddm_orig = self._ddm
+        try:
+            for i, q in enumerate(_qpoints):
+                if force_python:
+                    self._run_py(q, q_direction=_q_direction)
+                else:
+                    self._run_c(q, q_direction=_q_direction)
+                ddms[i] = self._ddm
+        finally:
+            self._ddm = ddm_orig
+        return ddms
 
     @property
     def d_dynamical_matrix(self) -> NDArray[np.cdouble] | None:
@@ -287,31 +339,12 @@ class DerivativeOfDynamicalMatrix:
                 q_dir = np.array(q_direction, dtype="double")
                 is_nac_q_zero = False
 
-        if is_gonze:
-            # Use short-range FC for the real-space SR derivative, and add
-            # the analytic Ewald derivative separately below.  The existing
-            # kernel must NOT apply the Wang formula here, so suppress NAC.
-            dm_gl = self._dynmat
-            assert isinstance(dm_gl, DynamicalMatrixGL)
-            if dm_gl.short_range_force_constants is None:
-                dm_gl.make_Gonze_nac_dataset()
-            assert dm_gl.short_range_force_constants is not None
-            fc = dm_gl.short_range_force_constants
-            kernel_is_nac = False
-        else:
-            fc = self._force_constants
-            kernel_is_nac = is_nac
-
-        # Full fc has shape (n_satom, n_satom, 3, 3); compact fc has
-        # (n_patom, n_satom, 3, 3).  ``s2_for_inner`` matches the inner
-        # supercell-to-primitive comparison in the kernel; ``fc_row``
-        # selects the row index into ``fc``.
-        if fc.shape[0] == fc.shape[1]:  # type: ignore
-            s2_for_inner = self._s2p_map
-            fc_row = self._p2s_map
-        else:
-            s2_for_inner = self._s2pp_map
-            fc_row = np.arange(len(self._p2s_map), dtype="int64")
+        # For Gonze-Lee, the short-range FC is used for the real-space SR
+        # derivative, and the analytic Ewald derivative is added separately
+        # below.  The existing kernel must NOT apply the Wang formula here,
+        # so suppress NAC.
+        fc, s2_for_inner, fc_row = self._get_rust_fc_and_maps()
+        kernel_is_nac = is_nac and not is_gonze
 
         phonors.derivative_dynmat_at_q(
             ddm,
@@ -334,6 +367,98 @@ class DerivativeOfDynamicalMatrix:
             ddm += self._gonze_lee_d_recip_dipole_dipole_rust(q, q_direction)
 
         self._ddm = ddm
+
+    def _run_rust_at_qpoints(
+        self,
+        qpoints: NDArray[np.double],
+        q_direction: NDArray[np.double] | None = None,
+    ) -> NDArray[np.cdouble]:
+        """Run the derivatives at many q-points through the Rust kernels.
+
+        The kernels of phonors are parallelized over q-points.  Whether a
+        q-point is the Gamma point is judged in the kernels for each
+        q-point.  With NAC and without ``q_direction``, the NAC term is
+        omitted at the Gamma point only.  For Gonze-Lee NAC, the short-range
+        part and the dipole-dipole part are computed by one kernel.  Every
+        returned matrix is made Hermitian.
+
+        """
+        import phonors  # type: ignore[import-untyped]
+
+        log_dispatch("Rust", "DerivativeOfDynamicalMatrix._run_rust_at_qpoints")
+
+        dynmat = self._dynmat
+        num_band = len(self._p2s_map) * 3
+        ddms = np.zeros((len(qpoints), 3, num_band, num_band), dtype=np.cdouble)
+        reclat = np.array(np.linalg.inv(self._pcell.cell), dtype="double", order="C")
+        lattice = np.array(self._pcell.cell.T, dtype="double", order="C")
+        fc, s2_for_inner, fc_row = self._get_rust_fc_and_maps()
+        args = (
+            ddms,
+            qpoints,
+            fc,
+            lattice,
+            reclat,
+            self._svecs,
+            self._multi,
+            dynmat.normalization_masses,
+            s2_for_inner,
+            fc_row,
+        )
+
+        if isinstance(dynmat, DynamicalMatrixGL):
+            phonors.derivative_dynmats_at_qpoints_gonze(
+                *args,
+                np.array(dynmat.born, dtype="double", order="C"),
+                np.array(dynmat.dielectric_constant, dtype="double", order="C"),
+                np.array(self._pcell.positions, dtype="double", order="C"),
+                dynmat._G_list,
+                dynmat.nac_factor,
+                dynmat._Lambda,
+                q_direction=q_direction,
+            )
+        elif isinstance(dynmat, DynamicalMatrixNAC):
+            phonors.derivative_dynmats_at_qpoints(
+                *args,
+                born=np.array(dynmat.born, dtype="double", order="C"),
+                dielectric=np.array(
+                    dynmat.dielectric_constant, dtype="double", order="C"
+                ),
+                q_direction=q_direction,
+                nac_factor=dynmat.nac_factor,
+            )
+        else:
+            phonors.derivative_dynmats_at_qpoints(*args)
+
+        return ddms
+
+    def _get_rust_fc_and_maps(
+        self,
+    ) -> tuple[NDArray[np.double], NDArray[np.int64], NDArray[np.int64]]:
+        """Return force constants and atom maps given to the Rust kernels.
+
+        Returns ``(fc, s2_for_inner, fc_row)``:
+
+        - ``fc``: short-range force constants for Gonze-Lee NAC, the
+          original force constants otherwise.  Full fc has shape
+          (n_satom, n_satom, 3, 3); compact fc has (n_patom, n_satom, 3, 3).
+        - ``s2_for_inner``: map used for the inner supercell-to-primitive
+          comparison in the kernels.
+        - ``fc_row``: row index into ``fc`` of each primitive-cell atom.
+
+        """
+        if isinstance(self._dynmat, DynamicalMatrixGL):
+            dm_gl = self._dynmat
+            if dm_gl.short_range_force_constants is None:
+                dm_gl.make_Gonze_nac_dataset()
+            assert dm_gl.short_range_force_constants is not None
+            fc = dm_gl.short_range_force_constants
+        else:
+            fc = self._force_constants
+
+        if fc.shape[0] == fc.shape[1]:
+            return fc, self._s2p_map, self._p2s_map
+        return fc, self._s2pp_map, np.arange(len(self._p2s_map), dtype="int64")
 
     def _gonze_lee_d_recip_dipole_dipole_rust(
         self,
@@ -395,8 +520,6 @@ class DerivativeOfDynamicalMatrix:
         and the analytic dipole-dipole derivative is added on top (see
         ``_gonze_lee_d_recip_dipole_dipole``).
 
-        Derivative order 2 is supported only for no-NAC and Wang NAC.
-
         """
         fc, fc_nac, d_fc_nac, d_dd = self._prepare_py_inputs(q, q_direction)
 
@@ -405,9 +528,8 @@ class DerivativeOfDynamicalMatrix:
         multiplicity = self._multi
         num_patom = len(self._p2s_map)
         num_satom = len(self._s2p_map)
-        num_elem = 6 if self._derivative_order == 2 else 3
 
-        ddm = np.zeros((num_elem, 3 * num_patom, 3 * num_patom), dtype=np.cdouble)
+        ddm = np.zeros((3, 3 * num_patom, 3 * num_patom), dtype=np.cdouble)
 
         for i, j in np.ndindex(num_patom, num_patom):
             s_i = self._p2s_map[i]
@@ -417,7 +539,7 @@ class DerivativeOfDynamicalMatrix:
                 self._dynmat.normalization_masses[i]
                 * self._dynmat.normalization_masses[j]
             )
-            ddm_local = np.zeros((num_elem, 3, 3), dtype=np.cdouble)
+            ddm_local = np.zeros((3, 3, 3), dtype=np.cdouble)
 
             for k in range(num_satom):
                 if s_j != self._s2p_map[k]:
@@ -426,19 +548,19 @@ class DerivativeOfDynamicalMatrix:
                 multi = multiplicity[k, i]
                 vecs_multi = vecs[multi[1] : multi[1] + multi[0]]
                 phase_multi = np.exp(2j * np.pi * (vecs_multi @ q))
-                vecs_multi_cart = vecs_multi @ self._pcell.cell
-                coef = self._derivative_coef(vecs_multi_cart, num_elem)
+                # d/dq_l of exp(2*pi*i q.r) gives 2*pi*i * r_l (Cartesian).
+                coef = 2j * np.pi * (vecs_multi @ self._pcell.cell)
 
                 fc_elem = fc[fc_row, k]
                 if fc_nac is not None:
                     # Wang: add NAC term to FC before differentiating.
                     fc_elem = fc_elem + fc_nac[i, j]
 
-                # Sum over multi vectors at once: gives (num_elem,) scalars.
+                # Sum over multi vectors at once: gives (3,) scalars.
                 scalars = (coef.T @ phase_multi) / (mass * multi[0])
                 ddm_local += scalars[:, None, None] * fc_elem
 
-                if d_fc_nac is not None and num_elem == 3:
+                if d_fc_nac is not None:
                     # Wang: add the d/dq of the NAC correction.
                     ddm_local += d_fc_nac[:, i, j] * (
                         phase_multi.sum() / (mass * multi[0])
@@ -477,10 +599,6 @@ class DerivativeOfDynamicalMatrix:
         """
         if isinstance(self._dynmat, DynamicalMatrixGL):
             # Gonze-Lee: short-range FC + analytic Ewald derivative.
-            if self._derivative_order == 2:
-                raise NotImplementedError(
-                    "Derivative order 2 is not implemented for Gonze-Lee NAC."
-                )
             dm_gl = self._dynmat
             if dm_gl.short_range_force_constants is None:
                 dm_gl.make_Gonze_nac_dataset()
@@ -500,25 +618,6 @@ class DerivativeOfDynamicalMatrix:
                 "Python derivative path."
             )
         return self._force_constants, None, None, None
-
-    @staticmethod
-    def _derivative_coef(
-        vecs_cart: NDArray[np.double], num_elem: int
-    ) -> NDArray[np.cdouble]:
-        """Return per-multi-vector derivative coefficients.
-
-        Shape ``(M, num_elem)`` where M is the number of equivalent
-        shortest vectors.  For order 1, ``coef[m, l] = 2*pi*i * vec[m, l]``.
-        For order 2, the upper-triangular outer-product
-        ``(2*pi*i)^2 * vec ⊗ vec`` is packed in the order ``[xx, yy, zz,
-        yz, xz, xy]``.
-
-        """
-        coef1 = 2j * np.pi * vecs_cart
-        if num_elem == 3:
-            return coef1
-        outer = coef1[:, :, None] * coef1[:, None, :]  # (M, 3, 3)
-        return outer.reshape(len(coef1), 9)[:, [0, 4, 8, 5, 2, 1]]
 
     # --- Gonze-Lee NAC: analytical dD_DD/dq from the Ewald sum. ---
     # See dDdq/main.tex for the derivation; the formula is

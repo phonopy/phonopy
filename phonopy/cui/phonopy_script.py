@@ -1609,8 +1609,6 @@ def _run_modulation(phonon: Phonopy, settings: PhonopySettings, log_level: int) 
     assert mod_setting is not None
     phonon_modes = mod_setting["modulations"]
     dimension = mod_setting["dimension"]
-    delta_q = mod_setting.get("delta_q")
-    derivative_order = mod_setting["order"]
     num_band = len(phonon.primitive) * 3
 
     if log_level:
@@ -1647,8 +1645,6 @@ def _run_modulation(phonon: Phonopy, settings: PhonopySettings, log_level: int) 
     phonon.run_modulations(
         dimension,
         phonon_modes,
-        delta_q=delta_q,
-        derivative_order=derivative_order,
         nac_q_direction=settings.nac_q_direction,
     )
     phonon.write_modulations()
@@ -2378,7 +2374,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             distance=displacement_distance,
             is_plusminus=settings.is_plusminus_displacement,
             is_diagonal=settings.is_diagonal_displacement,
-            is_trigonal=settings.is_trigonal_displacement,
+            is_trigonal=settings.is_trigonal_displacement,  # REMOVE-AT-V5
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
             max_distance=settings.displacement_distance_max,

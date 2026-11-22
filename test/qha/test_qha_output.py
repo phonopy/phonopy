@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from phonopy import PhonopyQHA
+from phonopy import PhonopyQHA  # REMOVE-AT-V6
 from phonopy.qha import output as qha_output
 from phonopy.qha import plot as qha_plot
 from phonopy.qha.qha import QHAResult

@@ -321,6 +321,7 @@ def test_debye_frequency(ph_nacl_nofcsym: Phonopy):
     assert freq_debye > 0
 
 
+# REMOVE-AT-V5
 def test_debye_frequency_deprecated_api(ph_nacl_nofcsym: Phonopy):
     """Deprecated set_/get_Debye_frequency keep working but warn."""
     phonon = ph_nacl_nofcsym

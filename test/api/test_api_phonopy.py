@@ -60,6 +60,7 @@ def test_replicate_NaCl(ph_nacl: Phonopy):
     assert ph.dataset is None
 
 
+# REMOVE-AT-V5
 def test_copy_deprecated_NaCl(ph_nacl: Phonopy):
     """Test that Phonopy.copy warns and delegates to replicate."""
     with pytest.warns(DeprecationWarning):

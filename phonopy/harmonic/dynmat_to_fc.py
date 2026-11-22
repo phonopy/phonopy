@@ -134,6 +134,7 @@ def ph2fc(
         Transformed force constants of ``supercell_matrix``.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "ph2fc function is deprecated. Use Phonopy.ph2ph instead.",
         DeprecationWarning,
@@ -249,7 +250,7 @@ class DynmatToForceConstants:
             section of this class.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate force constants from dynamical matrix.
-        lang : Literal["C", "Rust"], optional, default="C"
+        lang : Literal["C", "Rust"], optional, default="Rust"
             Backend implementation for the inverse transformation.
 
         """
@@ -284,6 +285,7 @@ class DynmatToForceConstants:
         else:
             self._fc_shape = (n_p, n_s, 3, 3)
 
+        # REMOVE-AT-V5
         if dynamical_matrices is not None or commensurate_points is not None:
             warnings.warn(
                 "Instantiation init parameters of dynamical_matrices"
@@ -293,6 +295,7 @@ class DynmatToForceConstants:
                 stacklevel=2,
             )
 
+        # REMOVE-AT-V5
         if eigenvalues is not None or eigenvectors is not None:
             warnings.warn(
                 "Instantiation init parameters of eigenvalues and "
@@ -321,6 +324,7 @@ class DynmatToForceConstants:
 
     def get_force_constants(self) -> NDArray[np.double] | None:
         """Return force constants."""
+        # REMOVE-AT-V5
         warnings.warn(
             "Use attribute, force_constants.", DeprecationWarning, stacklevel=2
         )
@@ -348,6 +352,7 @@ class DynmatToForceConstants:
 
     def get_commensurate_points(self) -> NDArray[np.double]:
         """Commensurate points in supercell with respect to primitive cell."""
+        # REMOVE-AT-V5
         warnings.warn(
             "Use attribute, commensurate_points.", DeprecationWarning, stacklevel=2
         )
@@ -375,6 +380,7 @@ class DynmatToForceConstants:
 
     def get_dynamical_matrices(self) -> NDArray[np.cdouble] | None:
         """Return numerical matrices of dynamical matrices."""
+        # REMOVE-AT-V5
         warnings.warn(
             "Use attribute, dynamical_matrix.", DeprecationWarning, stacklevel=2
         )
@@ -382,6 +388,7 @@ class DynmatToForceConstants:
 
     def set_dynamical_matrices(self, dynmat: NDArray[np.cdouble]) -> None:
         """Set numerical matrices of dynamical matrices."""
+        # REMOVE-AT-V5
         warnings.warn(
             "Use attribute, dynamical_matrix.", DeprecationWarning, stacklevel=2
         )

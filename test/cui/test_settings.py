@@ -73,3 +73,60 @@ def test_magmom_option_invalid(token: str):
     """Invalid token of --magmom option raises MagmomValueError."""
     with pytest.raises(MagmomValueError, match=re.escape(f'"{token}"')):
         _parse_magmom_option(f"1 {token}")
+
+
+_modulation_header_cases = [
+    ("2 2 2", [2, 2, 2]),
+    ("-1 1 1 1 -1 1 1 1 -1", [-1, 1, 1, 1, -1, 1, 1, 1, -1]),
+]
+
+
+def _parse_modulation_conf_file(header: str, tmp_path: pathlib.Path) -> dict:
+    conf_filename = tmp_path / "phonopy.conf"
+    conf_filename.write_text(f"MODULATION = {header}, 0 1/2 1/2 1 2\n")
+    modulation = PhonopyConfParser(filename=conf_filename).settings.modulation
+    assert modulation is not None
+    return modulation
+
+
+@pytest.mark.parametrize("header,dimension", _modulation_header_cases)
+def test_modulation_conf_file(header: str, dimension: list[int], tmp_path):
+    """MODULATION header gives supercell dimension."""
+    modulation = _parse_modulation_conf_file(header, tmp_path)
+    assert modulation["dimension"] == dimension
+    assert modulation["modulations"] == [[[0.0, 0.5, 0.5], 0, 2.0, 0]]
+
+
+@pytest.mark.parametrize(
+    "header", ["2 2 2 0.01", "2 2 2 0.01 0 0 2", "-1 1 1 1 -1 1 1 1 -1 0.01 0 0 2"]
+)
+def test_modulation_conf_file_wrong_header(header: str, tmp_path):
+    """MODULATION header with a wrong number of values is rejected.
+
+    The header used to accept a direction and the derivative order of the
+    dynamical matrix after the supercell dimension.  They are no longer
+    accepted.
+
+    """
+    with pytest.raises(SystemExit):
+        _parse_modulation_conf_file(header, tmp_path)
+
+
+@pytest.mark.parametrize("header", ["2 2 2 0.01 0 0", "-1 1 1 1 -1 1 1 1 -1 0.01 0 0"])
+def test_modulation_conf_file_direction(
+    header: str, tmp_path, capsys: pytest.CaptureFixture
+):
+    """MODULATION header with a direction after the dimension is rejected."""
+    with pytest.raises(SystemExit):
+        _parse_modulation_conf_file(header, tmp_path)
+    assert "degeneracy_lifting_direction" in capsys.readouterr().out
+
+
+# REMOVE-AT-V5
+@pytest.mark.parametrize("conf,expected", [("", None), ("TRIGONAL = .TRUE.\n", True)])
+def test_trigonal_conf_file(conf: str, expected: bool | None, tmp_path):
+    """TRIGONAL tag is None unless given, so that no warning is emitted."""
+    conf_filename = tmp_path / "phonopy.conf"
+    conf_filename.write_text(f"DIM = 1 1 1\n{conf}")
+    settings = PhonopyConfParser(filename=conf_filename).settings
+    assert settings.is_trigonal_displacement is expected

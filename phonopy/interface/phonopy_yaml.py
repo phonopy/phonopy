@@ -1131,6 +1131,7 @@ def _as_physical_units(
         return None
     if isinstance(value, CalculatorPhysicalUnits):
         return value
+    # REMOVE-AT-V5
     if isinstance(value, dict):
         warnings.warn(
             "Dict input for physical_units is deprecated. "

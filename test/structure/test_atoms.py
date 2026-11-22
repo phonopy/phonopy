@@ -530,6 +530,29 @@ def test_build_species_table_from_symbols_order_missing_symbol_raises():
         build_species_table_from_symbols(["Au", "S", "Mo"], order=["Au", "Mo"])
 
 
+def test_PhonopyAtoms_species_ids_input_is_copied():
+    """PhonopyAtoms does not share the species_ids array passed in.
+
+    The input is an int64 array, for which np.asarray would return the
+    same array without copying.
+
+    """
+    table, ids = build_species_table_from_symbols(["B1", "B2"])
+    assert ids.dtype == np.int64
+    cell = PhonopyAtoms(
+        cell=np.eye(3),
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        species_table=table,
+        species_ids=ids,
+    )
+    assert not np.shares_memory(cell._species_ids, ids)
+    ids[:] = 0
+    assert cell.symbols == ["B1", "B2"]
+
+    cell_copy = cell.copy()
+    assert not np.shares_memory(cell._species_ids, cell_copy._species_ids)
+
+
 def test_PhonopyAtoms_input_mutual_exclusion():
     """Reject simultaneous symbols / numbers / species_table."""
     species, ids = build_species_table_from_mixtures([[("Si", 1.0)]])
@@ -702,18 +725,21 @@ def test_PhonopyAtoms_merge_and_weighted_cannot_coexist():
         )
 
 
+# REMOVE-AT-V5
 def test_import_deprecated_atom_data():
     """Test import of deprecated atom_data."""
     with pytest.warns(DeprecationWarning):
         from phonopy.structure.atoms import atom_data  # noqa: F401
 
 
+# REMOVE-AT-V5
 def test_import_deprecated_symbol_map():
     """Test import of deprecated symbol_map."""
     with pytest.warns(DeprecationWarning):
         from phonopy.structure.atoms import symbol_map  # noqa: F401
 
 
+# REMOVE-AT-V5
 def test_import_deprecated_isotope_data():
     """Test import of deprecated isotope_data."""
     with pytest.warns(DeprecationWarning):

@@ -47,6 +47,29 @@ to a model where analyses return self-contained result objects and
 3. (v5.x to v6) Analysis results move off `Phonopy` attributes onto
    self-contained result objects returned by `run_*` methods.
 
+## Experimental and developer-only features
+
+- An experimental feature is documented, and is marked as
+  experimental in the user documentation and with `[Experimental]`
+  in its docstring or help message. Users can benefit from it, but
+  its interface may change, and it may not be supported in the long
+  term. It may be changed or removed without the deprecation period.
+- A developer-only feature is not in the user documentation. It is
+  being tested by developers, and users are not expected to use it.
+  Every place where it can be reached (an argument, a setting tag, a
+  command-line option) has a comment with the marker
+  `DEVELOPER-ONLY`, its docstring says "Developer only.", and its
+  command-line option is hidden from the help message with
+  `argparse.SUPPRESS`. It may be changed or removed at any time. It
+  becomes an experimental or a regular feature only when it is
+  documented.
+- Code that is neither documented nor marked looks supported and
+  misleads contributors. Example: the second derivative of the
+  dynamical matrix (`derivative_order=2` of
+  `Phonopy.run_modulations`) was neither. A contributor extended it
+  to the Wang NAC term (#1080), and it was removed in #1099 instead
+  (#1088).
+
 ## Deprecation policy
 
 - A replacement API lands first; the old API becomes a thin shim
@@ -56,6 +79,11 @@ to a model where analyses return self-contained result objects and
 - The deprecation window is at most two major versions, e.g.,
   deprecated in v5.x and removed in v6.0. A deprecation may start
   earlier (already in v4.x) to extend the notice period.
+- Every place in the code and the tests that has to change when a
+  deprecated API is removed has a comment with the marker
+  `REMOVE-AT-V<N>`, where N is the major version of the removal, for
+  example `REMOVE-AT-V5`. `grep -rn REMOVE-AT-V5 phonopy test` then
+  lists all the places to change for v5.0.
 - Example: `Phonopy.copy` is deprecated in v4.x in favor of
   `Phonopy.replicate`, which constructs a new instance from the same
   init parameters without carrying over internal state.

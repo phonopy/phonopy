@@ -3,14 +3,23 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
-from phonopy.phonon.degeneracy import degenerate_sets, delta_dynamical_matrix
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    diagonalize_dynamical_matrices,
+    get_dynamical_matrices_at_qpoints,
+)
+from phonopy.phonon.degeneracy import (
+    delta_dynamical_matrix,
+    derivative_along_direction,
+    lift_degeneracy,
+)
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -84,16 +93,23 @@ class GroupVelocity:
             self._ddm = None
 
         self._symmetry = symmetry
+        if symmetry is not None:
+            # Rotations of q in reduced coordinates and of v in Cartesian.
+            self._reciprocal_ops = symmetry.reciprocal_operations
+            self._reciprocal_ops_cart = np.array(
+                [
+                    similarity_transformation(self._reciprocal_lattice, r)
+                    for r in self._reciprocal_ops
+                ],
+                dtype="double",
+            )
         if frequency_factor_to_THz is None:
             self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = frequency_factor_to_THz
         self._cutoff_frequency = cutoff_frequency
 
-        self._directions = np.array(
-            [[1, 2, 3], [1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double", order="C"
-        )
-        self._directions[0] /= np.linalg.norm(self._directions[0])
+        self._lifting_direction = self._get_lifting_direction(None)
 
         self._group_velocities: NDArray[np.double] | None = None
 
@@ -103,6 +119,9 @@ class GroupVelocity:
         | Sequence[NDArray[np.double]]
         | NDArray[np.double],
         perturbation: Sequence[float] | NDArray[np.double] | None = None,
+        degeneracy_lifting_direction: Sequence[float]
+        | NDArray[np.double]
+        | None = None,
     ) -> None:
         """Group velocities are computed at q-points.
 
@@ -112,22 +131,46 @@ class GroupVelocity:
         ----------
         q_points : array-like
             List of q-points such as [[0, 0, 0], [0.1, 0.2, 0.3], ...].
-        perturbation : array-like
-            Direction in fractional coordinates of reciprocal space.
+        perturbation : array-like, optional
+            Deprecated.  Use ``degeneracy_lifting_direction``.
+        degeneracy_lifting_direction : array-like, optional
+            Direction in reduced coordinates of the reciprocal lattice used to
+            choose eigenvectors of degenerate bands.  In each degenerate
+            subspace, the eigenvectors are rotated to diagonalize the
+            derivative of the dynamical matrix along this direction.  Only the
+            direction is used.  When None, the direction (1, 2, 3) in
+            Cartesian coordinates is used.  ``shape=(3,)``.
 
         """
-        if perturbation is None:
-            # Give an random direction to break symmetry
-            self._directions[0] = np.array([1, 2, 3], dtype="double")
-        else:
-            self._directions[0] = np.dot(self._reciprocal_lattice, perturbation)
-        self._directions[0] /= np.linalg.norm(self._directions[0])
+        degeneracy_lifting_direction = self._handle_deprecated_perturbation(
+            perturbation, degeneracy_lifting_direction
+        )
+        self._lifting_direction = self._get_lifting_direction(
+            degeneracy_lifting_direction
+        )
 
-        gv = [
-            self._calculate_group_velocity_at_q(q)
-            for q in np.array(q_points, dtype="double")
-        ]
-        self._group_velocities = np.array(gv, dtype="double", order="C")
+        qpoints = np.array(q_points, dtype="double")
+        if len(qpoints) == 0:
+            self._group_velocities = np.array([], dtype="double")
+            return
+
+        freqs, eigvecs = self._get_frequencies_and_eigenvectors(qpoints)
+        dD_lifting, dD_cart = self._get_dD(qpoints)
+        gv = np.array(
+            [
+                self._calculate_group_velocity_at_q(
+                    freqs_at_q, eigvecs_at_q, dD_lifting_at_q, dD_cart_at_q
+                )
+                for freqs_at_q, eigvecs_at_q, dD_lifting_at_q, dD_cart_at_q in zip(
+                    freqs, eigvecs, dD_lifting, dD_cart, strict=True
+                )
+            ],
+            dtype="double",
+            order="C",
+        )
+        if self._symmetry is not None:
+            gv = self._symmetrize_group_velocities(gv, qpoints)
+        self._group_velocities = gv
 
     @property
     def q_length(self) -> float | None:
@@ -143,23 +186,53 @@ class GroupVelocity:
         """Return group velocities."""
         return self._group_velocities
 
-    def _calculate_group_velocity_at_q(
-        self, q: NDArray[np.double]
-    ) -> NDArray[np.double]:
-        self._dynmat.run(q)
-        dm = self._dynmat.dynamical_matrix
-        assert dm is not None
-        eigvals, eigvecs = np.linalg.eigh(dm)
-        eigvals = eigvals.real  # type: ignore
-        freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
-        gv = np.zeros((len(freqs), 3), dtype="double", order="C")
-        deg_sets = degenerate_sets(freqs)
+    def _get_frequencies_and_eigenvectors(
+        self, qpoints: NDArray[np.double]
+    ) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
+        """Return frequencies and eigenvectors at q-points.
 
-        ddms = self._get_dD(np.array(q))
-        pos = 0
-        for deg in deg_sets:
-            gv[pos : pos + len(deg)] = self._perturb_D(ddms, eigvecs[:, deg])
-            pos += len(deg)
+        Dynamical matrices at all q-points are built and diagonalized at
+        once.
+
+        Returns
+        -------
+        freqs : ndarray
+            Frequencies in THz. Imaginary frequencies are given as negative
+            values.
+            shape=(num_qpoints, num_band), dtype='double'
+        eigvecs : ndarray
+            Eigenvectors in columns.
+            shape=(num_qpoints, num_band, num_band), dtype='cdouble'
+
+        """
+        dynmats = get_dynamical_matrices_at_qpoints(self._dynmat, qpoints)
+        eigvals, eigvecs = diagonalize_dynamical_matrices(
+            dynmats, lang=self._dynmat.lang
+        )
+        assert eigvecs is not None
+        freqs = np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
+        return freqs, eigvecs
+
+    def _calculate_group_velocity_at_q(
+        self,
+        freqs: NDArray[np.double],
+        eigvecs: NDArray[np.cdouble],
+        dD_lifting: NDArray[np.cdouble],
+        dD_cart: NDArray[np.cdouble],
+    ) -> NDArray[np.double]:
+        """Return group velocities at a q-point.
+
+        dD_lifting and dD_cart are those of ``_get_dD`` at this q-point.
+
+        """
+        gv = np.zeros((len(freqs), 3), dtype="double", order="C")
+
+        # Degenerate eigenvectors are rotated by the derivative along
+        # self._lifting_direction so that their group velocities along the
+        # Cartesian directions are well defined.
+        _, rot_eigvecs = lift_degeneracy(freqs, eigvecs, dD_lifting)
+        for i, dD in enumerate(dD_cart):
+            gv[:, i] = (rot_eigvecs.conj() * (dD @ rot_eigvecs)).sum(axis=0).real
 
         for i, f in enumerate(freqs):
             if f > self._cutoff_frequency:
@@ -167,50 +240,128 @@ class GroupVelocity:
             else:
                 gv[i, :] = 0
 
-        if self._symmetry is None:
-            return gv
-        else:
-            return self._symmetrize_group_velocity(gv, q)
+        return gv
 
-    def _symmetrize_group_velocity(
-        self, gv: NDArray[np.double], q: NDArray[np.double]
+    def _symmetrize_group_velocities(
+        self, gv: NDArray[np.double], qpoints: NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Symmetrize obtained group velocities using site symmetries."""
-        rotations = []
+        """Symmetrize group velocities by the little group of each q-point.
+
+        gv : shape=(qpoints, bands, 3)
+        qpoints : shape=(qpoints, 3)
+
+        """
+        q_in_BZ = qpoints - np.rint(qpoints)
+        r_cart_mean = np.array([self._get_r_cart_mean(q) for q in q_in_BZ])
+        return gv @ r_cart_mean.transpose(0, 2, 1)
+
+    def _get_r_cart_mean(self, q: NDArray[np.double]) -> NDArray[np.double]:
+        """Return the mean of the Cartesian rotations that satisfy R q = q."""
         assert self._symmetry is not None
-        for r in self._symmetry.reciprocal_operations:
-            q_in_BZ = q - np.rint(q)
-            diff = q_in_BZ - np.dot(r, q_in_BZ)
-            if (np.abs(diff) < self._symmetry.tolerance).all():
-                rotations.append(r)
+        diff = q - self._reciprocal_ops @ q
+        is_little = (np.abs(diff) < self._symmetry.tolerance).all(axis=1)
+        return self._reciprocal_ops_cart[is_little].mean(axis=0)
 
-        gv_sym = np.zeros_like(gv)
-        for r in rotations:
-            r_cart = similarity_transformation(self._reciprocal_lattice, r)
-            gv_sym += np.dot(r_cart, gv.T).T
+    def _handle_deprecated_perturbation(
+        self,
+        perturbation: Sequence[float] | NDArray[np.double] | None,
+        degeneracy_lifting_direction: Sequence[float] | NDArray[np.double] | None,
+    ) -> Sequence[float] | NDArray[np.double] | None:
+        """Return degeneracy_lifting_direction given by either argument of run.
 
-        return gv_sym / len(rotations)
+        REMOVE-AT-V5: perturbation is removed, and so is this method.
 
-    def _get_dD(self, q: NDArray[np.double]) -> list[NDArray[np.cdouble]]:
-        """Compute derivative or finite difference of dynamcial matrices."""
-        if self._q_length is None:
-            return self._get_dD_analytical(q)
+        """
+        if perturbation is None:
+            return degeneracy_lifting_direction
+        if degeneracy_lifting_direction is not None:
+            raise ValueError(
+                "perturbation and degeneracy_lifting_direction cannot be given "
+                "together."
+            )
+        warnings.warn(
+            "perturbation is deprecated. Use degeneracy_lifting_direction.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return perturbation
+
+    def _get_lifting_direction(
+        self,
+        degeneracy_lifting_direction: Sequence[float] | NDArray[np.double] | None,
+    ) -> NDArray[np.double]:
+        """Return the Cartesian unit vector along which degeneracy is lifted.
+
+        degeneracy_lifting_direction :
+            Direction in reduced coordinates of the reciprocal lattice. With
+            None, an arbitrary direction that breaks the symmetry is used.
+
+        """
+        if degeneracy_lifting_direction is None:
+            direction = np.array([1, 2, 3], dtype="double")
         else:
-            return [self._get_dD_FD(q, direction) for direction in self._directions]
+            direction = np.dot(self._reciprocal_lattice, degeneracy_lifting_direction)
+        return direction / np.linalg.norm(direction)
 
-    def _get_dD_analytical(self, q: NDArray[np.double]) -> list[NDArray[np.cdouble]]:
-        """Compute derivative of dynamcial matrices."""
+    def _get_dD(
+        self, qpoints: NDArray[np.double]
+    ) -> tuple[NDArray[np.cdouble], NDArray[np.cdouble]]:
+        """Compute derivatives or finite differences of dynamcial matrices.
+
+        The arrays of all q-points are allocated at once.  This is done
+        before the loop over q-points that calls BLAS, so that kernels of
+        phonors are not called in that loop.
+
+        Parameters
+        ----------
+        qpoints : ndarray
+            q-points in reduced coordinates.
+            shape=(num_qpoints, 3)
+
+        Returns
+        -------
+        dD_lifting : ndarray
+            Derivatives along self._lifting_direction.
+            shape=(num_qpoints, num_band, num_band)
+        dD_cart : ndarray
+            Derivatives with respect to Cartesian components of q.
+            shape=(num_qpoints, 3, num_band, num_band)
+
+        """
+        if self._q_length is None:
+            return self._get_dD_analytical(qpoints)
+        return self._get_dD_FD_at_qpoints(qpoints)
+
+    def _get_dD_FD_at_qpoints(
+        self, qpoints: NDArray[np.double]
+    ) -> tuple[NDArray[np.cdouble], NDArray[np.cdouble]]:
+        """Compute finite differences of dynamcial matrices at q-points."""
+        dD_lifting = np.array(
+            [self._get_dD_FD(q, self._lifting_direction) for q in qpoints],
+            dtype="cdouble",
+            order="C",
+        )
+        dD_cart = np.array(
+            [
+                [self._get_dD_FD(q, direction) for direction in np.eye(3)]
+                for q in qpoints
+            ],
+            dtype="cdouble",
+            order="C",
+        )
+        return dD_lifting, dD_cart
+
+    def _get_dD_analytical(
+        self, qpoints: NDArray[np.double]
+    ) -> tuple[NDArray[np.cdouble], NDArray[np.cdouble]]:
+        """Compute derivatives of dynamcial matrices at q-points."""
         assert self._ddm is not None
-        self._ddm.run(q)
-        ddm = self._ddm.d_dynamical_matrix
-        assert ddm is not None
-        ddm_dirs = []
-        for dq in self._directions:
-            ddm_dir = np.zeros(ddm.shape[1:], dtype="cdouble", order="C")
-            for j in range(3):
-                ddm_dir += dq[j] * ddm[j]
-            ddm_dirs.append(ddm_dir)
-        return ddm_dirs
+        dD_cart = self._ddm.run_at_qpoints(qpoints)
+        # derivative_along_direction takes the Cartesian axis first.
+        dD_lifting = derivative_along_direction(
+            dD_cart.transpose(1, 0, 2, 3), self._lifting_direction
+        )
+        return dD_lifting, dD_cart
 
     def _get_dD_FD(
         self,
@@ -229,27 +380,3 @@ class GroupVelocity:
         dq = self._dynmat.primitive.cell @ dq_cart
         ddm = delta_dynamical_matrix(q, dq, self._dynmat) / self._q_length / 2
         return ddm
-
-    def _perturb_D(
-        self, ddms: list[NDArray[np.cdouble]], eigsets: NDArray[np.cdouble]
-    ) -> NDArray[np.double]:
-        """Treat degeneracy.
-
-        Group velocities are calculated using analytical continuation using
-        specified directions (self._directions) in reciprocal space.
-
-        ddms : array-like
-            List of delta (derivative or finite difference) of dynamical
-            matrices along several q-directions for perturbation.
-        eigsets : array-like
-            List of phonon eigenvectors of degenerate bands.
-
-        """
-        _, eigvecs = np.linalg.eigh(eigsets.T.conj() @ ddms[0] @ eigsets)
-
-        gv = []
-        rot_eigsets = np.dot(eigsets, eigvecs)
-        for ddm in ddms[1:]:
-            gv.append(np.diag(rot_eigsets.T.conj() @ ddm @ rot_eigsets).real)  # type: ignore
-
-        return np.transpose(gv)

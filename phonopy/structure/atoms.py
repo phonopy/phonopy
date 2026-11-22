@@ -51,6 +51,7 @@ def Atoms(*args, **kwargs) -> PhonopyAtoms:
     This exists backward compatibility.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "phonopy.atoms.Atoms is deprecated. Please use PhonopyAtoms instead of Atoms.",
         DeprecationWarning,
@@ -456,7 +457,7 @@ class PhonopyAtoms:
         else:
             assert species_table is not None and species_ids is not None
             self._species = list(species_table)
-            self._species_ids = np.asarray(species_ids, dtype="int64")
+            self._species_ids = np.array(species_ids, dtype="int64")
 
         if masses is not None:
             self._set_masses(masses)
@@ -1246,6 +1247,7 @@ def parse_cell_dict(cell_dict: CellDict) -> PhonopyAtoms | None:
 
 
 def __getattr__(name):
+    # REMOVE-AT-V5
     if name in ("symbol_map", "atom_data", "isotope_data"):
         warnings.warn(
             "symbol_map, atom_data, and isotope_data are deprecated. "

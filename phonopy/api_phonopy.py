@@ -861,7 +861,7 @@ class Phonopy:
         distance: float | None = None,
         is_plusminus: Literal["auto"] | bool = "auto",
         is_diagonal: bool = True,
-        is_trigonal: bool = False,
+        is_trigonal: bool | None = None,
         number_of_snapshots: int | Literal["auto"] | None = None,
         random_seed: int | None = None,
         temperature: float | None = None,
@@ -907,7 +907,7 @@ class Phonopy:
             Systematic displacements only. When False, displace only along
             basis vectors. Default is True.
         is_trigonal : bool, optional
-            Exists only for testing purposes. Default is False.
+            Deprecated.  Developer only.  Default is None.
         number_of_snapshots : int, "auto", or None, optional
             Number of supercells with random displacements. When ``"auto"``,
             it is estimated with symfc. None selects systematic
@@ -943,6 +943,14 @@ class Phonopy:
             Default is None, corresponding to ``'symmetric'``.
 
         """
+        if is_trigonal is not None:
+            # REMOVE-AT-V5
+            warnings.warn(
+                "is_trigonal of generate_displacements is deprecated. It is a "
+                "developer-only parameter.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if distance_sampling == "atom" and max_distance is None:
             raise ValueError('distance_sampling="atom" requires max_distance.')
         if number_of_snapshots is not None and (
@@ -1002,7 +1010,7 @@ class Phonopy:
                 distance=distance,
                 is_plusminus=is_plusminus,
                 is_diagonal=is_diagonal,
-                is_trigonal=is_trigonal,
+                is_trigonal=bool(is_trigonal),  # REMOVE-AT-V5
                 log_level=self._log_level,
             )
 
@@ -1107,6 +1115,7 @@ class Phonopy:
             None (use the Phonopy instance's ``log_level``).
 
         """
+        # REMOVE-AT-V5
         if forces is not None:
             warnings.warn(
                 (
@@ -1363,6 +1372,7 @@ class Phonopy:
             ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_dynamical_matrix_at_q() is deprecated. Use "
             "run_qpoints([q], with_dynamical_matrices=True); the returned "
@@ -1400,6 +1410,7 @@ class Phonopy:
             of the returned ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_frequencies() is deprecated. Use run_qpoints([q]); the "
             "returned QpointsPhonon object provides frequencies[0].",
@@ -1452,6 +1463,7 @@ class Phonopy:
             returned ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_frequencies_with_eigenvectors() is deprecated. Use "
             "run_qpoints([q], with_eigenvectors=True); the returned "
@@ -1588,6 +1600,7 @@ class Phonopy:
             Use the ``band_structure`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_band_structure_dict() is deprecated. Use the band_structure "
             "property to access the BandStructure result object; its "
@@ -1893,6 +1906,7 @@ class Phonopy:
             Use the ``mesh`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_mesh_dict() is deprecated. Use the mesh property to access "
             "the Mesh result object; its qpoints, weights, frequencies, "
@@ -2047,6 +2061,7 @@ class Phonopy:
             Use the ``qpoints`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_qpoints_dict() is deprecated. Use the qpoints property to "
             "access the Qpoints result object; its frequencies, eigenvectors, "
@@ -2185,6 +2200,7 @@ class Phonopy:
             Use the ``total_dos`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_total_dos_dict() is deprecated. Use the total_dos property "
             "to access the TotalDos result object; its frequency_points and "
@@ -2209,6 +2225,7 @@ class Phonopy:
             ``total_dos.run_debye_frequency(num_atoms)`` instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "set_Debye_frequency() is deprecated. After run_total_dos(), call "
             "total_dos.run_debye_frequency(num_atoms) and read "
@@ -2228,6 +2245,7 @@ class Phonopy:
             Use ``total_dos.debye_frequency`` instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_Debye_frequency() is deprecated. Use the total_dos property "
             "and read its debye_frequency attribute instead.",
@@ -2437,6 +2455,7 @@ class Phonopy:
             Use the ``projected_dos`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_projected_dos_dict() is deprecated. Use the projected_dos "
             "property to access the ProjectedDos result object; its "
@@ -2633,6 +2652,7 @@ class Phonopy:
             Use the ``thermal_properties`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_thermal_properties_dict() is deprecated. Use the "
             "thermal_properties property to access the ThermalProperties "
@@ -2799,6 +2819,7 @@ class Phonopy:
             Use the ``thermal_displacements`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_thermal_displacements_dict() is deprecated. Use the "
             "thermal_displacements property to access the ThermalDisplacements"
@@ -2912,6 +2933,7 @@ class Phonopy:
             Use the ``thermal_displacement_matrices`` property instead.
 
         """
+        # REMOVE-AT-V6
         warnings.warn(
             "get_thermal_displacement_matrices_dict() is deprecated. Use the "
             "thermal_displacement_matrices property to access the "
@@ -2993,8 +3015,10 @@ class Phonopy:
         dimension: Sequence[int] | NDArray[np.int64],
         phonon_modes: Sequence,
         delta_q: Sequence[float] | NDArray[np.double] | None = None,
-        derivative_order: int | None = None,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
+        degeneracy_lifting_direction: Sequence[float]
+        | NDArray[np.double]
+        | None = None,
     ) -> Modulation:
         """Generate atomic displacements of phonon modes.
 
@@ -3016,12 +3040,23 @@ class Phonopy:
             The first element is a list representing the q-point in
             reduced coordinates. The remaining elements are the band
             index (starting with 0), amplitude, and phase factor.
+        delta_q : array_like, optional
+            Deprecated.  Use ``degeneracy_lifting_direction``.  This is the
+            same direction in Cartesian coordinates.
         nac_q_direction : array_like
             q-point direction from Gamma-point in fractional coordinates
             of reciprocal basis vectors. Only the direction is used, i.e.,
             ``q_direction / norm(q_direction)`` is computed and used. This
             parameter is activated only at q=(0, 0, 0).
             ``shape=(3,)``, ``dtype='double'``.
+        degeneracy_lifting_direction : array_like, optional
+            Direction in reduced coordinates of the reciprocal lattice used to
+            choose eigenvectors of degenerate bands.  In each degenerate
+            subspace, the eigenvectors are rotated to diagonalize the
+            derivative of the dynamical matrix along this direction.  Bands
+            that this derivative does not split are left as returned by the
+            eigensolver.  Only the direction is used.  When None, no rotation
+            is made.  ``shape=(3,)``.
 
         Returns
         -------
@@ -3034,14 +3069,29 @@ class Phonopy:
             msg = "Dynamical matrix has not yet built."
             raise RuntimeError(msg)
 
+        if delta_q is not None:
+            # REMOVE-AT-V5: delta_q is removed.
+            if degeneracy_lifting_direction is not None:
+                raise ValueError(
+                    "delta_q and degeneracy_lifting_direction cannot be given together."
+                )
+            warnings.warn(
+                "delta_q is deprecated. Use degeneracy_lifting_direction, which "
+                "is in reduced coordinates of the reciprocal lattice.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            degeneracy_lifting_direction = self._primitive.cell @ np.array(
+                delta_q, dtype="double"
+            )
+
         self._modulation = Modulation(
             self._dynamical_matrix,
             dimension,
             phonon_modes,
-            delta_q=delta_q,
-            derivative_order=derivative_order,
             nac_q_direction=nac_q_direction,
             factor=self._unit_conversion_factor,
+            degeneracy_lifting_direction=degeneracy_lifting_direction,
         )
         self._modulation.run()
         return self._modulation
@@ -3055,6 +3105,7 @@ class Phonopy:
             of the ``modulation`` property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_modulated_supercells() is deprecated. Use the "
             "modulated_supercells attribute of the Modulation object "
@@ -3084,6 +3135,7 @@ class Phonopy:
             of the ``modulation`` property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_modulations_and_supercell() is deprecated. Use the "
             "modulations and supercell attributes of the Modulation object "
@@ -3186,6 +3238,7 @@ class Phonopy:
             Use :meth:`run_irreps` instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "set_irreps() is deprecated. Use run_irreps() instead.",
             DeprecationWarning,
@@ -3223,6 +3276,7 @@ class Phonopy:
             ``QpointsPhonon`` object instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_group_velocity_at_q() is deprecated. Use "
             "run_qpoints([q], with_group_velocities=True); the returned "
@@ -3290,6 +3344,7 @@ class Phonopy:
             property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_moment() is deprecated. Use the moment attribute of the "
             "PhononMoment object returned by run_moment() or of the moment "
@@ -3429,6 +3484,7 @@ class Phonopy:
             ``dynamic_structure_factor`` property) instead.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "get_dynamic_structure_factor() is deprecated. Use the qpoints "
             "and dynamic_structure_factors attributes of the "
@@ -3716,6 +3772,7 @@ class Phonopy:
         constants and NAC parameters.
 
         """
+        # REMOVE-AT-V5
         warnings.warn(
             "Phonopy.copy is deprecated. Use Phonopy.replicate instead. "
             "Note that neither method carries over internal state such "
@@ -4049,8 +4106,8 @@ class Phonopy:
                 )
         except ValueError as exc:
             msg = (
-                "Creating primitive cell is failed. "
-                "PRIMITIVE_AXIS may be incorrectly specified."
+                "Creating the primitive cell failed. "
+                "PRIMITIVE_AXES (primitive_matrix) may be incorrectly specified."
             )
             raise RuntimeError(msg) from exc
 

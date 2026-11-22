@@ -9,6 +9,7 @@ from phonopy.electron.kpoint_sum import (  # noqa: F401
     get_free_energy_at_T,
 )
 
+# REMOVE-AT-V5
 warnings.warn(
     "phonopy.qha.electron_kpoint_sum is deprecated. Use "
     "phonopy.electron.kpoint_sum instead.",

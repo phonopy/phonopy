@@ -412,6 +412,7 @@ points:
     helper_methods.compare_cells_with_order(cell, cell_ref)
 
 
+# REMOVE-AT-V5
 def test_get_vasp_structure_lines_is_vasp5_false_warns():
     """is_vasp5=False emits a DeprecationWarning."""
     cell = read_vasp_from_strings(_POSCAR_VASP5)
@@ -419,6 +420,7 @@ def test_get_vasp_structure_lines_is_vasp5_false_warns():
         get_vasp_structure_lines(cell, is_vasp5=False)
 
 
+# REMOVE-AT-V5
 def test_get_vasp_structure_lines_direct_false_warns():
     """direct=False emits a DeprecationWarning."""
     cell = read_vasp_from_strings(_POSCAR_VASP5)

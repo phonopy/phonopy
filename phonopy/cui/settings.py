@@ -107,7 +107,7 @@ class Settings:
         self.is_symmetry: bool = True
         self.is_tetrahedron_method: bool = True
         self.is_time_reversal_symmetry: bool = True
-        self.is_trigonal_displacement: bool = False
+        self.is_trigonal_displacement: bool | None = None  # REMOVE-AT-V5
         self.magnetic_moments: list[float] | None = None
         self.masses: list[float] | None = None
         self.site_mixture: list[float] | None = None
@@ -353,6 +353,7 @@ class ConfParser(Generic[TSettings]):
             if args.is_plusminus_displacements:
                 self._confs["pm"] = ".true."
 
+        # REMOVE-AT-V5
         if "is_trigonal_displacements" in arg_list:
             if args.is_trigonal_displacements:
                 self._confs["trigonal"] = ".true."
@@ -528,6 +529,7 @@ class ConfParser(Generic[TSettings]):
         if "use_rust" in arg_list and args.use_rust:
             import warnings
 
+            # REMOVE-AT-V5
             warnings.warn(
                 "--rust is a deprecated no-op in phonopy v4; the Rust backend "
                 "is now the default. Pass --legacy-backend to opt back into "
@@ -913,6 +915,7 @@ class ConfParser(Generic[TSettings]):
                 val = float(confs["tmin"])
                 self._set_parameter("tmin", val)
 
+            # REMOVE-AT-V5
             if conf_key == "trigonal":
                 if confs["trigonal"].lower() == ".false.":
                     self._set_parameter("is_trigonal_displacement", False)
@@ -1066,6 +1069,7 @@ class ConfParser(Generic[TSettings]):
             settings.is_time_reversal_symmetry = params["is_time_reversal_symmetry"]
 
         # Trigonal displacement
+        # REMOVE-AT-V5
         if "is_trigonal_displacement" in params:
             settings.is_trigonal_displacement = params["is_trigonal_displacement"]
 
@@ -1851,26 +1855,18 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
     def _parse_conf_modulation(self, conf_modulation: str) -> None:
         modulation: dict[str, Any] = {}
         modulation["dimension"] = [1, 1, 1]
-        modulation["order"] = None
         mod_list = conf_modulation.split(",")
         header = mod_list[0].split()
-        if len(header) > 2 and len(mod_list) > 1:
-            if len(header) > 8:
-                dimension = [int(x) for x in header[:9]]
-                modulation["dimension"] = dimension
-                if len(header) > 11:
-                    delta_q = [float(x) for x in header[9:12]]
-                    modulation["delta_q"] = delta_q
-                if len(header) == 13:
-                    modulation["order"] = int(header[12])
-            else:
-                dimension = [int(x) for x in header[:3]]
-                modulation["dimension"] = dimension
-                if len(header) > 3:
-                    delta_q = [float(x) for x in header[3:6]]
-                    modulation["delta_q"] = delta_q
-                if len(header) == 7:
-                    modulation["order"] = int(header[6])
+        # Supercell dimension (3 or 9 values).  A direction of 3 values used
+        # to be accepted after it.
+        if len(header) in (6, 12) and len(mod_list) > 1:
+            self.setting_error(
+                "A direction after the supercell dimension in MODULATION tag is "
+                "no longer accepted. Use degeneracy_lifting_direction of "
+                "Phonopy.run_modulations instead."
+            )
+        if len(header) in (3, 9) and len(mod_list) > 1:
+            modulation["dimension"] = [int(x) for x in header]
 
             vals = []
             for phonon_mode in mod_list[1:]:

@@ -2,6 +2,41 @@
 
 # Change Log
 
+## Nov-21-2026: Version 4.11.0
+
+- phonors 0.9.0 or later is required.
+- Bug fix: With zero magnetic moments, spglib returns a grey magnetic space
+  group, in which every operation appears with and without time reversal.
+  `Symmetry.symmetry_operations` had each of these operations twice, and the
+  symfc projector failed with `IndexError`. Each operation now appears once.
+- `Phonopy` raises `ValueError` when a lattice vector of the primitive cell
+  moves an atom onto an atom with a different magnetic moment. Before, the
+  primitive cell kept the magnetic moment of one of these atoms, and the
+  primitive matrix was accepted. A lattice vector that reverses every magnetic
+  moment is still accepted.
+- `PhonopyAtoms` copies `species_ids` that is given to it. Before, the array
+  was shared with the caller and between a cell and its copy.
+- Bug fix: `reciprocal_lattice` in `modulation.yaml` was wrong when the matrix
+  of the basis vectors was not symmetric.
+- The phase of a modulation is measured from the element of the eigenvector
+  with the largest magnitude. The elements of atoms related by lattice
+  translations have the same magnitude, and the element chosen among them
+  depended on rounding errors. The first of these elements is chosen now.
+- `modulation.yaml` has the phonopy version at the top, and its crystal
+  structures are written in the same format as in `phonopy.yaml`.
+- The second derivative of the dynamical matrix is removed. It was an
+  experimental feature that was correct only without NAC or with the NAC of
+  Wang.
+- `mode_cv` of `phonopy.phonon.thermal_properties`, deprecated in v4.10.0, is
+  removed.
+- `is_trigonal` of `Phonopy.generate_displacements`, the `--trigonal` option
+  and the `TRIGONAL` tag are deprecated. They were not documented, and they
+  will be removed in v5.
+- The `get_*_dict` methods of `Phonopy` and `PhonopyQHA`, and `PhonopyQHA`
+  itself, are kept until v6.0. The migration guide to v5 said that they were
+  removed in v5.0.
+- `VelocityMatrix` moved from phono3py to `phonopy.phonon.velocity_matrix`.
+
 ## Nov-06-2026: Version 4.10.0
 
 - Bug fix: `phonopy.load` and

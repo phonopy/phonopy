@@ -1914,6 +1914,7 @@ def get_mock_symmetry_dataset(
     Deprecated. Use GridMatrix.grid_symmetry_dataset.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "get_mock_symmetry_dataset is deprecated. "
         "Use GridMatrix.grid_symmetry_dataset instead.",

@@ -248,7 +248,9 @@ class QpointsPhonon:
 
     def _run(self) -> None:
         if self._gv_obj is not None:
-            self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
+            self._gv_obj.run(
+                self._qpoints, degeneracy_lifting_direction=self._nac_q_direction
+            )
             self._group_velocities = self._gv_obj.group_velocities
 
         dynmat = get_dynamical_matrices_at_qpoints(

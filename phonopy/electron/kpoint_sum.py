@@ -69,6 +69,7 @@ def compute_free_energy_by_kpoint_sum(
         temperatures. shape=(temperatures,) each.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "compute_free_energy_by_kpoint_sum() is deprecated. Use "
         "compute_thermal_properties_by_kpoint_sum(), whose free_energy field "
@@ -158,6 +159,7 @@ def get_free_energy_at_T(
         ElectronicStates and the temperatures as an array.
 
     """
+    # REMOVE-AT-V5
     warnings.warn(
         "get_free_energy_at_T() is deprecated. Use "
         "compute_thermal_properties_by_kpoint_sum().",

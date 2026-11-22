@@ -2685,6 +2685,7 @@ def test_GridMatrix_type4_antiferromagnetic_bcc_conv(magmoms: list):
     np.testing.assert_array_equal(gm.D_diag, [4, 4, 4])
 
 
+# REMOVE-AT-V5
 @pytest.mark.parametrize("with_symmetry", [True, False])
 def test_get_mock_symmetry_dataset_deprecated(ph_nacl: Phonopy, with_symmetry: bool):
     """Test that get_mock_symmetry_dataset is deprecated.

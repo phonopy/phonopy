@@ -12,6 +12,7 @@ from phonopy.electron.states import (  # noqa: F401
     write_electronic_states_hdf5,
 )
 
+# REMOVE-AT-V5
 warnings.warn(
     "phonopy.qha.electron_states is deprecated. Use phonopy.electron.states instead.",
     DeprecationWarning,

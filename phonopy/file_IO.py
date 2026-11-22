@@ -165,6 +165,7 @@ def parse_FORCE_SETS(
         Displacement dataset. See Phonopy.dataset.
 
     """
+    # REMOVE-AT-V5
     if isinstance(filename, (int, np.integer)):
         warnings.warn(
             "The first argument of parse_FORCE_SETS is filename. Give natom as "
@@ -212,6 +213,7 @@ def _get_to_type2(to_type2: bool | None, func_name: str) -> bool:
     """Return to_type2, warning that the parameter is deprecated when given."""
     if to_type2 is None:
         return False
+    # REMOVE-AT-V5
     warnings.warn(
         f"to_type2 of {func_name} is deprecated. Use "
         "phonopy.structure.dataset.get_displacements_and_forces instead.",
@@ -987,6 +989,7 @@ def is_file_phonopy_yaml(
         ("supercell_matrix", "unit_cell").
 
     """
+    # REMOVE-AT-V5
     if keyword is not None:
         warnings.warn(
             "keyword of is_file_phonopy_yaml is deprecated and ignored. "

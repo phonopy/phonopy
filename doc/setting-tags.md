@@ -1439,10 +1439,11 @@ phase factor in degrees. The phase factor is optional. If it is not specified, 0
 is used.
 
 Before multiplying user specified phase factor, the phase of the modulation
-vector is adjusted as the largest absolute value,
-{math}`\left|\mathbf{e}_j\right|/\sqrt{m_j}`, of element of 3N dimensional
-modulation vector to be real. The complex modulation vector is shown in
-`modulation.yaml`.
+vector is adjusted so that the element of the largest absolute value,
+{math}`\left|\mathbf{e}_j\right|/\sqrt{m_j}`, of the 3N dimensional modulation
+vector is real. Atoms related by lattice translations give elements of the same
+absolute value, and the first of them in the order of the atoms in the supercell
+is used. The complex modulation vector is shown in `modulation.yaml`.
 
 ```
 MODULATION = 3 3 1, 1/3 1/3 0 1 2, 1/3 1/3 0 2 3.5

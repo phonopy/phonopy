@@ -10,11 +10,7 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy._lang import have_c_ext
-from phonopy.phonon.thermal_properties import (
-    ThermalProperties,
-    bose_einstein_dist,
-    mode_cv,
-)
+from phonopy.phonon.thermal_properties import ThermalProperties, bose_einstein_dist
 from phonopy.physical_units import get_physical_units
 
 temps = [
@@ -189,10 +185,3 @@ def test_bose_einstein_dist_negative_temperature(temperature):
     """Test that negative temperature is rejected."""
     with pytest.raises(ValueError, match="Temperature"):
         bose_einstein_dist(1.0, temperature)
-
-
-def test_mode_cv_deprecated():
-    """Test that mode_cv warns and still returns the heat capacity."""
-    with pytest.warns(DeprecationWarning, match="mode_cv"):
-        cv = mode_cv(300.0, 0.05)
-    assert cv == pytest.approx(6.3676487e-05)

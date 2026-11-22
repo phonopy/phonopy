@@ -17,7 +17,7 @@ from qha_utils import (
     thermal_properties,
 )
 
-from phonopy import Phonopy, PhonopyQHA, run_qha
+from phonopy import Phonopy, PhonopyQHA, run_qha  # REMOVE-AT-V6
 from phonopy.electron.kpoint_sum import compute_thermal_properties_by_kpoint_sum
 from phonopy.electron.states import ElectronicStates
 from phonopy.physical_units import get_physical_units

@@ -38,6 +38,7 @@ class CalculatorPhysicalUnits:
 
     def __getitem__(self, key: str) -> Any:
         """Return attribute by name (deprecated dict-like usage)."""
+        # REMOVE-AT-V5
         warnings.warn(
             "Dict-like access to CalculatorPhysicalUnits is deprecated. "
             "Use attribute access instead.",
@@ -51,6 +52,7 @@ class CalculatorPhysicalUnits:
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return attribute by name with a default (deprecated dict-like usage)."""
+        # REMOVE-AT-V5
         warnings.warn(
             "Dict-like access to CalculatorPhysicalUnits is deprecated. "
             "Use attribute access instead.",
@@ -61,6 +63,7 @@ class CalculatorPhysicalUnits:
 
     def keys(self) -> tuple[str, ...]:
         """Return supported attribute names (deprecated dict-like usage)."""
+        # REMOVE-AT-V5
         warnings.warn(
             "Dict-like access to CalculatorPhysicalUnits is deprecated. "
             "Use attribute access instead.",

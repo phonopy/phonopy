@@ -13,7 +13,7 @@ from qha_utils import (
     thermal_properties,
 )
 
-from phonopy import Phonopy, PhonopyQHA, run_qha
+from phonopy import Phonopy, PhonopyQHA, run_qha  # REMOVE-AT-V6
 from phonopy.qha.qha import QHAResult
 
 
