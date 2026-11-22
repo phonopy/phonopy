@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Electronic thermal properties &#8212; Phonopy v.4.10.0</title>
+    <title>Electronic thermal properties &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -414,7 +414,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="prev" title="Anisotropic thermal expansion from free-energy minimization" href="aniso-thermal-expansion.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -539,7 +539,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -779,15 +779,15 @@ window.runMermaid = runMermaid;</script>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-equations">Equations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reference-at-0-k">The reference at 0 K</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-over-the-brillouin-zone">Integration over the Brillouin zone</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chemical-potential">Chemical potential</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spin-degeneracy">Spin degeneracy</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-electronic-states">Input: electronic states</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-integration">Integration over the Brillouin zone</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-chemical-potential">Chemical potential</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-spin">Spin degeneracy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-input">Input: electronic states</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-api">Python API</a></li>
 </ul>
             </nav>
         </div>
@@ -870,8 +870,8 @@ capacity of the electrons to those of the phonons. See
 <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code>. See <a class="reference internal" href="aniso-thermal-expansion.html#aniso-thermal-expansion"><span class="std std-ref">Anisotropic thermal expansion from free-energy minimization</span></a> for how the
 dataset is made.</p>
 </section>
-<section id="equations">
-<span id="electronic-thermal-properties-equations"></span><h2>Equations<a class="headerlink" href="#equations" title="Link to this heading">#</a></h2>
+<section id="electronic-thermal-properties-equations">
+<span id="equations"></span><h2>Equations<a class="headerlink" href="#electronic-thermal-properties-equations" title="Link to this heading">#</a></h2>
 <p>The electronic structure calculation gives the eigenvalues
 <span class="math notranslate nohighlight">\(\epsilon_{\mathbf{k}i}\)</span>, where <span class="math notranslate nohighlight">\(\mathbf{k}\)</span> is a k-point and
 <span class="math notranslate nohighlight">\(i\)</span> is a band index. Each k-point has a weight <span class="math notranslate nohighlight">\(w_\mathbf{k}\)</span>,
@@ -971,8 +971,8 @@ electronic free energy at that temperature, and adding
 <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span> would count it twice.</p>
 </section>
 </section>
-<section id="integration-over-the-brillouin-zone">
-<span id="electronic-thermal-properties-integration"></span><h2>Integration over the Brillouin zone<a class="headerlink" href="#integration-over-the-brillouin-zone" title="Link to this heading">#</a></h2>
+<section id="electronic-thermal-properties-integration">
+<span id="integration-over-the-brillouin-zone"></span><h2>Integration over the Brillouin zone<a class="headerlink" href="#electronic-thermal-properties-integration" title="Link to this heading">#</a></h2>
 <p>The sums over k-points above can be computed in two ways.</p>
 <p>The linear tetrahedron method builds the electronic density of states from
 the eigenvalues on the regular k-point mesh, and integrates the expressions
@@ -1042,8 +1042,8 @@ and the <code class="docutils literal notranslate"><span class="pre">symmetrize_
 <a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a> for this option and its default in the next major
 version.</p>
 </section>
-<section id="chemical-potential">
-<span id="electronic-thermal-properties-chemical-potential"></span><h2>Chemical potential<a class="headerlink" href="#chemical-potential" title="Link to this heading">#</a></h2>
+<section id="electronic-thermal-properties-chemical-potential">
+<span id="chemical-potential"></span><h2>Chemical potential<a class="headerlink" href="#electronic-thermal-properties-chemical-potential" title="Link to this heading">#</a></h2>
 <p>The chemical potential <span class="math notranslate nohighlight">\(\mu\)</span> at temperature <span class="math notranslate nohighlight">\(T\)</span> is the root of
 the equation</p>
 <div class="math notranslate nohighlight">
@@ -1091,8 +1091,8 @@ at every temperature. This number is fixed by the condition at 0 K,</p>
 to <span class="math notranslate nohighlight">\(\mu_0\)</span>, and <span class="math notranslate nohighlight">\(\mu\)</span> approaches <span class="math notranslate nohighlight">\(\mu_0\)</span> as <span class="math notranslate nohighlight">\(T\)</span> goes
 to 0 K.</p>
 </section>
-<section id="spin-degeneracy">
-<span id="electronic-thermal-properties-spin"></span><h2>Spin degeneracy<a class="headerlink" href="#spin-degeneracy" title="Link to this heading">#</a></h2>
+<section id="electronic-thermal-properties-spin">
+<span id="spin-degeneracy"></span><h2>Spin degeneracy<a class="headerlink" href="#electronic-thermal-properties-spin" title="Link to this heading">#</a></h2>
 <p><span class="math notranslate nohighlight">\(g\)</span> in the equations above is the number of electrons that one
 eigenvalue holds.</p>
 <ul class="simple">
@@ -1109,8 +1109,8 @@ one channel, so the inferred value is <span class="math notranslate nohighlight"
 is <span class="math notranslate nohighlight">\(g = 1\)</span>. For a non-collinear calculation, set <code class="docutils literal notranslate"><span class="pre">spin_degeneracy=1</span></code> in
 <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>.</p>
 </section>
-<section id="input-electronic-states">
-<span id="electronic-thermal-properties-input"></span><h2>Input: electronic states<a class="headerlink" href="#input-electronic-states" title="Link to this heading">#</a></h2>
+<section id="electronic-thermal-properties-input">
+<span id="input-electronic-states"></span><h2>Input: electronic states<a class="headerlink" href="#electronic-thermal-properties-input" title="Link to this heading">#</a></h2>
 <p>The input is <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.states</span></code>, one per
 crystal structure:</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -1163,8 +1163,8 @@ electronic states of all of them to <code class="docutils literal notranslate"><
 <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes a regular k-point mesh. Read the file with
 <code class="docutils literal notranslate"><span class="pre">read_electronic_states_hdf5</span></code>, which returns a list of <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>.</p>
 </section>
-<section id="python-api">
-<span id="electronic-thermal-properties-api"></span><h2>Python API<a class="headerlink" href="#python-api" title="Link to this heading">#</a></h2>
+<section id="electronic-thermal-properties-api">
+<span id="python-api"></span><h2>Python API<a class="headerlink" href="#electronic-thermal-properties-api" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_tetrahedron</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.tetrahedron</span></code>
 computes the thermal properties by the tetrahedron method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1278,15 +1278,15 @@ and its <code class="docutils literal notranslate"><span class="pre">dos_at_ferm
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-equations">Equations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reference-at-0-k">The reference at 0 K</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-over-the-brillouin-zone">Integration over the Brillouin zone</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chemical-potential">Chemical potential</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spin-degeneracy">Spin degeneracy</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-electronic-states">Input: electronic states</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-integration">Integration over the Brillouin zone</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-chemical-potential">Chemical potential</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-spin">Spin degeneracy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-input">Input: electronic states</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-thermal-properties-api">Python API</a></li>
 </ul>
   </nav></div>
 

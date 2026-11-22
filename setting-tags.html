@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.4.10.0</title>
+    <title>Setting tags &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Output files" href="output-files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -422,112 +422,112 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-file">Configuration file</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-tags">Basic tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dim"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#magnetic-unit-cells">Magnetic unit cells</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dimension-tag"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes-tag"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes-auto-magnetic">Magnetic unit cells</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atom-name"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#magmom"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-filename"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-conversion-factor"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors-tag"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass-tag"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#magmom-tag"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-filename-tag"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-conversion-factor-tag"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-creation-tags">Displacement creation tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-displacements"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-displacements-tag"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-tag"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diag"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-max"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-sampling"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_SAMPLING</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rd-number-estimation-factor"><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm-displacement-tag"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-tag"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-max-tag"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-sampling-tag"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_SAMPLING</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rd-number-estimation-factor-tag"><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature-tag"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed-tag"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure-tags">Band structure tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band"><code class="docutils literal notranslate"><span class="pre">BAND</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-points"><code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-labels"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-connection"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-const-interval"><code class="docutils literal notranslate"><span class="pre">BAND_CONST_INTERVAL</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure-related-tags">Band structure tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-tag"><code class="docutils literal notranslate"><span class="pre">BAND</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-points-tag"><code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-labels-tag"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-connection-tag"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-const-interval-tag"><code class="docutils literal notranslate"><span class="pre">BAND_CONST_INTERVAL</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling-tags">Mesh sampling tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-mp-or-mesh-numbers"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-tag"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mp-shift"><code class="docutils literal notranslate"><span class="pre">MP_SHIFT</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamma-center"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-mesh"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamma-center-tag"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-mesh-tag"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-density-of-states-dos-tags">Phonon density of states (DOS) tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-range"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fmin-fmax-and-fpitch"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pdos"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-direction"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#xyz-projection"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sigma"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debye-model"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#momemt-and-moment-order"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-related-tags">Phonon density of states (DOS) tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-tag"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-range-tag"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-fmin-fmax-tags"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pdos-tag"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-direction-tag"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#xyz-projection-tag"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sigma-tag"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debye-model-tag"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-moment-tag"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-related-tags">Thermal properties related tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tprop"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tmin-tmax-and-tstep"><code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pretend-real"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cutoff-frequency"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exclude-gamma-acoustic"><code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-tag"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-property-temperatures"><code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pretend-real-tags"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cutoff-frequency-tags"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exclude-gamma-acoustic-tag"><code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdisp"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat-cif"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-atomic-displacements-tags">Thermal displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements-tag"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement-matrices-tag"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement-cif-tag"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specific-q-points">Specific q-points</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writedm"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-tag"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writedm-tag"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-method"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#q-direction"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-tag"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-method-tag"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#q-direction-tag"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity">Group velocity</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity-tag"><code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gv-delta-q"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gv-delta-q-tag"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry">Symmetry</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tolerance"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tolerance-tag"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tag"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-symmetry"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-symmetry"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nomeshsym-tag"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-symmetry-tag"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants">Force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-tag">Force constants</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-force-constants"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#read-force-constants"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-options"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc"><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alm"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-force-constants-tag"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#read-force-constants-tag"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants-tag"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-tag"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-options-tag"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-symfc-tag"><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-alm-tag"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-animation-file">Create animation file</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#animation-tag">Create animation file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime-type"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime-tag"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-v-sim">For v_sim</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-the-other-animation-formats">For the other animation formats</a></li>
 </ul>
@@ -535,28 +535,28 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-modulated-structure">Create modulated structure</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulation"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulation-tag"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#characters-of-irreducible-representations">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-symmetry-adapted"><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#irreducible-representation-related-tags">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-tag"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps-tag"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-symmetry-adapted-tag"><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup-tag"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-output-file-control">Input/Output file control</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-format-readfc-format-writefc-format"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format-mesh-format-qpoints-format"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-format"><code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-format"><code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-format-tag"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-mesh-qpoints-format-tags"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format-tag"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-format-tag"><code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-format-tag"><code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5-tag"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-hdf5"><code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-hdf5"><code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-hdf5"><code class="docutils literal notranslate"><span class="pre">qpoints.hdf5</span></code></a></li>
@@ -564,10 +564,10 @@
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-tag"></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fc"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fs"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-disp"><code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-all"><code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fc-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fs-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-disp-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-all-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -601,8 +601,8 @@ accepted. However fractional values must not have space among characters (e.g.
 </section>
 <section id="basic-tags">
 <h2>Basic tags<a class="headerlink" href="#basic-tags" title="Link to this heading">#</a></h2>
-<section id="dim">
-<span id="dimension-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DIM</span></code><a class="headerlink" href="#dim" title="Link to this heading">#</a></h3>
+<section id="dimension-tag">
+<span id="dim"></span><h3><code class="docutils literal notranslate"><span class="pre">DIM</span></code><a class="headerlink" href="#dimension-tag" title="Link to this heading">#</a></h3>
 <p>The supercell is created from the input unit cell. When three integers are
 specified, a supercell elongated along axes of unit cell is created.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
@@ -632,8 +632,8 @@ vectors of <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{u}\)<
 <p>Be careful that the axes in <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> is defined by three row vectors, i.e.,
 <span class="math notranslate nohighlight">\(( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )^T\)</span>.</p>
 </section>
-<section id="primitive-axes">
-<span id="primitive-axes-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code><a class="headerlink" href="#primitive-axes" title="Link to this heading">#</a></h3>
+<section id="primitive-axes-tag">
+<span id="primitive-axes"></span><h3><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code><a class="headerlink" href="#primitive-axes-tag" title="Link to this heading">#</a></h3>
 <p>When specified, transformation from the input unit cell to the primitive cell is
 performed. With this, the primitive cell basis vectors are used as the
 coordinate system for the phonon calculation. The transformation matrix is
@@ -673,8 +673,8 @@ is arbitrary, it is recommended to use <code class="docutils literal notranslate
 possible transformation matrix exists or not.</p>
 <p><strong>Changed in v4.0</strong> <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span> <span class="pre">=</span> <span class="pre">AUTO</span></code> is the default when
 <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> is not specified.</p>
-<section id="magnetic-unit-cells">
-<span id="primitive-axes-auto-magnetic"></span><h4>Magnetic unit cells<a class="headerlink" href="#magnetic-unit-cells" title="Link to this heading">#</a></h4>
+<section id="primitive-axes-auto-magnetic">
+<span id="magnetic-unit-cells"></span><h4>Magnetic unit cells<a class="headerlink" href="#primitive-axes-auto-magnetic" title="Link to this heading">#</a></h4>
 <p>When the input unit cell has magnetic moments (see <a class="reference internal" href="#magmom-tag"><span class="std std-ref">MAGMOM</span></a>), the
 primitive cell is determined from the magnetic space group (MSG) detected by
 spglib. The behavior depends on the MSG type:</p>
@@ -718,12 +718,12 @@ tag is used to specify chemical symbols.</p>
 </pre></div>
 </div>
 </section>
-<section id="eigenvectors">
-<span id="eigenvectors-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code><a class="headerlink" href="#eigenvectors" title="Link to this heading">#</a></h3>
+<section id="eigenvectors-tag">
+<span id="eigenvectors"></span><h3><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code><a class="headerlink" href="#eigenvectors-tag" title="Link to this heading">#</a></h3>
 <p>When this tag is <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code>, eigenvectors are calculated.</p>
 </section>
-<section id="mass">
-<span id="mass-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">MASS</span></code><a class="headerlink" href="#mass" title="Link to this heading">#</a></h3>
+<section id="mass-tag">
+<span id="mass"></span><h3><code class="docutils literal notranslate"><span class="pre">MASS</span></code><a class="headerlink" href="#mass-tag" title="Link to this heading">#</a></h3>
 <p>This tag is not necessary to use usually, because atomic masses are
 automatically set from the chemical symbols.</p>
 <p>Atomic masses of a <strong>primitive cell</strong> are overwritten by the values specified.
@@ -736,8 +736,8 @@ follows :</p>
 </pre></div>
 </div>
 </section>
-<section id="magmom">
-<span id="magmom-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code><a class="headerlink" href="#magmom" title="Link to this heading">#</a></h3>
+<section id="magmom-tag">
+<span id="magmom"></span><h3><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code><a class="headerlink" href="#magmom-tag" title="Link to this heading">#</a></h3>
 <p>Symmetry of spin such as magnetic moments is specified using this tag. The
 number of values has to be equal to the number of atoms, or its three times for
 non-collinear-like case, in <strong>the input unit cell</strong>, not the primitive cell or
@@ -754,15 +754,15 @@ This file contains the <code class="docutils literal notranslate"><span class="p
 </div>
 <p>where the first three values as a vector is for the first atom, and so on.</p>
 </section>
-<section id="cell-filename">
-<span id="cell-filename-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code><a class="headerlink" href="#cell-filename" title="Link to this heading">#</a></h3>
+<section id="cell-filename-tag">
+<span id="cell-filename"></span><h3><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code><a class="headerlink" href="#cell-filename-tag" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CELL_FILENAME</span> <span class="o">=</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span>
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="command-options.html#cell-filename-option"><span class="std std-ref">Input cell</span></a>.</p>
 </section>
-<section id="frequency-conversion-factor">
-<span id="frequency-conversion-factor-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code><a class="headerlink" href="#frequency-conversion-factor" title="Link to this heading">#</a></h3>
+<section id="frequency-conversion-factor-tag">
+<span id="frequency-conversion-factor"></span><h3><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code><a class="headerlink" href="#frequency-conversion-factor-tag" title="Link to this heading">#</a></h3>
 <p><strong>This tag was deprecated at v2.44.</strong></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -784,8 +784,8 @@ factors is explained at <a class="reference internal" href="formulation.html#phy
 </section>
 <section id="displacement-creation-tags">
 <h2>Displacement creation tags<a class="headerlink" href="#displacement-creation-tags" title="Link to this heading">#</a></h2>
-<section id="create-displacements">
-<span id="create-displacements-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code><a class="headerlink" href="#create-displacements" title="Link to this heading">#</a></h3>
+<section id="create-displacements-tag">
+<span id="create-displacements"></span><h3><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code><a class="headerlink" href="#create-displacements-tag" title="Link to this heading">#</a></h3>
 <p>Supercells with displacements are created. This tag is used as the post process
 of phonon calculation.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CREATE_DISPLACEMENTS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -793,8 +793,8 @@ of phonon calculation.</p>
 </pre></div>
 </div>
 </section>
-<section id="displacement-distance">
-<span id="displacement-distance-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code><a class="headerlink" href="#displacement-distance" title="Link to this heading">#</a></h3>
+<section id="displacement-distance-tag">
+<span id="displacement-distance"></span><h3><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code><a class="headerlink" href="#displacement-distance-tag" title="Link to this heading">#</a></h3>
 <p>Finite atomic displacement distance is set as specified value when creating
 supercells with displacements. The default displacement amplitude is 0.01
 Angstrom, but when the <code class="docutils literal notranslate"><span class="pre">wien2k</span></code>, <code class="docutils literal notranslate"><span class="pre">abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">Fleur</span></code> or <code class="docutils literal notranslate"><span class="pre">turbomole</span></code> option is
@@ -807,8 +807,8 @@ searched, i.e. all the displacements are along the lattice vectors.
 <code class="docutils literal notranslate"><span class="pre">DIAG</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> is recommended if one of the lattice parameter of your
 supercell is much longer or much shorter than the other lattice parameters.</p>
 </section>
-<section id="pm">
-<span id="pm-displacement-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">PM</span></code><a class="headerlink" href="#pm" title="Link to this heading">#</a></h3>
+<section id="pm-displacement-tag">
+<span id="pm"></span><h3><code class="docutils literal notranslate"><span class="pre">PM</span></code><a class="headerlink" href="#pm-displacement-tag" title="Link to this heading">#</a></h3>
 <p>This tag specified how displacements are found. When <code class="docutils literal notranslate"><span class="pre">PM</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>, least
 displacements that can calculate force constants are found. This may cause less
 accurate result. When <code class="docutils literal notranslate"><span class="pre">PM</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>, all the displacements that are opposite
@@ -819,8 +819,8 @@ symmetrically equivalent, only the plus displacement is found. This may be in
 between <code class="docutils literal notranslate"><span class="pre">.FALSE.</span></code> and <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code>. You can check how it works to see the file
 <code class="docutils literal notranslate"><span class="pre">DISP</span></code> where displacement directions on atoms are written.</p>
 </section>
-<section id="random-displacements">
-<span id="random-displacements-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code><a class="headerlink" href="#random-displacements" title="Link to this heading">#</a></h3>
+<section id="random-displacements-tag">
+<span id="random-displacements"></span><h3><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code><a class="headerlink" href="#random-displacements-tag" title="Link to this heading">#</a></h3>
 <p>The number of random displacement supercells are created by the specified
 positive integer values. In each supercell, all atoms are displaced in random
 direction with a constant displacement distance specified by
@@ -843,8 +843,8 @@ required to solve the normal equation under symmetry considerations. When
 times the minimum required number. These factors (4 or 8) can be changed by
 <code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code>.</p>
 </section>
-<section id="displacement-distance-max">
-<span id="displacement-distance-max-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code><a class="headerlink" href="#displacement-distance-max" title="Link to this heading">#</a></h3>
+<section id="displacement-distance-max-tag">
+<span id="displacement-distance-max"></span><h3><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code><a class="headerlink" href="#displacement-distance-max-tag" title="Link to this heading">#</a></h3>
 <p>This is used along with <code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code> but not with
 <code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code>. The random displacements are generated with
 variation not only in direction, but also in distance, with distances randomly
@@ -857,8 +857,8 @@ draw is uniform over <code class="docutils literal notranslate"><span class="pre
 <code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code>. See <code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_PER_ATOM</span></code> for the per-atom
 draw.</p>
 </section>
-<section id="displacement-distance-sampling">
-<span id="displacement-distance-sampling-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_SAMPLING</span></code><a class="headerlink" href="#displacement-distance-sampling" title="Link to this heading">#</a></h3>
+<section id="displacement-distance-sampling-tag">
+<span id="displacement-distance-sampling"></span><h3><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_SAMPLING</span></code><a class="headerlink" href="#displacement-distance-sampling-tag" title="Link to this heading">#</a></h3>
 <p>The unit the random displacement distance is drawn for, either <code class="docutils literal notranslate"><span class="pre">SUPERCELL</span></code>
 (default) or <code class="docutils literal notranslate"><span class="pre">ATOM</span></code>. This is used along with <code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code> but
 not with <code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code>, whose canonical ensemble already
@@ -880,14 +880,14 @@ of supercells.</p>
 </pre></div>
 </div>
 </section>
-<section id="rd-number-estimation-factor">
-<span id="rd-number-estimation-factor-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code><a class="headerlink" href="#rd-number-estimation-factor" title="Link to this heading">#</a></h3>
+<section id="rd-number-estimation-factor-tag">
+<span id="rd-number-estimation-factor"></span><h3><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code><a class="headerlink" href="#rd-number-estimation-factor-tag" title="Link to this heading">#</a></h3>
 <p>The default factor to generate supercells with symfc using
 <code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS=AUTO</span></code> is changed to this value. See the default factor in
 <a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a>.</p>
 </section>
-<section id="random-displacement-temperature">
-<span id="random-displacement-temperature-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code><a class="headerlink" href="#random-displacement-temperature" title="Link to this heading">#</a></h3>
+<section id="random-displacement-temperature-tag">
+<span id="random-displacement-temperature"></span><h3><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code><a class="headerlink" href="#random-displacement-temperature-tag" title="Link to this heading">#</a></h3>
 <p>This invokes generation of random displacements at a
 temperature specified by this tag. Collective displacements are randomly sampled
 from harmonic oscillator distribution functions of phonon modes. See more
@@ -928,18 +928,18 @@ acoustic sum rule. It is also possible to ignore phonons with frequencies below
 cutoff frequency specified by <a class="reference internal" href="#cutoff-frequency-tags"><span class="std std-ref">CUTOFF_FREQUENCY</span></a> tag. Phonon
 frequencies of imaginary modes are treated as their absolute values.</p>
 </section>
-<section id="random-seed">
-<span id="random-seed-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code><a class="headerlink" href="#random-seed" title="Link to this heading">#</a></h3>
+<section id="random-seed-tag">
+<span id="random-seed"></span><h3><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code><a class="headerlink" href="#random-seed-tag" title="Link to this heading">#</a></h3>
 <p>The random seed used for creating random displacements by
 <a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> tag. The value has to be 32bit unsigned int. The
 random seed is useful for crating the same random displacements with using the
 same number.</p>
 </section>
 </section>
-<section id="band-structure-tags">
-<span id="band-structure-related-tags"></span><h2>Band structure tags<a class="headerlink" href="#band-structure-tags" title="Link to this heading">#</a></h2>
-<section id="band">
-<span id="band-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND</span></code><a class="headerlink" href="#band" title="Link to this heading">#</a></h3>
+<section id="band-structure-related-tags">
+<span id="band-structure-tags"></span><h2>Band structure tags<a class="headerlink" href="#band-structure-related-tags" title="Link to this heading">#</a></h2>
+<section id="band-tag">
+<span id="band"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND</span></code><a class="headerlink" href="#band-tag" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">BAND</span></code> gives sampling band paths. The reciprocal points are specified in reduced
 coordinates. The given points are connected for defining band paths. When comma
 <code class="docutils literal notranslate"><span class="pre">,</span></code> is inserted between the points, the paths are disconnected.</p>
@@ -950,13 +950,13 @@ coordinates. The given points are connected for defining band paths. When comma
 </pre></div>
 </div>
 </section>
-<section id="band-points">
-<span id="band-points-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code><a class="headerlink" href="#band-points" title="Link to this heading">#</a></h3>
+<section id="band-points-tag">
+<span id="band-points"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code><a class="headerlink" href="#band-points-tag" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code> gives the number of sampling points including the path ends. The
 default value is <code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span> <span class="pre">=</span> <span class="pre">51</span></code>.</p>
 </section>
-<section id="band-labels">
-<span id="band-labels-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code><a class="headerlink" href="#band-labels" title="Link to this heading">#</a></h3>
+<section id="band-labels-tag">
+<span id="band-labels"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code><a class="headerlink" href="#band-labels-tag" title="Link to this heading">#</a></h3>
 <p>Labels specified are depicted in band structure plot at the points of band
 segments. The number of labels has to correspond to the number of band paths
 specified by <code class="docutils literal notranslate"><span class="pre">BAND</span></code> plus one. When LaTeX math style expression such as
@@ -972,8 +972,8 @@ BAND_LABELS = X $\Gamma$ L
 in a band segment shows the same kind of band. Between different band segments,
 the correspondence of colors doesn’t mean anything.</p>
 </section>
-<section id="band-connection">
-<span id="band-connection-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code><a class="headerlink" href="#band-connection" title="Link to this heading">#</a></h3>
+<section id="band-connection-tag">
+<span id="band-connection"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code><a class="headerlink" href="#band-connection-tag" title="Link to this heading">#</a></h3>
 <p>With this option, band connections are estimated from eigenvectors and band
 structure is drawn considering band crossings. In sensitive cases, to obtain
 better band connections, it requires to increase number of points calculated in
@@ -986,8 +986,8 @@ band segments by the <code class="docutils literal notranslate"><span class="pre
 <a class="reference internal image-reference" href="_images/band-connection.png"><img alt="_images/band-connection.png" height="240" src="_images/band-connection.png" width="320" />
 </a>
 </section>
-<section id="band-const-interval">
-<span id="band-const-interval-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_CONST_INTERVAL</span></code><a class="headerlink" href="#band-const-interval" title="Link to this heading">#</a></h3>
+<section id="band-const-interval-tag">
+<span id="band-const-interval"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_CONST_INTERVAL</span></code><a class="headerlink" href="#band-const-interval-tag" title="Link to this heading">#</a></h3>
 <p>When <code class="docutils literal notranslate"><span class="pre">BAND_CONST_INTERVAL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>, the number of q-points sampled in each band
 path segment is determined by the longest path segment, which uses the number
 specified by <code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code>. This ensures similar distances between points across
@@ -1005,8 +1005,8 @@ equal to or less than the value of <code class="docutils literal notranslate"><s
 <span id="id3"></span><h2>Mesh sampling tags<a class="headerlink" href="#mesh-sampling-tags" title="Link to this heading">#</a></h2>
 <p>Mesh sampling tags are used commonly for calculations of thermal properties and
 density of states.</p>
-<section id="mesh-mp-or-mesh-numbers">
-<span id="mesh-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code><a class="headerlink" href="#mesh-mp-or-mesh-numbers" title="Link to this heading">#</a></h3>
+<section id="mesh-tag">
+<span id="mesh-mp-or-mesh-numbers"></span><h3><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code><a class="headerlink" href="#mesh-tag" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">MESH</span></code> numbers give uniform meshes in each axis. As the default behavior, the
 center of mesh is determined by the Monkhorst-Pack scheme, i.e., for odd number,
 a point comes to the center, and for even number, the center is shifted half in
@@ -1042,16 +1042,16 @@ sampling mesh.</p>
 values. 1/2 means the half mesh shift with respect to neighboring grid points in
 each direction.</p>
 </section>
-<section id="gamma-center">
-<span id="gamma-center-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code><a class="headerlink" href="#gamma-center" title="Link to this heading">#</a></h3>
+<section id="gamma-center-tag">
+<span id="gamma-center"></span><h3><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code><a class="headerlink" href="#gamma-center-tag" title="Link to this heading">#</a></h3>
 <p>Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
 <span class="math notranslate nohighlight">\(\Gamma\)</span> center mesh is used. The default value is <code class="docutils literal notranslate"><span class="pre">.FALSE.</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GAMMA_CENTER</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </section>
-<section id="write-mesh">
-<span id="write-mesh-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code><a class="headerlink" href="#write-mesh" title="Link to this heading">#</a></h3>
+<section id="write-mesh-tag">
+<span id="write-mesh"></span><h3><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code><a class="headerlink" href="#write-mesh-tag" title="Link to this heading">#</a></h3>
 <p>With a dense mesh, with eigenvectors, without mesh symmetry, sometimes its
 output file <code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code> can be huge. However when those files are
 not needed, e.g., in (P)DOS calculation, <code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> can disable to
@@ -1062,8 +1062,8 @@ even with <code class="docutils literal notranslate"><span class="pre">WRITE_MES
 </div>
 </section>
 </section>
-<section id="phonon-density-of-states-dos-tags">
-<span id="dos-related-tags"></span><h2>Phonon density of states (DOS) tags<a class="headerlink" href="#phonon-density-of-states-dos-tags" title="Link to this heading">#</a></h2>
+<section id="dos-related-tags">
+<span id="phonon-density-of-states-dos-tags"></span><h2>Phonon density of states (DOS) tags<a class="headerlink" href="#dos-related-tags" title="Link to this heading">#</a></h2>
 <p>Phonon density of states (DOS) is calculated either with a linear tetrahedron
 method (default) or smearing method. Phonons are calculated on a sampling mesh,
 therefore these tags must be used with <a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a>. The physical
@@ -1085,16 +1085,16 @@ smearing method, the delta function is replaced by normal distribution (Gaussian
 function) with the standard deviation specified by <a class="reference internal" href="#sigma-tag"><span class="std std-ref">SIGMA</span></a>. In the
 tetrahedron method, the Brillouin integration is made analytically within
 tetrahedra in reciprocal space.</p>
-<section id="dos">
-<span id="dos-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DOS</span></code><a class="headerlink" href="#dos" title="Link to this heading">#</a></h3>
+<section id="dos-tag">
+<span id="dos"></span><h3><code class="docutils literal notranslate"><span class="pre">DOS</span></code><a class="headerlink" href="#dos-tag" title="Link to this heading">#</a></h3>
 <p>This tag enables to calculate DOS. This tag is automatically set when <code class="docutils literal notranslate"><span class="pre">PDOS</span></code> tag
 or <code class="docutils literal notranslate"><span class="pre">-p</span></code> option.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DOS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </section>
-<section id="dos-range">
-<span id="dos-range-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code><a class="headerlink" href="#dos-range" title="Link to this heading">#</a></h3>
+<section id="dos-range-tag">
+<span id="dos-range"></span><h3><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code><a class="headerlink" href="#dos-range-tag" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DOS_RANGE</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">40</span> <span class="mf">0.1</span>
 </pre></div>
 </div>
@@ -1103,15 +1103,15 @@ makes DOS be calculated from frequency=0 to 40 with 0.1 pitch.</p>
 <p><a class="reference internal" href="#dos-fmin-fmax-tags"><span class="std std-ref">FMIN, FMAX, and FPITCH</span></a> can be alternatively used to specify the minimum and
 maximum frequencies (the first and second values).</p>
 </section>
-<section id="fmin-fmax-and-fpitch">
-<span id="dos-fmin-fmax-tags"></span><h3><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code><a class="headerlink" href="#fmin-fmax-and-fpitch" title="Link to this heading">#</a></h3>
+<section id="dos-fmin-fmax-tags">
+<span id="fmin-fmax-and-fpitch"></span><h3><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code><a class="headerlink" href="#dos-fmin-fmax-tags" title="Link to this heading">#</a></h3>
 <p>The uniform frequency sampling points for phonon-DOS calculation are specified.
 <code class="docutils literal notranslate"><span class="pre">FMIN</span></code> and <code class="docutils literal notranslate"><span class="pre">FMAX</span></code> give the minimum, maximum frequencies of the range,
 respectively, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code> gives the frequency pitch to be sampled. These three
 values are the same as those that can be specified by <code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code>.</p>
 </section>
-<section id="pdos">
-<span id="pdos-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">PDOS</span></code><a class="headerlink" href="#pdos" title="Link to this heading">#</a></h3>
+<section id="pdos-tag">
+<span id="pdos"></span><h3><code class="docutils literal notranslate"><span class="pre">PDOS</span></code><a class="headerlink" href="#pdos-tag" title="Link to this heading">#</a></h3>
 <p>Projected DOS is calculated using this tag. The formal definition is written as</p>
 <div class="math notranslate nohighlight">
 \[g^j(\omega, \hat{\mathbf{n}}) = \frac{1}{N} \sum_\lambda \delta(\omega -
@@ -1143,8 +1143,8 @@ unexpectedly huge. If only PDOS is necessary but these output files are
 unnecessary, then it is good to consider using <code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>
 (<a class="reference internal" href="#write-mesh-tag"><span class="std std-ref">WRITE_MESH</span></a>).</p>
 </section>
-<section id="projection-direction">
-<span id="projection-direction-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code><a class="headerlink" href="#projection-direction" title="Link to this heading">#</a></h3>
+<section id="projection-direction-tag">
+<span id="projection-direction"></span><h3><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code><a class="headerlink" href="#projection-direction-tag" title="Link to this heading">#</a></h3>
 <p>Eigenvectors are projected along the direction specified by this tag. Projection
 direction is specified in reduced coordinates, i.e., with respect to <em>a</em>, <em>b</em>,
 <em>c</em> axes.</p>
@@ -1153,8 +1153,8 @@ direction is specified in reduced coordinates, i.e., with respect to <em>a</em>,
 </pre></div>
 </div>
 </section>
-<section id="xyz-projection">
-<span id="xyz-projection-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code><a class="headerlink" href="#xyz-projection" title="Link to this heading">#</a></h3>
+<section id="xyz-projection-tag">
+<span id="xyz-projection"></span><h3><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code><a class="headerlink" href="#xyz-projection-tag" title="Link to this heading">#</a></h3>
 <p>PDOS is calculated using eigenvectors projected along x, y, and z Cartesian
 coordinates. The format of output file <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code> becomes different
 when using this tag, where phonon-mode-frequency and x, y, and z components of
@@ -1169,8 +1169,8 @@ components of eigenvectors, respectively.</p>
 </pre></div>
 </div>
 </section>
-<section id="sigma">
-<span id="sigma-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code><a class="headerlink" href="#sigma" title="Link to this heading">#</a></h3>
+<section id="sigma-tag">
+<span id="sigma"></span><h3><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code><a class="headerlink" href="#sigma-tag" title="Link to this heading">#</a></h3>
 <p>A smearing method is used instead of a linear tetrahedron method. This tag also
 specifies the smearing width. The unit is same as that used for phonon
 frequency. The default value is the value given by the difference of maximum and
@@ -1179,8 +1179,8 @@ minimum frequencies divided by 100.</p>
 </pre></div>
 </div>
 </section>
-<section id="debye-model">
-<span id="debye-model-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code><a class="headerlink" href="#debye-model" title="Link to this heading">#</a></h3>
+<section id="debye-model-tag">
+<span id="debye-model"></span><h3><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code><a class="headerlink" href="#debye-model-tag" title="Link to this heading">#</a></h3>
 <p>By setting <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code>, DOS at lower phonon frequencies are fit to a Debye model.
 By default, the DOS from 0 to 1/4 of the maximum phonon frequencies are used for
 the fitting. The function used to the fitting is <span class="math notranslate nohighlight">\(D(\omega)=a\omega^2\)</span>
@@ -1192,8 +1192,8 @@ is dependent on how to parameterize it.</p>
 </pre></div>
 </div>
 </section>
-<section id="momemt-and-moment-order">
-<span id="dos-moment-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code><a class="headerlink" href="#momemt-and-moment-order" title="Link to this heading">#</a></h3>
+<section id="dos-moment-tag">
+<span id="momemt-and-moment-order"></span><h3><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code><a class="headerlink" href="#dos-moment-tag" title="Link to this heading">#</a></h3>
 <p>Phonon moments for DOS and PDOS defined below are calculated using these tags up
 to arbitrary order. The order is specified with <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code> (<span class="math notranslate nohighlight">\(n\)</span> in the
 formula). Unless <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code> specified, the first and second moments are
@@ -1223,8 +1223,8 @@ negative <span class="math notranslate nohighlight">\(\omega_\text{min}\)</span>
 <section id="thermal-properties-related-tags">
 <h2>Thermal properties related tags<a class="headerlink" href="#thermal-properties-related-tags" title="Link to this heading">#</a></h2>
 <p>See <a class="reference internal" href="#cutoff-frequency-tags"><span class="std std-ref">CUTOFF_FREQUENCY</span></a> on the treatment of the imaginary modes.</p>
-<section id="tprop">
-<span id="thermal-properties-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">TPROP</span></code><a class="headerlink" href="#tprop" title="Link to this heading">#</a></h3>
+<section id="thermal-properties-tag">
+<span id="tprop"></span><h3><code class="docutils literal notranslate"><span class="pre">TPROP</span></code><a class="headerlink" href="#thermal-properties-tag" title="Link to this heading">#</a></h3>
 <p>Thermal properties, free energy, heat capacity, and entropy, are calculated from
 their statistical thermodynamic expressions (see
 <a class="reference internal" href="formulation.html#thermal-properties-expressions"><span class="std std-ref">Thermodynamic properties</span></a>). Thermal properties are calculated from
@@ -1250,8 +1250,8 @@ divide the phonopy output by four.</p>
 </pre></div>
 </div>
 </section>
-<section id="tmin-tmax-and-tstep">
-<span id="thermal-property-temperatures"></span><h3><code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tmin-tmax-and-tstep" title="Link to this heading">#</a></h3>
+<section id="thermal-property-temperatures">
+<span id="tmin-tmax-and-tstep"></span><h3><code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code><a class="headerlink" href="#thermal-property-temperatures" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code> tags are used to specify the temperature range to be
 calculated. The default values of them are 0, 1000, and 10, respectively.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TPROP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -1259,8 +1259,8 @@ calculated. The default values of them are 0, 1000, and 10, respectively.</p>
 </pre></div>
 </div>
 </section>
-<section id="pretend-real">
-<span id="pretend-real-tags"></span><h3><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code><a class="headerlink" href="#pretend-real" title="Link to this heading">#</a></h3>
+<section id="pretend-real-tags">
+<span id="pretend-real"></span><h3><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code><a class="headerlink" href="#pretend-real-tags" title="Link to this heading">#</a></h3>
 <p>This enables to take imaginary frequencies as real for thermal property
 calculation. This does give false thermal properties, therefore for a testing
 purpose only, when a small amount of imaginary branches obtained.</p>
@@ -1269,8 +1269,8 @@ purpose only, when a small amount of imaginary branches obtained.</p>
 </pre></div>
 </div>
 </section>
-<section id="cutoff-frequency">
-<span id="cutoff-frequency-tags"></span><h3><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code><a class="headerlink" href="#cutoff-frequency" title="Link to this heading">#</a></h3>
+<section id="cutoff-frequency-tags">
+<span id="cutoff-frequency"></span><h3><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code><a class="headerlink" href="#cutoff-frequency-tags" title="Link to this heading">#</a></h3>
 <p>This is given by a real value and the default value is 0. This tag works as
 follows.</p>
 <p>Phonon thermal properties are computed as sum over phonon modes. See
@@ -1286,8 +1286,8 @@ shown as <code class="docutils literal notranslate"><span class="pre">num_modes:
 </pre></div>
 </div>
 </section>
-<section id="exclude-gamma-acoustic">
-<span id="exclude-gamma-acoustic-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code><a class="headerlink" href="#exclude-gamma-acoustic" title="Link to this heading">#</a></h3>
+<section id="exclude-gamma-acoustic-tag">
+<span id="exclude-gamma-acoustic"></span><h3><code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code><a class="headerlink" href="#exclude-gamma-acoustic-tag" title="Link to this heading">#</a></h3>
 <p>When this tag is <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code>, the three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> are
 excluded from the sums of the thermal properties. The default is <code class="docutils literal notranslate"><span class="pre">.FALSE.</span></code>.</p>
 <p>The frequencies of the three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> should be zero.
@@ -1326,10 +1326,10 @@ of the thermal displacements by the same rule as from the thermal properties.</p
 </div>
 </section>
 </section>
-<section id="thermal-displacements">
-<span id="thermal-atomic-displacements-tags"></span><h2>Thermal displacements<a class="headerlink" href="#thermal-displacements" title="Link to this heading">#</a></h2>
-<section id="tdisp">
-<span id="thermal-displacements-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">TDISP</span></code><a class="headerlink" href="#tdisp" title="Link to this heading">#</a></h3>
+<section id="thermal-atomic-displacements-tags">
+<span id="thermal-displacements"></span><h2>Thermal displacements<a class="headerlink" href="#thermal-atomic-displacements-tags" title="Link to this heading">#</a></h2>
+<section id="thermal-displacements-tag">
+<span id="tdisp"></span><h3><code class="docutils literal notranslate"><span class="pre">TDISP</span></code><a class="headerlink" href="#thermal-displacements-tag" title="Link to this heading">#</a></h3>
 <p>Mean square displacements projected to Cartesian axes as a function of
 temperature are calculated from the number of phonon excitations. Phonon
 frequencies in THz, which is the default setting of phonopy, are used to obtain
@@ -1357,8 +1357,8 @@ thermal displacements are calculated.</p>
 </pre></div>
 </div>
 </section>
-<section id="tdispmat">
-<span id="thermal-displacement-matrices-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code><a class="headerlink" href="#tdispmat" title="Link to this heading">#</a></h3>
+<section id="thermal-displacement-matrices-tag">
+<span id="tdispmat"></span><h3><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code><a class="headerlink" href="#thermal-displacement-matrices-tag" title="Link to this heading">#</a></h3>
 <p>Mean square displacement matrices are calculated. The definition is shown at
 <a class="reference internal" href="formulation.html#thermal-displacement"><span class="std std-ref">Thermal displacement</span></a>. Phonon frequencies in THz, which is the default
 setting of phonopy, are used to obtain the mean square displacement matrices,
@@ -1387,8 +1387,8 @@ thermal displacement matrices are calculated.</p>
 </pre></div>
 </div>
 </section>
-<section id="tdispmat-cif">
-<span id="thermal-displacement-cif-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code><a class="headerlink" href="#tdispmat-cif" title="Link to this heading">#</a></h3>
+<section id="thermal-displacement-cif-tag">
+<span id="tdispmat-cif"></span><h3><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code><a class="headerlink" href="#thermal-displacement-cif-tag" title="Link to this heading">#</a></h3>
 <p>This tag specifies a temperature (K) at which thermal displacement is calculated
 and the mean square displacement matrix is written to the cif file
 <code class="docutils literal notranslate"><span class="pre">tdispmat.cif</span></code> with the dictionary item <code class="docutils literal notranslate"><span class="pre">aniso_U</span></code>. Phonon frequencies in THz,
@@ -1404,8 +1404,8 @@ displacement matrices, therefore physical units have to be set properly for it
 </section>
 <section id="specific-q-points">
 <h2>Specific q-points<a class="headerlink" href="#specific-q-points" title="Link to this heading">#</a></h2>
-<section id="qpoints">
-<span id="qpoints-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code><a class="headerlink" href="#qpoints" title="Link to this heading">#</a></h3>
+<section id="qpoints-tag">
+<span id="qpoints"></span><h3><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code><a class="headerlink" href="#qpoints-tag" title="Link to this heading">#</a></h3>
 <p>When q-points are supplied, those phonons are calculated. Q-points are specified
 successive values separated by spaces and collected by every three values as
 vectors in reciprocal reduced coordinates.</p>
@@ -1419,8 +1419,8 @@ q-points are calculated.</p>
 </pre></div>
 </div>
 </section>
-<section id="writedm">
-<span id="writedm-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code><a class="headerlink" href="#writedm" title="Link to this heading">#</a></h3>
+<section id="writedm-tag">
+<span id="writedm"></span><h3><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code><a class="headerlink" href="#writedm-tag" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WRITEDM</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
@@ -1474,8 +1474,8 @@ script. For example, <code class="docutils literal notranslate"><span class="pre
 </section>
 <section id="non-analytical-term-correction">
 <h2>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h2>
-<section id="nac">
-<span id="nac-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">NAC</span></code><a class="headerlink" href="#nac" title="Link to this heading">#</a></h3>
+<section id="nac-tag">
+<span id="nac"></span><h3><code class="docutils literal notranslate"><span class="pre">NAC</span></code><a class="headerlink" href="#nac-tag" title="Link to this heading">#</a></h3>
 <p>Non-analytical term correction is applied to dynamical matrix. <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file has
 to be prepared in the current directory. See <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> and
 <a class="reference internal" href="formulation.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>. The default method is
@@ -1484,14 +1484,14 @@ to be prepared in the current directory. See <a class="reference internal" href=
 </pre></div>
 </div>
 </section>
-<section id="nac-method">
-<span id="nac-method-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code><a class="headerlink" href="#nac-method" title="Link to this heading">#</a></h3>
+<section id="nac-method-tag">
+<span id="nac-method"></span><h3><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code><a class="headerlink" href="#nac-method-tag" title="Link to this heading">#</a></h3>
 <p>The method of non-analytical term correction is chosen by this tag between two,
 <code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span> <span class="pre">=</span> <span class="pre">GONZE</span></code> (<a class="reference internal" href="reference.html#reference-dp-dp-nac"><span class="std std-ref">Correction by dipole-dipole interaction</span></a>) and <code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span> <span class="pre">=</span> <span class="pre">WANG</span></code>
 (<a class="reference internal" href="reference.html#reference-wang-nac"><span class="std std-ref">Interpolation scheme at general q-points with non-analytical term correction</span></a>), and the default is the former after v1.13.0.</p>
 </section>
-<section id="q-direction">
-<span id="q-direction-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code><a class="headerlink" href="#q-direction" title="Link to this heading">#</a></h3>
+<section id="q-direction-tag">
+<span id="q-direction"></span><h3><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code><a class="headerlink" href="#q-direction-tag" title="Link to this heading">#</a></h3>
 <p>This tag is used to activate non-analytical term correction (NAC) at
 <span class="math notranslate nohighlight">\(\mathbf{q}\rightarrow\mathbf{0}\)</span>, i.e. practically <span class="math notranslate nohighlight">\(\Gamma\)</span>-point,
 because NAC is direction dependent. With this tag, <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is
@@ -1524,8 +1524,8 @@ calculators are listed at <a class="reference internal" href="interfaces.html#in
 </div>
 <p>Technical details are shown at <a class="reference internal" href="formulation.html#group-velocity"><span class="std std-ref">Group velocity</span></a>.</p>
 </section>
-<section id="gv-delta-q">
-<span id="gv-delta-q-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code><a class="headerlink" href="#gv-delta-q" title="Link to this heading">#</a></h3>
+<section id="gv-delta-q-tag">
+<span id="gv-delta-q"></span><h3><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code><a class="headerlink" href="#gv-delta-q-tag" title="Link to this heading">#</a></h3>
 <p>The reciprocal distance used for the finite difference method is specified.
 Unless this tag is set, the analytical derivative of the dynamical matrix
 is used (including the Gonze-Lee non-analytical term correction, for which
@@ -1542,8 +1542,8 @@ explicitly to reproduce that behavior.</p>
 </section>
 <section id="symmetry">
 <h2>Symmetry<a class="headerlink" href="#symmetry" title="Link to this heading">#</a></h2>
-<section id="symmetry-tolerance">
-<span id="tolerance-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code><a class="headerlink" href="#symmetry-tolerance" title="Link to this heading">#</a></h3>
+<section id="tolerance-tag">
+<span id="symmetry-tolerance"></span><h3><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code><a class="headerlink" href="#tolerance-tag" title="Link to this heading">#</a></h3>
 <p>This is used to set geometric tolerance to find symmetry of crystal structure.
 The default value is <code class="docutils literal notranslate"><span class="pre">1e-5</span></code>. In general, it is not a good idea to loosen the
 tolerance. It is recommended to symmetrize crystal structure before starting
@@ -1556,8 +1556,8 @@ phonon calculation, e.g., using <a class="reference internal" href="command-opti
 <span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code><a class="headerlink" href="#symmetry-tag" title="Link to this heading">#</a></h3>
 <p>P1 symmetry is enforced to the input unit cell by setting <code class="docutils literal notranslate"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE</span></code>.</p>
 </section>
-<section id="mesh-symmetry">
-<span id="nomeshsym-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code><a class="headerlink" href="#mesh-symmetry" title="Link to this heading">#</a></h3>
+<section id="nomeshsym-tag">
+<span id="mesh-symmetry"></span><h3><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code><a class="headerlink" href="#nomeshsym-tag" title="Link to this heading">#</a></h3>
 <p>Symmetry search on the reciprocal sampling mesh is disabled by setting
 <code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>. In some case such as hexagonal systems or primitive
 cells of cubic systems having F and I-centrings, the results with and without
@@ -1569,8 +1569,8 @@ written in <code class="docutils literal notranslate"><span class="pre">mesh.yam
 site-symmetry group and time reversal symmetry. Generally the difference becomes
 smaller when increasing the sampling mesh numbers.</p>
 </section>
-<section id="fc-symmetry">
-<span id="fc-symmetry-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code><a class="headerlink" href="#fc-symmetry" title="Link to this heading">#</a></h3>
+<section id="fc-symmetry-tag">
+<span id="fc-symmetry"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code><a class="headerlink" href="#fc-symmetry-tag" title="Link to this heading">#</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Starting with version 1.12.3, this tag was changed to a boolean (<code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code> or
@@ -1596,8 +1596,8 @@ u_j^\beta} = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha} =
 crystal symmetry or rotational symmetry, are broken to use <code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code>.</p>
 </section>
 </section>
-<section id="force-constants">
-<span id="force-constants-tag"></span><h2>Force constants<a class="headerlink" href="#force-constants" title="Link to this heading">#</a></h2>
+<section id="force-constants-tag">
+<span id="force-constants"></span><h2>Force constants<a class="headerlink" href="#force-constants-tag" title="Link to this heading">#</a></h2>
 <section id="id6">
 <h3><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FORCE_CONSTANTS</span> <span class="o">=</span> <span class="n">READ</span>
@@ -1615,8 +1615,8 @@ by <code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONST
 <p>The file format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> is shown
 <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">here</span></a>.</p>
 </section>
-<section id="full-force-constants">
-<span id="full-force-constants-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code><a class="headerlink" href="#full-force-constants" title="Link to this heading">#</a></h3>
+<section id="full-force-constants-tag">
+<span id="full-force-constants"></span><h3><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code><a class="headerlink" href="#full-force-constants-tag" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is used to compute full supercell constants
 matrix. This may be used to enforce space group symmetry to existing force
 constants.</p>
@@ -1624,27 +1624,27 @@ constants.</p>
 shape becomes <code class="docutils literal notranslate"><span class="pre">(n_patom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> or <code class="docutils literal notranslate"><span class="pre">(n_satom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>,
 respectively. The detail is found at <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">FORCE_CONSTANTS and force_constants.hdf5</span></a>.</p>
 </section>
-<section id="read-force-constants">
-<span id="read-force-constants-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code><a class="headerlink" href="#read-force-constants" title="Link to this heading">#</a></h3>
+<section id="read-force-constants-tag">
+<span id="read-force-constants"></span><h3><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code><a class="headerlink" href="#read-force-constants-tag" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">READ</span></code>.</p>
 </section>
-<section id="write-force-constants">
-<span id="write-force-constants-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code><a class="headerlink" href="#write-force-constants" title="Link to this heading">#</a></h3>
+<section id="write-force-constants-tag">
+<span id="write-force-constants"></span><h3><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code><a class="headerlink" href="#write-force-constants-tag" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">WRITE</span></code>.</p>
 </section>
-<section id="fc-calculator">
-<span id="fc-calculator-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code><a class="headerlink" href="#fc-calculator" title="Link to this heading">#</a></h3>
+<section id="fc-calculator-tag">
+<span id="fc-calculator"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code><a class="headerlink" href="#fc-calculator-tag" title="Link to this heading">#</a></h3>
 <p>External force constants calculator can be used using this tag. Currently
 <code class="docutils literal notranslate"><span class="pre">symfc</span></code> and <code class="docutils literal notranslate"><span class="pre">ALM</span></code> are supported. The phonopy’s default force constants
 calculator is based on finite difference method, for which atomic displacements
 are made systematically. The following is the list of the force constants
 calculator currently possible to be invoked from phonopy.</p>
 </section>
-<section id="fc-calculator-options">
-<span id="fc-calculator-options-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code><a class="headerlink" href="#fc-calculator-options" title="Link to this heading">#</a></h3>
+<section id="fc-calculator-options-tag">
+<span id="fc-calculator-options"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code><a class="headerlink" href="#fc-calculator-options-tag" title="Link to this heading">#</a></h3>
 <p>To be written.</p>
-<section id="symfc">
-<span id="fc-calculator-symfc-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code><a class="headerlink" href="#symfc" title="Link to this heading">#</a></h4>
+<section id="fc-calculator-symfc-tag">
+<span id="symfc"></span><h4><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code><a class="headerlink" href="#fc-calculator-symfc-tag" title="Link to this heading">#</a></h4>
 <p><strong>New in v2.25</strong> Symfc (<a class="github reference external" href="https://github.com/symfc/symfc">symfc/symfc</a>) is based on fitting
 approach and any displacements set of atoms in supercell can be handled. For
 example, random displacements generated by <a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> can
@@ -1656,8 +1656,8 @@ B, <strong>110</strong>, 214302 (2024) [<a class="reference external" href="http
 </pre></div>
 </div>
 </section>
-<section id="alm">
-<span id="fc-calculator-alm-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">ALM</span></code><a class="headerlink" href="#alm" title="Link to this heading">#</a></h4>
+<section id="fc-calculator-alm-tag">
+<span id="alm"></span><h4><code class="docutils literal notranslate"><span class="pre">ALM</span></code><a class="headerlink" href="#fc-calculator-alm-tag" title="Link to this heading">#</a></h4>
 <p><strong>New in v2.3</strong> ALM (<a class="github reference external" href="https://github.com/ttadano/ALM">ttadano/ALM</a>) is based on fitting
 approach and any displacements set of atoms in supercell can be handled. For
 example, random displacements generated by <a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> can
@@ -1672,8 +1672,8 @@ Soc. Jpn. <strong>87</strong>, 041015 (2018).</p>
 </section>
 </section>
 </section>
-<section id="create-animation-file">
-<span id="animation-tag"></span><h2>Create animation file<a class="headerlink" href="#create-animation-file" title="Link to this heading">#</a></h2>
+<section id="animation-tag">
+<span id="create-animation-file"></span><h2>Create animation file<a class="headerlink" href="#animation-tag" title="Link to this heading">#</a></h2>
 <section id="anime-type">
 <h3><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code><a class="headerlink" href="#anime-type" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ANIME_TYPE</span> <span class="o">=</span> <span class="n">JMOL</span>
@@ -1686,8 +1686,8 @@ respective animation images are created such as <code class="docutils literal no
 <code class="docutils literal notranslate"><span class="pre">APOSCAR-001</span></code>,….</p>
 <p>There are several parameters to be set in the <code class="docutils literal notranslate"><span class="pre">ANIME</span></code> tag.</p>
 </section>
-<section id="anime">
-<span id="anime-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">ANIME</span></code><a class="headerlink" href="#anime" title="Link to this heading">#</a></h3>
+<section id="anime-tag">
+<span id="anime"></span><h3><code class="docutils literal notranslate"><span class="pre">ANIME</span></code><a class="headerlink" href="#anime-tag" title="Link to this heading">#</a></h3>
 <p><strong>The format of <code class="docutils literal notranslate"><span class="pre">ANIME</span></code> tag was modified after ver. 0.9.3.3.</strong></p>
 <section id="for-v-sim">
 <h4>For v_sim<a class="headerlink" href="#for-v-sim" title="Link to this heading">#</a></h4>
@@ -1731,8 +1731,8 @@ values, e.g. 0, are required.</p>
 </section>
 <section id="create-modulated-structure">
 <h2>Create modulated structure<a class="headerlink" href="#create-modulated-structure" title="Link to this heading">#</a></h2>
-<section id="modulation">
-<span id="modulation-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code><a class="headerlink" href="#modulation" title="Link to this heading">#</a></h3>
+<section id="modulation-tag">
+<span id="modulation"></span><h3><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code><a class="headerlink" href="#modulation-tag" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">MODULATION</span></code> tag is used to create a crystal structure with displacements
 along normal modes at q-point in the specified supercell dimension.</p>
 <p>Atomic displacement of the <em>j</em>-th atom is created from the real part of the
@@ -1766,10 +1766,11 @@ values are the band index from the bottom with ascending order, amplitude, and
 phase factor in degrees. The phase factor is optional. If it is not specified, 0
 is used.</p>
 <p>Before multiplying user specified phase factor, the phase of the modulation
-vector is adjusted as the largest absolute value,
-<span class="math notranslate nohighlight">\(\left|\mathbf{e}_j\right|/\sqrt{m_j}\)</span>, of element of 3N dimensional
-modulation vector to be real. The complex modulation vector is shown in
-<code class="docutils literal notranslate"><span class="pre">modulation.yaml</span></code>.</p>
+vector is adjusted so that the element of the largest absolute value,
+<span class="math notranslate nohighlight">\(\left|\mathbf{e}_j\right|/\sqrt{m_j}\)</span>, of the 3N dimensional modulation
+vector is real. Atoms related by lattice translations give elements of the same
+absolute value, and the first of them in the order of the atoms in the supercell
+is used. The complex modulation vector is shown in <code class="docutils literal notranslate"><span class="pre">modulation.yaml</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MODULATION</span> <span class="o">=</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mf">3.5</span>
 </pre></div>
 </div>
@@ -1785,10 +1786,10 @@ modulation vector to be real. The complex modulation vector is shown in
 </section>
 </section>
 </section>
-<section id="characters-of-irreducible-representations">
-<span id="irreducible-representation-related-tags"></span><h2>Characters of irreducible representations<a class="headerlink" href="#characters-of-irreducible-representations" title="Link to this heading">#</a></h2>
-<section id="irreps">
-<span id="irreps-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code><a class="headerlink" href="#irreps" title="Link to this heading">#</a></h3>
+<section id="irreducible-representation-related-tags">
+<span id="characters-of-irreducible-representations"></span><h2>Characters of irreducible representations<a class="headerlink" href="#irreducible-representation-related-tags" title="Link to this heading">#</a></h2>
+<section id="irreps-tag">
+<span id="irreps"></span><h3><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code><a class="headerlink" href="#irreps-tag" title="Link to this heading">#</a></h3>
 <p>Characters of irreducible representations (Irreps) of phonon modes are shown.
 For this calculation, a primitive cell has to be used. If the input unit cell is
 a non-primitive cell, it has to be transformed to a primitive cell using
@@ -1806,16 +1807,16 @@ value in the frequency unit that the user specified.</p>
 <p>Symbols of Irreps for the 32 point group types at the <span class="math notranslate nohighlight">\(\Gamma\)</span> point are
 shown but not at non-<span class="math notranslate nohighlight">\(\Gamma\)</span> point.</p>
 </section>
-<section id="show-irreps">
-<span id="show-irreps-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code><a class="headerlink" href="#show-irreps" title="Link to this heading">#</a></h3>
+<section id="show-irreps-tag">
+<span id="show-irreps"></span><h3><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code><a class="headerlink" href="#show-irreps-tag" title="Link to this heading">#</a></h3>
 <p>Irreducible representations are shown along with character table.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span>
 <span class="n">SHOW_IRREPS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </section>
-<section id="irreps-symmetry-adapted">
-<span id="irreps-symmetry-adapted-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code><a class="headerlink" href="#irreps-symmetry-adapted" title="Link to this heading">#</a></h3>
+<section id="irreps-symmetry-adapted-tag">
+<span id="irreps-symmetry-adapted"></span><h3><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code><a class="headerlink" href="#irreps-symmetry-adapted-tag" title="Link to this heading">#</a></h3>
 <p>When this tag is <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code>, the degenerate bands in the <code class="docutils literal notranslate"><span class="pre">IRREPS</span></code> calculation are
 found from the symmetry of the <em>q</em>-point, and not from how close their
 frequencies are. The default is <code class="docutils literal notranslate"><span class="pre">.FALSE.</span></code>.</p>
@@ -1839,8 +1840,8 @@ at <span class="math notranslate nohighlight">\(\Gamma\)</span>.</p>
 </pre></div>
 </div>
 </section>
-<section id="little-cogroup">
-<span id="little-cogroup-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code><a class="headerlink" href="#little-cogroup" title="Link to this heading">#</a></h3>
+<section id="little-cogroup-tag">
+<span id="little-cogroup"></span><h3><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code><a class="headerlink" href="#little-cogroup-tag" title="Link to this heading">#</a></h3>
 <p>Show irreps of little co-group (point-group of wavevector) instead of little
 group.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">8</span>
@@ -1851,8 +1852,8 @@ group.</p>
 </section>
 <section id="input-output-file-control">
 <h2>Input/Output file control<a class="headerlink" href="#input-output-file-control" title="Link to this heading">#</a></h2>
-<section id="fc-format-readfc-format-writefc-format">
-<span id="fc-format-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code><a class="headerlink" href="#fc-format-readfc-format-writefc-format" title="Link to this heading">#</a></h3>
+<section id="fc-format-tag">
+<span id="fc-format-readfc-format-writefc-format"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code><a class="headerlink" href="#fc-format-tag" title="Link to this heading">#</a></h3>
 <p>There are two file-formats to store force constants. Currently
 <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">text style</span></a> (<code class="docutils literal notranslate"><span class="pre">TEXT</span></code>) and hdf5 (<code class="docutils literal notranslate"><span class="pre">HDF5</span></code>) formats are
 supported. The default file format is the
@@ -1873,30 +1874,30 @@ format is possible:</p>
 </pre></div>
 </div>
 </section>
-<section id="band-format-mesh-format-qpoints-format">
-<span id="band-mesh-qpoints-format-tags"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code><a class="headerlink" href="#band-format-mesh-format-qpoints-format" title="Link to this heading">#</a></h3>
+<section id="band-mesh-qpoints-format-tags">
+<span id="band-format-mesh-format-qpoints-format"></span><h3><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code><a class="headerlink" href="#band-mesh-qpoints-format-tags" title="Link to this heading">#</a></h3>
 <p>There are two file-formats to write the results of band structure, mesh, and
 q-points calculations. Currently YAML (<code class="docutils literal notranslate"><span class="pre">YAML</span></code>) and hdf5 (<code class="docutils literal notranslate"><span class="pre">HDF5</span></code>) formats are
 supported. The default file format is the YAML format. The file format is
 changed as follows:</p>
-<section id="band-format">
-<span id="band-format-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code><a class="headerlink" href="#band-format" title="Link to this heading">#</a></h4>
+<section id="band-format-tag">
+<span id="band-format"></span><h4><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code><a class="headerlink" href="#band-format-tag" title="Link to this heading">#</a></h4>
 <p>When <code class="docutils literal notranslate"><span class="pre">HDF5</span></code> is set, calculated result is stored in <code class="docutils literal notranslate"><span class="pre">band.hdf5</span></code> instead of
 <code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BAND_FORMAT</span> <span class="o">=</span> <span class="n">HDF5</span>
 </pre></div>
 </div>
 </section>
-<section id="mesh-format">
-<span id="mesh-format-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code><a class="headerlink" href="#mesh-format" title="Link to this heading">#</a></h4>
+<section id="mesh-format-tag">
+<span id="mesh-format"></span><h4><code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code><a class="headerlink" href="#mesh-format-tag" title="Link to this heading">#</a></h4>
 <p>When <code class="docutils literal notranslate"><span class="pre">HDF5</span></code> is set, calculated result is stored in <code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code> instead of
 <code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MESH_FORMAT</span> <span class="o">=</span> <span class="n">HDF5</span>
 </pre></div>
 </div>
 </section>
-<section id="qpoints-format">
-<span id="qpoints-format-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code><a class="headerlink" href="#qpoints-format" title="Link to this heading">#</a></h4>
+<section id="qpoints-format-tag">
+<span id="qpoints-format"></span><h4><code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code><a class="headerlink" href="#qpoints-format-tag" title="Link to this heading">#</a></h4>
 <p>When <code class="docutils literal notranslate"><span class="pre">HDF5</span></code> is set, calculated result is stored in <code class="docutils literal notranslate"><span class="pre">qpoints.hdf5</span></code> instead of
 <code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QPOINTS_FORMAT</span> <span class="o">=</span> <span class="n">HDF5</span>
@@ -1904,8 +1905,8 @@ changed as follows:</p>
 </div>
 </section>
 </section>
-<section id="hdf5">
-<span id="hdf5-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">HDF5</span></code><a class="headerlink" href="#hdf5" title="Link to this heading">#</a></h3>
+<section id="hdf5-tag">
+<span id="hdf5"></span><h3><code class="docutils literal notranslate"><span class="pre">HDF5</span></code><a class="headerlink" href="#hdf5-tag" title="Link to this heading">#</a></h3>
 <p>The following output files are written in hdf5 format instead of their original
 formats (in parenthesis) by <code class="docutils literal notranslate"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>. In addition, <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code>
 is read with this tag.</p>
@@ -1950,26 +1951,26 @@ calculation results are written into <code class="docutils literal notranslate">
 <span id="id7"></span><h3><a class="headerlink" href="#summary-tag" title="Link to this heading">#</a></h3>
 <p>The following data may be optionally included in the <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> file that is
 written at the end of the pre/post-process (after running the <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> script).</p>
-<section id="include-fc">
-<span id="include-fc-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span></code><a class="headerlink" href="#include-fc" title="Link to this heading">#</a></h4>
+<section id="include-fc-tag">
+<span id="include-fc"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span></code><a class="headerlink" href="#include-fc-tag" title="Link to this heading">#</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">--include-fc</span></code> flag or setting <code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> will cause the force
 constants (if available) to be written as an entry in <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> file.
 The written force constants will reflect the required/available format used
 during processing. So if <code class="docutils literal notranslate"><span class="pre">--full-fc</span></code> is set the entire matrix will be written.</p>
 </section>
-<section id="include-fs">
-<span id="include-fs-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span></code><a class="headerlink" href="#include-fs" title="Link to this heading">#</a></h4>
+<section id="include-fs-tag">
+<span id="include-fs"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span></code><a class="headerlink" href="#include-fs-tag" title="Link to this heading">#</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">--include-fs</span></code> flag or setting <code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> will cause the force
 sets (if available) to be written as an entry in <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>.</p>
 </section>
-<section id="include-disp">
-<span id="include-disp-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span></code><a class="headerlink" href="#include-disp" title="Link to this heading">#</a></h4>
+<section id="include-disp-tag">
+<span id="include-disp"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span></code><a class="headerlink" href="#include-disp-tag" title="Link to this heading">#</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">--include-disp</span></code> flag or setting <code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> will cause
 displacements data (if available) to be written as an entry in <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>
 file.</p>
 </section>
-<section id="include-all">
-<span id="include-all-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span></code><a class="headerlink" href="#include-all" title="Link to this heading">#</a></h4>
+<section id="include-all-tag">
+<span id="include-all"></span><h4><code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span></code><a class="headerlink" href="#include-all-tag" title="Link to this heading">#</a></h4>
 <p>All available data covered by the other <code class="docutils literal notranslate"><span class="pre">include</span></code> flags can be written to
 <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> file using the <code class="docutils literal notranslate"><span class="pre">--include-all</span></code> flag or by setting <code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>. Force constants are not stored when force sets are stored.</p>
 </section>
@@ -2026,112 +2027,112 @@ file.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-file">Configuration file</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-tags">Basic tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dim"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#magnetic-unit-cells">Magnetic unit cells</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dimension-tag"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes-tag"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes-auto-magnetic">Magnetic unit cells</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atom-name"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#magmom"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-filename"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-conversion-factor"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors-tag"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass-tag"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#magmom-tag"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-filename-tag"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-conversion-factor-tag"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-creation-tags">Displacement creation tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-displacements"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-displacements-tag"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-tag"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diag"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-max"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-sampling"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_SAMPLING</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rd-number-estimation-factor"><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm-displacement-tag"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-tag"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-max-tag"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-sampling-tag"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_SAMPLING</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rd-number-estimation-factor-tag"><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature-tag"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed-tag"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure-tags">Band structure tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band"><code class="docutils literal notranslate"><span class="pre">BAND</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-points"><code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-labels"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-connection"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-const-interval"><code class="docutils literal notranslate"><span class="pre">BAND_CONST_INTERVAL</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure-related-tags">Band structure tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-tag"><code class="docutils literal notranslate"><span class="pre">BAND</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-points-tag"><code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-labels-tag"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-connection-tag"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-const-interval-tag"><code class="docutils literal notranslate"><span class="pre">BAND_CONST_INTERVAL</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling-tags">Mesh sampling tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-mp-or-mesh-numbers"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-tag"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mp-shift"><code class="docutils literal notranslate"><span class="pre">MP_SHIFT</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamma-center"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-mesh"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamma-center-tag"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-mesh-tag"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-density-of-states-dos-tags">Phonon density of states (DOS) tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-range"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fmin-fmax-and-fpitch"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pdos"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-direction"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#xyz-projection"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sigma"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debye-model"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#momemt-and-moment-order"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-related-tags">Phonon density of states (DOS) tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-tag"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-range-tag"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-fmin-fmax-tags"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pdos-tag"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-direction-tag"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#xyz-projection-tag"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sigma-tag"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debye-model-tag"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-moment-tag"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-related-tags">Thermal properties related tags</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tprop"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tmin-tmax-and-tstep"><code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pretend-real"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cutoff-frequency"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exclude-gamma-acoustic"><code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-tag"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-property-temperatures"><code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pretend-real-tags"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cutoff-frequency-tags"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exclude-gamma-acoustic-tag"><code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdisp"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat-cif"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-atomic-displacements-tags">Thermal displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements-tag"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement-matrices-tag"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement-cif-tag"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specific-q-points">Specific q-points</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writedm"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-tag"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writedm-tag"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-method"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#q-direction"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-tag"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-method-tag"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#q-direction-tag"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity">Group velocity</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity-tag"><code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gv-delta-q"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gv-delta-q-tag"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry">Symmetry</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tolerance"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tolerance-tag"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tag"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-symmetry"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-symmetry"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nomeshsym-tag"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-symmetry-tag"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants">Force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-tag">Force constants</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-force-constants"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#read-force-constants"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-options"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc"><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alm"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-force-constants-tag"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#read-force-constants-tag"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants-tag"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-tag"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-options-tag"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-symfc-tag"><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-alm-tag"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-animation-file">Create animation file</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#animation-tag">Create animation file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime-type"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime-tag"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-v-sim">For v_sim</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-the-other-animation-formats">For the other animation formats</a></li>
 </ul>
@@ -2139,28 +2140,28 @@ file.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-modulated-structure">Create modulated structure</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulation"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulation-tag"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#characters-of-irreducible-representations">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-symmetry-adapted"><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#irreducible-representation-related-tags">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-tag"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps-tag"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-symmetry-adapted-tag"><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup-tag"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-output-file-control">Input/Output file control</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-format-readfc-format-writefc-format"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format-mesh-format-qpoints-format"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-format"><code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-format"><code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-format-tag"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-mesh-qpoints-format-tags"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format-tag"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-format-tag"><code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-format-tag"><code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5-tag"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-hdf5"><code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-hdf5"><code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-hdf5"><code class="docutils literal notranslate"><span class="pre">qpoints.hdf5</span></code></a></li>
@@ -2168,10 +2169,10 @@ file.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-tag"></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fc"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fs"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-disp"><code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-all"><code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fc-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-fs-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-disp-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#include-all-tag"><code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span></code></a></li>
 </ul>
 </li>
 </ul>

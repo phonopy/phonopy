@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Migrating toward phonopy v5 &#8212; Phonopy v.4.10.0</title>
+    <title>Migrating toward phonopy v5 &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Migrating from phonopy v3 to v4" href="migration-v4.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -446,8 +446,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="migrating-toward-phonopy-v5">
-<span id="migration-v5"></span><h1>Migrating toward phonopy v5<a class="headerlink" href="#migrating-toward-phonopy-v5" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="migration-v5">
+<span id="migrating-toward-phonopy-v5"></span><h1>Migrating toward phonopy v5<a class="headerlink" href="#migration-v5" title="Link to this heading">#</a></h1>
 <p>Phonopy is moving to a model where each analysis returns a
 self-contained <em>result object</em> and the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance holds only
 the calculation inputs (cells, symmetry, force constants, NAC
@@ -455,9 +455,10 @@ parameters). See <a class="reference internal" href="development.html#developmen
 and the deprecation policy.</p>
 <p>As part of this migration, a group of legacy <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> methods has
 been deprecated. They still work in the v4.x series but emit
-<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> and are scheduled for removal in v5.0. This page
-lists each deprecated method and its replacement so that existing
-scripts can be updated ahead of v5.0.</p>
+<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. Most of them are scheduled for removal in v5.0.
+The <code class="docutils literal notranslate"><span class="pre">get_*_dict()</span></code> methods and the <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> class are kept until
+v6.0. This page lists each deprecated method and its replacement so
+that existing scripts can be updated ahead of the removal.</p>
 <p>The replacements are available now: every <code class="docutils literal notranslate"><span class="pre">run_*</span></code> method returns its
 result object, and the corresponding property on <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> exposes the
 same object. You can migrate today on v4.x without waiting for v5.0.</p>
@@ -497,7 +498,8 @@ names and list.</p>
 <p>Each <code class="docutils literal notranslate"><span class="pre">get_*_dict()</span></code> method returned a plain dictionary. The
 replacement is the result object returned by the matching <code class="docutils literal notranslate"><span class="pre">run_*</span></code>
 method (also reachable through the property of the same name); its
-attributes replace the former dict keys.</p>
+attributes replace the former dict keys. These methods are kept until
+v6.0.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Deprecated method</p></th>
@@ -643,7 +645,7 @@ computes the thermal properties internally, and returns an immutable
 <code class="docutils literal notranslate"><span class="pre">QHAResult</span></code> dataclass. File writers and plotters became free functions in
 <code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy.qha.plot</span></code>. See
 <a class="reference internal" href="qha.html#phonopy-qha-python-api"><span class="std std-ref">Python API: run_qha</span></a> for the full description including the new
-lattice-parameter output.</p>
+lattice-parameter output. <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> is kept until v6.0.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Deprecated (<code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code>)</p></th>
@@ -907,7 +909,7 @@ keep the v4.x result after v5.0, use <code class="docutils literal notranslate">
 <section id="surfacing-the-warnings-in-existing-code">
 <h2><a class="toc-backref" href="#id13" role="doc-backlink">Surfacing the warnings in existing code</a><a class="headerlink" href="#surfacing-the-warnings-in-existing-code" title="Link to this heading">#</a></h2>
 <p>Python hides <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> by default in many contexts. To see
-which deprecated calls a script makes before v5.0 removes them, run it
+which deprecated calls a script makes before they are removed, run it
 with warnings made visible:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-W<span class="w"> </span>default::DeprecationWarning<span class="w"> </span>your_script.py
 </pre></div>

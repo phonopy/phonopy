@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quasi harmonic approximation &#8212; Phonopy v.4.10.0</title>
+    <title>Quasi harmonic approximation &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="External tools" href="external-tools.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -420,11 +420,11 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gibbs-free-energy-and-thermal-expansion">Gibbs free energy and thermal expansion</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calculations-at-each-volume">Calculations at each volume</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-free-energy">Electronic free energy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-method">Gibbs free energy and thermal expansion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-calculations-at-each-volume">Calculations at each volume</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-electronic-free-energy">Electronic free energy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-phonopy-qha-command">The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-options">Options</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#h"><code class="docutils literal notranslate"><span class="pre">-h</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tmax"><code class="docutils literal notranslate"><span class="pre">--tmax</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pressure"><code class="docutils literal notranslate"><span class="pre">--pressure</span></code></a></li>
@@ -433,15 +433,15 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#p"><code class="docutils literal notranslate"><span class="pre">-p</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#s"><code class="docutils literal notranslate"><span class="pre">-s</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse"><code class="docutils literal notranslate"><span class="pre">--sparse</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#efe"><code class="docutils literal notranslate"><span class="pre">--efe</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-efe-option"><code class="docutils literal notranslate"><span class="pre">--efe</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-files">Output files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-output-files">Output files</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api-run-qha">Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-free-energies-from-eigenvalues">Electronic free energies from eigenvalues</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lattice-parameters-a-t-b-t-c-t">Lattice parameters a(T), b(T), c(T)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-python-api">Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-electronic-structures">Electronic free energies from eigenvalues</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-lattice-parameters">Lattice parameters a(T), b(T), c(T)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-from-phonopyqha-deprecated">Migration from <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> (deprecated)</a></li>
 </ul>
 </li>
@@ -456,13 +456,13 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="quasi-harmonic-approximation">
-<span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="phonopy-qha">
+<span id="quasi-harmonic-approximation"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#phonopy-qha" title="Link to this heading">#</a></h1>
 <p>This page describes how to calculate the thermal expansion and the heat
 capacity at constant pressure (Cp) of a crystal with phonopy. The calculation
 needs a phonon calculation at each of several volumes of the crystal.</p>
-<section id="gibbs-free-energy-and-thermal-expansion">
-<span id="phonopy-qha-method"></span><h2>Gibbs free energy and thermal expansion<a class="headerlink" href="#gibbs-free-energy-and-thermal-expansion" title="Link to this heading">#</a></h2>
+<section id="phonopy-qha-method">
+<span id="gibbs-free-energy-and-thermal-expansion"></span><h2>Gibbs free energy and thermal expansion<a class="headerlink" href="#phonopy-qha-method" title="Link to this heading">#</a></h2>
 <p>At each volume, the phonons are calculated in the harmonic approximation. The
 phonon frequencies change with the volume, so the phonon Helmholtz free energy
 <span class="math notranslate nohighlight">\(F_\mathrm{phonon}(T;\,V)\)</span> depends on both the temperature <span class="math notranslate nohighlight">\(T\)</span> and
@@ -491,8 +491,8 @@ range of calculations in the literature. <a class="reference internal" href="ani
 same approximation, and it minimizes the free energy over the lattice
 parameters instead of the volume.</p>
 </section>
-<section id="calculations-at-each-volume">
-<span id="phonopy-qha-calculations-at-each-volume"></span><h2>Calculations at each volume<a class="headerlink" href="#calculations-at-each-volume" title="Link to this heading">#</a></h2>
+<section id="phonopy-qha-calculations-at-each-volume">
+<span id="calculations-at-each-volume"></span><h2>Calculations at each volume<a class="headerlink" href="#phonopy-qha-calculations-at-each-volume" title="Link to this heading">#</a></h2>
 <p>At each volume, phonopy calculates the thermal properties
 (<a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">TPROP</span></a>) and writes them to <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code>.
 The calculator that gives the forces, such as VASP, also gives the total
@@ -505,8 +505,8 @@ of volumes and total energies of the static lattice. The Python API <code class=
 calculates the lattice parameters of the unit cell of each instance as functions
 of temperature.</p>
 </section>
-<section id="electronic-free-energy">
-<span id="phonopy-qha-electronic-free-energy"></span><h2>Electronic free energy<a class="headerlink" href="#electronic-free-energy" title="Link to this heading">#</a></h2>
+<section id="phonopy-qha-electronic-free-energy">
+<span id="electronic-free-energy"></span><h2>Electronic free energy<a class="headerlink" href="#phonopy-qha-electronic-free-energy" title="Link to this heading">#</a></h2>
 <p>In a metal, the electrons near the Fermi level are excited thermally. The free
 energy of these electrons depends on the temperature and the volume, and it
 changes the equilibrium volume, the thermal expansion coefficient and the heat
@@ -643,8 +643,8 @@ that expected by <code class="docutils literal notranslate"><span class="pre">ph
 the energies, or equivalent effect is applied using <code class="docutils literal notranslate"><span class="pre">--pressure</span></code> option.</p>
 <p>The electronic free energy is included with the <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option; see
 <a class="reference internal" href="#phonopy-qha-electronic-free-energy"><span class="std std-ref">Electronic free energy</span></a>.</p>
-<section id="options">
-<span id="phonopy-qha-options"></span><h3>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
+<section id="phonopy-qha-options">
+<span id="options"></span><h3>Options<a class="headerlink" href="#phonopy-qha-options" title="Link to this heading">#</a></h3>
 <section id="h">
 <h4><code class="docutils literal notranslate"><span class="pre">-h</span></code><a class="headerlink" href="#h" title="Link to this heading">#</a></h4>
 <p>Show help. The available options are shown. Without any option, the results are
@@ -693,8 +693,8 @@ coefficient are plotted on the display.</p>
 results at temperatures. For example with <code class="docutils literal notranslate"><span class="pre">--sparse=10</span></code>, 1 in 10 temperature
 curves is only plotted.</p>
 </section>
-<section id="efe">
-<span id="phonopy-qha-efe-option"></span><h4><code class="docutils literal notranslate"><span class="pre">--efe</span></code><a class="headerlink" href="#efe" title="Link to this heading">#</a></h4>
+<section id="phonopy-qha-efe-option">
+<span id="efe"></span><h4><code class="docutils literal notranslate"><span class="pre">--efe</span></code><a class="headerlink" href="#phonopy-qha-efe-option" title="Link to this heading">#</a></h4>
 <p><strong>Experimental</strong></p>
 <p>Temperature dependent energies other than phonon free energy are included with
 this option. This is used such as:</p>
@@ -746,8 +746,8 @@ capacity. The table in <a class="reference internal" href="#phonopy-qha-electron
 files include them.</p>
 </section>
 </section>
-<section id="output-files">
-<span id="phonopy-qha-output-files"></span><h3>Output files<a class="headerlink" href="#output-files" title="Link to this heading">#</a></h3>
+<section id="phonopy-qha-output-files">
+<span id="output-files"></span><h3>Output files<a class="headerlink" href="#phonopy-qha-output-files" title="Link to this heading">#</a></h3>
 <p>The physical units of V and T are <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and K, respectively.
 The unit of eV for Helmholtz and Gibbs energies, J/K/mol for <span class="math notranslate nohighlight">\(C_V\)</span> and
 entropy, GPa for bulk modulus and pressure are used.</p>
@@ -775,8 +775,8 @@ equation of <span class="math notranslate nohighlight">\(G(T, p)\)</span> at the
 </ul>
 </section>
 </section>
-<section id="python-api-run-qha">
-<span id="phonopy-qha-python-api"></span><h2>Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code><a class="headerlink" href="#python-api-run-qha" title="Link to this heading">#</a></h2>
+<section id="phonopy-qha-python-api">
+<span id="python-api-run-qha"></span><h2>Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code><a class="headerlink" href="#phonopy-qha-python-api" title="Link to this heading">#</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This API is experimental. The function and class names, arguments, and
@@ -852,8 +852,8 @@ stored on that path.</p></li>
 <li><p>The file formats written by <code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code> are identical to those of
 <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> for the shared quantities.</p></li>
 </ul>
-<section id="electronic-free-energies-from-eigenvalues">
-<span id="phonopy-qha-electronic-structures"></span><h3>Electronic free energies from eigenvalues<a class="headerlink" href="#electronic-free-energies-from-eigenvalues" title="Link to this heading">#</a></h3>
+<section id="phonopy-qha-electronic-structures">
+<span id="electronic-free-energies-from-eigenvalues"></span><h3>Electronic free energies from eigenvalues<a class="headerlink" href="#phonopy-qha-electronic-structures" title="Link to this heading">#</a></h3>
 <p>Instead of preparing a <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> file with <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> and the
 <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>, the electronic thermal properties can be
 computed inside <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> from the electronic states at each volume point.
@@ -891,8 +891,8 @@ Brillouin zone in <a class="reference internal" href="electronic-thermal-propert
 <code class="docutils literal notranslate"><span class="pre">electronic_window</span></code>, <code class="docutils literal notranslate"><span class="pre">electronic_spacing</span></code> and <code class="docutils literal notranslate"><span class="pre">symmetrize_tetrahedra</span></code>
 parameters of <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> are passed to the tetrahedron method.</p>
 </section>
-<section id="lattice-parameters-a-t-b-t-c-t">
-<span id="phonopy-qha-lattice-parameters"></span><h3>Lattice parameters a(T), b(T), c(T)<a class="headerlink" href="#lattice-parameters-a-t-b-t-c-t" title="Link to this heading">#</a></h3>
+<section id="phonopy-qha-lattice-parameters">
+<span id="lattice-parameters-a-t-b-t-c-t"></span><h3>Lattice parameters a(T), b(T), c(T)<a class="headerlink" href="#phonopy-qha-lattice-parameters" title="Link to this heading">#</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The setting assumed here is that the structures of the volume series were
@@ -1070,11 +1070,11 @@ was unavailable.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gibbs-free-energy-and-thermal-expansion">Gibbs free energy and thermal expansion</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calculations-at-each-volume">Calculations at each volume</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-free-energy">Electronic free energy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-method">Gibbs free energy and thermal expansion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-calculations-at-each-volume">Calculations at each volume</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-electronic-free-energy">Electronic free energy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-phonopy-qha-command">The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-options">Options</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#h"><code class="docutils literal notranslate"><span class="pre">-h</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tmax"><code class="docutils literal notranslate"><span class="pre">--tmax</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pressure"><code class="docutils literal notranslate"><span class="pre">--pressure</span></code></a></li>
@@ -1083,15 +1083,15 @@ was unavailable.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#p"><code class="docutils literal notranslate"><span class="pre">-p</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#s"><code class="docutils literal notranslate"><span class="pre">-s</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse"><code class="docutils literal notranslate"><span class="pre">--sparse</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#efe"><code class="docutils literal notranslate"><span class="pre">--efe</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-efe-option"><code class="docutils literal notranslate"><span class="pre">--efe</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-files">Output files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-output-files">Output files</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api-run-qha">Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-free-energies-from-eigenvalues">Electronic free energies from eigenvalues</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lattice-parameters-a-t-b-t-c-t">Lattice parameters a(T), b(T), c(T)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-python-api">Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-electronic-structures">Electronic free energies from eigenvalues</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-qha-lattice-parameters">Lattice parameters a(T), b(T), c(T)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-from-phonopyqha-deprecated">Migration from <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> (deprecated)</a></li>
 </ul>
 </li>

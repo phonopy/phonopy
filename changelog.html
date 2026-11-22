@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.10.0</title>
+    <title>Change Log &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Development" href="development.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -180,7 +180,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -419,6 +419,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-21-2026-version-4-11-0">Nov-21-2026: Version 4.11.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-06-2026-version-4-10-0">Nov-06-2026: Version 4.10.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-05-2026-version-4-9-0">Nov-05-2026: Version 4.9.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-6">Oct-24-2026: Version 4.8.6</a></li>
@@ -660,8 +661,45 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="change-log">
-<span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="changelog">
+<span id="change-log"></span><h1>Change Log<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h1>
+<section id="nov-21-2026-version-4-11-0">
+<h2>Nov-21-2026: Version 4.11.0<a class="headerlink" href="#nov-21-2026-version-4-11-0" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>phonors 0.9.0 or later is required.</p></li>
+<li><p>Bug fix: With zero magnetic moments, spglib returns a grey magnetic space
+group, in which every operation appears with and without time reversal.
+<code class="docutils literal notranslate"><span class="pre">Symmetry.symmetry_operations</span></code> had each of these operations twice, and the
+symfc projector failed with <code class="docutils literal notranslate"><span class="pre">IndexError</span></code>. Each operation now appears once.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> when a lattice vector of the primitive cell
+moves an atom onto an atom with a different magnetic moment. Before, the
+primitive cell kept the magnetic moment of one of these atoms, and the
+primitive matrix was accepted. A lattice vector that reverses every magnetic
+moment is still accepted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> copies <code class="docutils literal notranslate"><span class="pre">species_ids</span></code> that is given to it. Before, the array
+was shared with the caller and between a cell and its copy.</p></li>
+<li><p>Bug fix: <code class="docutils literal notranslate"><span class="pre">reciprocal_lattice</span></code> in <code class="docutils literal notranslate"><span class="pre">modulation.yaml</span></code> was wrong when the matrix
+of the basis vectors was not symmetric.</p></li>
+<li><p>The phase of a modulation is measured from the element of the eigenvector
+with the largest magnitude. The elements of atoms related by lattice
+translations have the same magnitude, and the element chosen among them
+depended on rounding errors. The first of these elements is chosen now.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">modulation.yaml</span></code> has the phonopy version at the top, and its crystal
+structures are written in the same format as in <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>.</p></li>
+<li><p>The second derivative of the dynamical matrix is removed. It was an
+experimental feature that was correct only without NAC or with the NAC of
+Wang.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mode_cv</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.thermal_properties</span></code>, deprecated in v4.10.0, is
+removed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_trigonal</span></code> of <code class="docutils literal notranslate"><span class="pre">Phonopy.generate_displacements</span></code>, the <code class="docutils literal notranslate"><span class="pre">--trigonal</span></code> option
+and the <code class="docutils literal notranslate"><span class="pre">TRIGONAL</span></code> tag are deprecated. They were not documented, and they
+will be removed in v5.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">get_*_dict</span></code> methods of <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> and <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code>, and <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code>
+itself, are kept until v6.0. The migration guide to v5 said that they were
+removed in v5.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VelocityMatrix</span></code> moved from phono3py to <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.velocity_matrix</span></code>.</p></li>
+</ul>
+</section>
 <section id="nov-06-2026-version-4-10-0">
 <h2>Nov-06-2026: Version 4.10.0<a class="headerlink" href="#nov-06-2026-version-4-10-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2980,6 +3018,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-21-2026-version-4-11-0">Nov-21-2026: Version 4.11.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-06-2026-version-4-10-0">Nov-06-2026: Version 4.10.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-05-2026-version-4-9-0">Nov-05-2026: Version 4.9.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-6">Oct-24-2026: Version 4.8.6</a></li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Input files &#8212; Phonopy v.4.10.0</title>
+    <title>Input files &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="phonopy command" href="phonopy.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -424,34 +424,34 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-file">Structure file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp-poscar-like-format">VASP POSCAR like format</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style">Example of rutile-type silicon oxide crystal structure (VASP 4 style)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-poscar1">Example of rutile-type silicon oxide crystal structure (VASP 4 style)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-5-style">Example of rutile-type silicon oxide crystal structure (VASP 5 style)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-file-force-sets">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-1">Type 1</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-forces">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-forces-type-1">Type 1</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-2">Type 2</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-forces-type-2">Type 2</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Example</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-and-force-constants-hdf5"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-force-constants"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-of-force-constants">Format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-of-force-constants-hdf5">Format of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-optional"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-file"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#born-optional"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#born-file"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format">Format</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Example</a></li>
 </ul>
@@ -524,8 +524,8 @@ positions in the order. The seventh line should be written as <code class="docut
 means that the atomic positions are represented in fractional (reduced)
 coordinates. When you write chemical symbols in the first line, they are read
 and those defined by the <code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code> tag are overwritten.</p>
-<section id="example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style">
-<span id="example-poscar1"></span><h4>Example of rutile-type silicon oxide crystal structure (VASP 4 style)<a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style" title="Link to this heading">#</a></h4>
+<section id="example-poscar1">
+<span id="example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style"></span><h4>Example of rutile-type silicon oxide crystal structure (VASP 4 style)<a class="headerlink" href="#example-poscar1" title="Link to this heading">#</a></h4>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Si</span> <span class="n">O</span>
    <span class="mf">1.00000000000000</span>
      <span class="mf">4.2266540199664249</span>    <span class="mf">0.0000000000000000</span>    <span class="mf">0.0000000000000000</span>
@@ -567,11 +567,11 @@ those defined by the <code class="docutils literal notranslate"><span class="pre
 </section>
 </section>
 </section>
-<section id="force-file-force-sets">
-<span id="file-forces"></span><h2>Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)<a class="headerlink" href="#force-file-force-sets" title="Link to this heading">#</a></h2>
+<section id="file-forces">
+<span id="force-file-force-sets"></span><h2>Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)<a class="headerlink" href="#file-forces" title="Link to this heading">#</a></h2>
 <p>Two types of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> formats are supported.</p>
-<section id="type-1">
-<span id="file-forces-type-1"></span><h3>Type 1<a class="headerlink" href="#type-1" title="Link to this heading">#</a></h3>
+<section id="file-forces-type-1">
+<span id="type-1"></span><h3>Type 1<a class="headerlink" href="#file-forces-type-1" title="Link to this heading">#</a></h3>
 <p>This format is the default format of phonopy and force constants can be
 calculated by built-in force constants calculator of phonopy by finite
 difference method, though external force constants calculator can be also used
@@ -613,8 +613,8 @@ repeated until the forces of all the displacements have been written.</p>
 </div>
 </section>
 </section>
-<section id="type-2">
-<span id="file-forces-type-2"></span><h3>Type 2<a class="headerlink" href="#type-2" title="Link to this heading">#</a></h3>
+<section id="file-forces-type-2">
+<span id="type-2"></span><h3>Type 2<a class="headerlink" href="#file-forces-type-2" title="Link to this heading">#</a></h3>
 <p>The format is compatible to <code class="docutils literal notranslate"><span class="pre">DFSET</span></code> of
 <a class="reference external" href="https://alm.readthedocs.io/en/develop/format-dfset.html#format-of-dfset">ALM code</a>.</p>
 <p>Each line has exactly 6 elements. The first three and second three elements give
@@ -706,8 +706,8 @@ displacement of the site.
 </section>
 </section>
 </section>
-<section id="force-constants-and-force-constants-hdf5">
-<span id="file-force-constants"></span><h2><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code><a class="headerlink" href="#force-constants-and-force-constants-hdf5" title="Link to this heading">#</a></h2>
+<section id="file-force-constants">
+<span id="force-constants-and-force-constants-hdf5"></span><h2><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code><a class="headerlink" href="#file-force-constants" title="Link to this heading">#</a></h2>
 <p>If the force constants of a supercell are known, it is not necessary to prepared
 <code class="docutils literal notranslate"><span class="pre">FORCES</span></code>. Phonopy has an interface to read and write <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> or
 <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code>. To read and write these files are controlled by
@@ -793,8 +793,8 @@ atoms in the primitive cell in supercell index system.</p>
 </div>
 </section>
 </section>
-<section id="qpoints-optional">
-<span id="qpoints-file"></span><h2><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)<a class="headerlink" href="#qpoints-optional" title="Link to this heading">#</a></h2>
+<section id="qpoints-file">
+<span id="qpoints-optional"></span><h2><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)<a class="headerlink" href="#qpoints-file" title="Link to this heading">#</a></h2>
 <p>Specific q-points are calculated using <code class="docutils literal notranslate"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> tag and <code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code>
 file. The file format of <code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> is as follows. The first line gives the
 number of q-points. Then the successive lines give q-points in reduced
@@ -810,8 +810,8 @@ coordinate of reciprocal space of the input unit cell.</p>
 </div>
 </section>
 </section>
-<section id="born-optional">
-<span id="born-file"></span><h2><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)<a class="headerlink" href="#born-optional" title="Link to this heading">#</a></h2>
+<section id="born-file">
+<span id="born-optional"></span><h2><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)<a class="headerlink" href="#born-file" title="Link to this heading">#</a></h2>
 <p>This file is used with the <code class="docutils literal notranslate"><span class="pre">--nac</span></code> option or <code class="docutils literal notranslate"><span class="pre">NAC</span></code> tag.</p>
 <p>The formula implemented is refered to
 <a class="reference internal" href="formulation.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
@@ -979,34 +979,34 @@ atoms No. 1 and 13 have to be written in <code class="docutils literal notransla
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-file">Structure file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp-poscar-like-format">VASP POSCAR like format</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style">Example of rutile-type silicon oxide crystal structure (VASP 4 style)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-poscar1">Example of rutile-type silicon oxide crystal structure (VASP 4 style)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-5-style">Example of rutile-type silicon oxide crystal structure (VASP 5 style)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-file-force-sets">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-1">Type 1</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-forces">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-forces-type-1">Type 1</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-2">Type 2</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-forces-type-2">Type 2</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Example</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-and-force-constants-hdf5"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-force-constants"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-of-force-constants">Format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-of-force-constants-hdf5">Format of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-optional"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-file"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#born-optional"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#born-file"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format">Format</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Example</a></li>
 </ul>

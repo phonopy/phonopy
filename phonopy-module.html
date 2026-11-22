@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Phonopy API for Python &#8212; Phonopy v.4.10.0</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Symmetry-adapted phonon modes" href="symmetry-adapted-modes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -420,7 +420,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-unit-cells">Three unit cells</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-three-unit-cells">Three unit cells</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-modules">Import modules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a><ul class="nav section-nav flex-column">
@@ -432,13 +432,13 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-calculation">Phonon calculation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#result-objects">Result objects</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-parameters-phonopy-save">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-result-objects">Result objects</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-save-parameters">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure">Band structure</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling">Mesh sampling</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-and-pdos">DOS and PDOS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties">Thermal properties</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-nac-params">Non-analytical term correction</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-at-arbitrary-q-points">Phonon at arbitrary q-points</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulations">Modulations</a></li>
@@ -457,10 +457,10 @@
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopyatoms-class"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-atoms"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization">Initialization</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cell"><code class="docutils literal notranslate"><span class="pre">cell</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-atoms-variables">Variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-atoms-cell"><code class="docutils literal notranslate"><span class="pre">cell</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#scaled-positions"><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#positions"><code class="docutils literal notranslate"><span class="pre">positions</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symbols"><code class="docutils literal notranslate"><span class="pre">symbols</span></code></a></li>
@@ -473,7 +473,7 @@
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods">Methods</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-species-sites-and-the-virtual-crystal-approximation">Mixed-species sites and the Virtual Crystal Approximation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-species-sites">Mixed-species sites and the Virtual Crystal Approximation</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#weighted-atoms-and-phonopy">Weighted atoms and <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-site-mixture">CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp-poscar-and-incar-for-vca">VASP POSCAR and INCAR for VCA</a></li>
@@ -482,13 +482,13 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-matrix">Supercell matrix</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-supercell-matrix">Supercell matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-primitive-matrix">Primitive matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-search-tolerance">Symmetry search tolerance</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-phonopy-settings-phonopy-load">Load phonopy settings <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#read-and-write-crystal-structures">Read and write crystal structures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-load">Load phonopy settings <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-read-write-structure">Read and write crystal structures</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-parameters-for-non-analytical-term-correction">Getting parameters for non-analytical term correction</a></li>
 </ul>
             </nav>
@@ -501,8 +501,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="phonopy-api-for-python">
-<span id="phonopy-module"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-api-for-python" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="phonopy-module">
+<span id="phonopy-api-for-python"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-module" title="Link to this heading">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The Python API is being restructured toward phonopy v5 and v6; see
@@ -519,8 +519,8 @@ raises <code class="docutils literal notranslate"><span class="pre">RuntimeError
 should not rely on them.</p></li>
 </ul>
 </div>
-<section id="three-unit-cells">
-<span id="phonopy-three-unit-cells"></span><h2>Three unit cells<a class="headerlink" href="#three-unit-cells" title="Link to this heading">#</a></h2>
+<section id="phonopy-three-unit-cells">
+<span id="three-unit-cells"></span><h2>Three unit cells<a class="headerlink" href="#phonopy-three-unit-cells" title="Link to this heading">#</a></h2>
 <p>In the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class, mainly three different unit cells are used, <code class="docutils literal notranslate"><span class="pre">unitcell</span></code>,
 <code class="docutils literal notranslate"><span class="pre">supercell</span></code>, and <code class="docutils literal notranslate"><span class="pre">primitive</span></code>, which can be accessed with these attributes in the
 instance. <code class="docutils literal notranslate"><span class="pre">unitcell</span></code> is the initial input crystal structure. From <code class="docutils literal notranslate"><span class="pre">unitcell</span></code>,
@@ -726,8 +726,8 @@ details at <a class="reference internal" href="input-files.html#file-force-const
 </section>
 <section id="phonon-calculation">
 <h2>Phonon calculation<a class="headerlink" href="#phonon-calculation" title="Link to this heading">#</a></h2>
-<section id="result-objects">
-<span id="phonopy-result-objects"></span><h3>Result objects<a class="headerlink" href="#result-objects" title="Link to this heading">#</a></h3>
+<section id="phonopy-result-objects">
+<span id="result-objects"></span><h3>Result objects<a class="headerlink" href="#phonopy-result-objects" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class holds the definition of the physical model: the
 three unit cells (<a class="reference internal" href="#phonopy-three-unit-cells"><span class="std std-ref">Three unit cells</span></a>), symmetry, force
 constants, and parameters of non-analytical term correction
@@ -754,9 +754,10 @@ listed below are the stable surface.</p>
 <span class="n">bs</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>  <span class="c1"># draw into a matplotlib Axes</span>
 </pre></div>
 </div>
-<p>Internal machinery such as <code class="docutils literal notranslate"><span class="pre">DynamicalMatrix</span></code> and <code class="docutils literal notranslate"><span class="pre">GroupVelocity</span></code> is
-not a result object; those are stateful calculators wrapped by the
-<code class="docutils literal notranslate"><span class="pre">run_*</span></code> methods and are not part of the supported data-access API.</p>
+<p>Internal machinery such as <code class="docutils literal notranslate"><span class="pre">DynamicalMatrix</span></code>, <code class="docutils literal notranslate"><span class="pre">GroupVelocity</span></code> and
+<code class="docutils literal notranslate"><span class="pre">VelocityMatrix</span></code> is not a result object; those are stateful calculators
+wrapped by the <code class="docutils literal notranslate"><span class="pre">run_*</span></code> methods or used by other packages such as
+phono3py, and are not part of the supported data-access API.</p>
 <p>The result objects and their main data attributes:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -823,8 +824,8 @@ on those that have a graphical representation (<code class="docutils literal not
 Figure-level convenience plot functions are provided in
 <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.plot</span></code> and as <code class="docutils literal notranslate"><span class="pre">Phonopy.plot_*</span></code> methods.</p>
 </section>
-<section id="save-parameters-phonopy-save">
-<span id="phonopy-save-parameters"></span><h3>Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)<a class="headerlink" href="#save-parameters-phonopy-save" title="Link to this heading">#</a></h3>
+<section id="phonopy-save-parameters">
+<span id="save-parameters-phonopy-save"></span><h3>Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)<a class="headerlink" href="#phonopy-save-parameters" title="Link to this heading">#</a></h3>
 <p>Basic information and parameters needed for phonon calculation are saved into a
 file by <code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -985,8 +986,8 @@ accessible via the <code class="docutils literal notranslate"><span class="pre">
 </pre></div>
 </div>
 </section>
-<section id="non-analytical-term-correction">
-<span id="phonopy-nac-params"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
+<section id="phonopy-nac-params">
+<span id="non-analytical-term-correction"></span><h3>Non-analytical term correction<a class="headerlink" href="#phonopy-nac-params" title="Link to this heading">#</a></h3>
 <p>To apply non-analytical term correction, Born effective charge tensors for all
 atoms in <strong>primitive</strong> cell, dielectric constant tensor, and the unit conversion
 factor have to be correctly set. The tensors are given in Cartesian coordinates.</p>
@@ -1194,8 +1195,8 @@ the convention of LAPACK, which can be shown at
 </section>
 </section>
 </section>
-<section id="phonopyatoms-class">
-<span id="phonopy-atoms"></span><h2><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class<a class="headerlink" href="#phonopyatoms-class" title="Link to this heading">#</a></h2>
+<section id="phonopy-atoms">
+<span id="phonopyatoms-class"></span><h2><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class<a class="headerlink" href="#phonopy-atoms" title="Link to this heading">#</a></h2>
 <section id="initialization">
 <h3>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">#</a></h3>
 <p>The usable keywords in the initialization are:</p>
@@ -1221,12 +1222,12 @@ the convention of LAPACK, which can be shown at
 and is required to construct cells with mixed-species sites such as those
 arising from the Virtual Crystal Approximation; see <a class="reference internal" href="#mixed-species-sites"><span class="std std-ref">Mixed-species sites and the Virtual Crystal Approximation</span></a>.</p>
 </section>
-<section id="variables">
-<span id="phonopy-atoms-variables"></span><h3>Variables<a class="headerlink" href="#variables" title="Link to this heading">#</a></h3>
+<section id="phonopy-atoms-variables">
+<span id="variables"></span><h3>Variables<a class="headerlink" href="#phonopy-atoms-variables" title="Link to this heading">#</a></h3>
 <p>The following variables are implemented in the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class in
 <code class="docutils literal notranslate"><span class="pre">phonopy/structure/atoms.py</span></code>.</p>
-<section id="cell">
-<span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">cell</span></code><a class="headerlink" href="#cell" title="Link to this heading">#</a></h4>
+<section id="phonopy-atoms-cell">
+<span id="cell"></span><h4><code class="docutils literal notranslate"><span class="pre">cell</span></code><a class="headerlink" href="#phonopy-atoms-cell" title="Link to this heading">#</a></h4>
 <p>Basis vectors are given in the matrix form in Cartesian coordinates.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span><span class="n">a_x</span><span class="p">,</span> <span class="n">a_y</span><span class="p">,</span> <span class="n">a_z</span><span class="p">],</span> <span class="p">[</span><span class="n">b_x</span><span class="p">,</span> <span class="n">b_y</span><span class="p">,</span> <span class="n">b_z</span><span class="p">],</span> <span class="p">[</span><span class="n">c_x</span><span class="p">,</span> <span class="n">c_y</span><span class="p">,</span> <span class="n">c_z</span><span class="p">]]</span>
 </pre></div>
@@ -1321,8 +1322,8 @@ Yaml format is shown by <code class="docutils literal notranslate"><span class="
 spglib crystal structure
 (<a class="reference external" href="https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell">https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell</a>).</p>
 </section>
-<section id="mixed-species-sites-and-the-virtual-crystal-approximation">
-<span id="mixed-species-sites"></span><h3>Mixed-species sites and the Virtual Crystal Approximation<a class="headerlink" href="#mixed-species-sites-and-the-virtual-crystal-approximation" title="Link to this heading">#</a></h3>
+<section id="mixed-species-sites">
+<span id="mixed-species-sites-and-the-virtual-crystal-approximation"></span><h3>Mixed-species sites and the Virtual Crystal Approximation<a class="headerlink" href="#mixed-species-sites" title="Link to this heading">#</a></h3>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><strong>Experimental.</strong> The support of mixed-species sites, including the
@@ -1478,8 +1479,8 @@ needs only the force constants to be calculated again.
 </section>
 <section id="definitions-of-variables">
 <h2>Definitions of variables<a class="headerlink" href="#definitions-of-variables" title="Link to this heading">#</a></h2>
-<section id="supercell-matrix">
-<span id="variable-supercell-matrix"></span><h3>Supercell matrix<a class="headerlink" href="#supercell-matrix" title="Link to this heading">#</a></h3>
+<section id="variable-supercell-matrix">
+<span id="supercell-matrix"></span><h3>Supercell matrix<a class="headerlink" href="#variable-supercell-matrix" title="Link to this heading">#</a></h3>
 <p>Supercell matrix <span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{s}\)</span> is a transformation matrix from lattice
 vectors to those of a super cell. Following a crystallography convention, the
 transformation is given by</p>
@@ -1498,8 +1499,8 @@ relies on the <code class="docutils literal notranslate"><span class="pre">Phono
 </pre></div>
 </div>
 </section>
-<section id="primitive-matrix">
-<span id="variable-primitive-matrix"></span><h3>Primitive matrix<a class="headerlink" href="#primitive-matrix" title="Link to this heading">#</a></h3>
+<section id="variable-primitive-matrix">
+<span id="primitive-matrix"></span><h3>Primitive matrix<a class="headerlink" href="#variable-primitive-matrix" title="Link to this heading">#</a></h3>
 <p>Primitive matrix <span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{p}\)</span> is a transformation matrix from lattice
 vectors to those of a primitive cell if there exists the primitive cell in the
 lattice vectors. Following a crystallography convention, the transformation is
@@ -1526,8 +1527,8 @@ to determine symmetry operations of the crystal structures. The physical unit
 follows that of input crystal structure.</p>
 </section>
 </section>
-<section id="load-phonopy-settings-phonopy-load">
-<span id="phonopy-load"></span><h2>Load phonopy settings <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code><a class="headerlink" href="#load-phonopy-settings-phonopy-load" title="Link to this heading">#</a></h2>
+<section id="phonopy-load">
+<span id="load-phonopy-settings-phonopy-load"></span><h2>Load phonopy settings <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code><a class="headerlink" href="#phonopy-load" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> is a convenient function that creates a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance by
 loading data from a <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> file, which may include all the necessary
 information to run phonopy. A typical usage is:</p>
@@ -1564,8 +1565,8 @@ BORN<span class="w">  </span>FORCE_SETS<span class="w">  </span>phonopy.yaml
 </pre></div>
 </div>
 </section>
-<section id="read-and-write-crystal-structures">
-<span id="phonopy-read-write-structure"></span><h2>Read and write crystal structures<a class="headerlink" href="#read-and-write-crystal-structures" title="Link to this heading">#</a></h2>
+<section id="phonopy-read-write-structure">
+<span id="read-and-write-crystal-structures"></span><h2>Read and write crystal structures<a class="headerlink" href="#phonopy-read-write-structure" title="Link to this heading">#</a></h2>
 <p>There is a function to write the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> instance into crystal structure
 formats of different force calculators, <code class="docutils literal notranslate"><span class="pre">write_crystal_structure</span></code>. This works as
 a partner of <code class="docutils literal notranslate"><span class="pre">read_crystal_structure</span></code>. Taking an example of QE interface, how to
@@ -1727,7 +1728,7 @@ VASP code by the unit cell.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-unit-cells">Three unit cells</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-three-unit-cells">Three unit cells</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-modules">Import modules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a><ul class="nav section-nav flex-column">
@@ -1739,13 +1740,13 @@ VASP code by the unit cell.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-calculation">Phonon calculation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#result-objects">Result objects</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-parameters-phonopy-save">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-result-objects">Result objects</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-save-parameters">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure">Band structure</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling">Mesh sampling</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-and-pdos">DOS and PDOS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties">Thermal properties</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-nac-params">Non-analytical term correction</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-at-arbitrary-q-points">Phonon at arbitrary q-points</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulations">Modulations</a></li>
@@ -1764,10 +1765,10 @@ VASP code by the unit cell.</p>
 </li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopyatoms-class"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-atoms"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization">Initialization</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cell"><code class="docutils literal notranslate"><span class="pre">cell</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-atoms-variables">Variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-atoms-cell"><code class="docutils literal notranslate"><span class="pre">cell</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#scaled-positions"><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#positions"><code class="docutils literal notranslate"><span class="pre">positions</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symbols"><code class="docutils literal notranslate"><span class="pre">symbols</span></code></a></li>
@@ -1780,7 +1781,7 @@ VASP code by the unit cell.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods">Methods</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-species-sites-and-the-virtual-crystal-approximation">Mixed-species sites and the Virtual Crystal Approximation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-species-sites">Mixed-species sites and the Virtual Crystal Approximation</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#weighted-atoms-and-phonopy">Weighted atoms and <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-site-mixture">CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp-poscar-and-incar-for-vca">VASP POSCAR and INCAR for VCA</a></li>
@@ -1789,13 +1790,13 @@ VASP code by the unit cell.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-matrix">Supercell matrix</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-supercell-matrix">Supercell matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-primitive-matrix">Primitive matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-search-tolerance">Symmetry search tolerance</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-phonopy-settings-phonopy-load">Load phonopy settings <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#read-and-write-crystal-structures">Read and write crystal structures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-load">Load phonopy settings <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-read-write-structure">Read and write crystal structures</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-parameters-for-non-analytical-term-correction">Getting parameters for non-analytical term correction</a></li>
 </ul>
   </nav></div>

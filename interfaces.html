@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Interfaces to calculators &#8212; Phonopy v.4.10.0</title>
+    <title>Interfaces to calculators &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Crystal symmetry" href="symmetry.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -418,15 +418,15 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-force-calculators">List of force calculators</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interfaces-to-force-calculators">List of force calculators</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#physical-unit-system-for-calculator">Physical unit system for calculator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interfaces-physical-units">Physical unit system for calculator</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-file-name-value-and-conversion-factor">Default file name, value, and conversion factor</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-unit-cell-file-name-for-calculator">Default unit cell file name for calculator</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-displacement-distances">Default displacement distances</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-unit-conversion-factor-of-phonon-frequency-to-thz">Default unit conversion factor of phonon frequency to THz</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-unit-conversion-factor-for-non-analytical-term-correction">Default unit conversion factor for non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-default-value-interfaces">Default unit conversion factor of phonon frequency to THz</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-default-value-interfaces">Default unit conversion factor for non-analytical term correction</a></li>
 </ul>
 </li>
 </ul>
@@ -440,14 +440,14 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="interfaces-to-calculators">
-<span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="calculator-interfaces">
+<span id="interfaces-to-calculators"></span><h1>Interfaces to calculators<a class="headerlink" href="#calculator-interfaces" title="Link to this heading">#</a></h1>
 <p>The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk, SIESTA,
 CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, LAMMPS, Questaal(QLM) and
 Octopus are built in to the usual phonopy command. See the command options
 and how to invoke each of them at <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>. <a class="reference internal" href="external-tools.html#external-tools-phonolammps"><span class="std std-ref">LAMMPS interface</span></a> is provided as an external tool by Abel Carreras.</p>
-<section id="list-of-force-calculators">
-<span id="interfaces-to-force-calculators"></span><h2>List of force calculators<a class="headerlink" href="#list-of-force-calculators" title="Link to this heading">#</a></h2>
+<section id="interfaces-to-force-calculators">
+<span id="list-of-force-calculators"></span><h2>List of force calculators<a class="headerlink" href="#interfaces-to-force-calculators" title="Link to this heading">#</a></h2>
 <p>Short tutorials for the force calculators are found in the following pages.</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -477,8 +477,8 @@ and how to invoke each of them at <a class="reference internal" href="command-op
 </ul>
 </div>
 </section>
-<section id="physical-unit-system-for-calculator">
-<span id="interfaces-physical-units"></span><h2>Physical unit system for calculator<a class="headerlink" href="#physical-unit-system-for-calculator" title="Link to this heading">#</a></h2>
+<section id="interfaces-physical-units">
+<span id="physical-unit-system-for-calculator"></span><h2>Physical unit system for calculator<a class="headerlink" href="#interfaces-physical-units" title="Link to this heading">#</a></h2>
 <p>Physical unit systems used for the calculators are as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>          <span class="o">|</span> <span class="n">Distance</span>   <span class="n">Atomic</span> <span class="n">mass</span>   <span class="n">Force</span>         <span class="n">Force</span> <span class="n">constants</span>
 <span class="o">-----------------------------------------------------------------</span>
@@ -559,8 +559,8 @@ on calculator, and the list is shown below:</p>
 </pre></div>
 </div>
 </section>
-<section id="default-unit-conversion-factor-of-phonon-frequency-to-thz">
-<span id="frequency-default-value-interfaces"></span><h3>Default unit conversion factor of phonon frequency to THz<a class="headerlink" href="#default-unit-conversion-factor-of-phonon-frequency-to-thz" title="Link to this heading">#</a></h3>
+<section id="frequency-default-value-interfaces">
+<span id="default-unit-conversion-factor-of-phonon-frequency-to-thz"></span><h3>Default unit conversion factor of phonon frequency to THz<a class="headerlink" href="#frequency-default-value-interfaces" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VASP</span>      <span class="o">|</span> <span class="mf">15.633302</span>
 <span class="n">WIEN2k</span>    <span class="o">|</span> <span class="mf">3.44595837</span>
 <span class="n">QE</span>        <span class="o">|</span> <span class="mf">108.97077</span>
@@ -582,8 +582,8 @@ on calculator, and the list is shown below:</p>
 </pre></div>
 </div>
 </section>
-<section id="default-unit-conversion-factor-for-non-analytical-term-correction">
-<span id="nac-default-value-interfaces"></span><h3>Default unit conversion factor for non-analytical term correction<a class="headerlink" href="#default-unit-conversion-factor-for-non-analytical-term-correction" title="Link to this heading">#</a></h3>
+<section id="nac-default-value-interfaces">
+<span id="default-unit-conversion-factor-for-non-analytical-term-correction"></span><h3>Default unit conversion factor for non-analytical term correction<a class="headerlink" href="#nac-default-value-interfaces" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VASP</span>      <span class="o">|</span> <span class="mf">14.399652</span>
 <span class="n">WIEN2k</span>    <span class="o">|</span> <span class="mi">2000</span>
 <span class="n">QE</span>        <span class="o">|</span> <span class="mi">2</span>
@@ -655,15 +655,15 @@ on calculator, and the list is shown below:</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-force-calculators">List of force calculators</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interfaces-to-force-calculators">List of force calculators</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#physical-unit-system-for-calculator">Physical unit system for calculator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interfaces-physical-units">Physical unit system for calculator</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-file-name-value-and-conversion-factor">Default file name, value, and conversion factor</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-unit-cell-file-name-for-calculator">Default unit cell file name for calculator</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-displacement-distances">Default displacement distances</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-unit-conversion-factor-of-phonon-frequency-to-thz">Default unit conversion factor of phonon frequency to THz</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-unit-conversion-factor-for-non-analytical-term-correction">Default unit conversion factor for non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-default-value-interfaces">Default unit conversion factor of phonon frequency to THz</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-default-value-interfaces">Default unit conversion factor for non-analytical term correction</a></li>
 </ul>
 </li>
 </ul>

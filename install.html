@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; Phonopy v.4.10.0</title>
+    <title>Installation &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Welcome to phonopy" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -418,18 +418,18 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-via-conda">Installation via conda</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-conda">Installation via conda</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minimum-steps-to-install-and-use-phonopy-via-conda">Minimum steps to install and use phonopy via conda</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-hdf5-on-nfs-mounted-file-system">Using HDF5 on NFS mounted file system</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-from-source-code">Installation from source code</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-source">Installation from source code</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#system-requirement">System requirement</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-required-packages-by-conda">Installing required packages by conda</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-using-pip-install">Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-setup-py">Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trouble-shooting">Trouble shooting</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-trouble-shooting">Trouble shooting</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-previous-phonopy-installations">Remove previous phonopy installations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-using-conda-environment-this-information-is-not-applicable">When using conda environment, this information is not applicable</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-intel-libraries-when-building-from-source-using-icc">Missing Intel libraries when building from source using icc</a></li>
@@ -447,10 +447,10 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="installation">
-<span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<section id="installation-via-conda">
-<span id="install-conda"></span><h2>Installation via conda<a class="headerlink" href="#installation-via-conda" title="Link to this heading">#</a></h2>
+  <section class="tex2jax_ignore mathjax_ignore" id="install">
+<span id="installation"></span><h1>Installation<a class="headerlink" href="#install" title="Link to this heading">#</a></h1>
+<section id="install-conda">
+<span id="installation-via-conda"></span><h2>Installation via conda<a class="headerlink" href="#install-conda" title="Link to this heading">#</a></h2>
 <p>Conda is a software package management system. Once the conda system is set-up
 (see <a class="reference external" href="https://github.com/conda-forge/miniforge">miniforge</a>), the installation of
 phonopy is super easy for any of Linux, MacOSX, and Windows. Phonopy is
@@ -507,8 +507,8 @@ In this case, setting the following environment variable may solve the problem:<
 </pre></div>
 </div>
 </section>
-<section id="installation-from-source-code">
-<span id="install-from-source"></span><h2>Installation from source code<a class="headerlink" href="#installation-from-source-code" title="Link to this heading">#</a></h2>
+<section id="install-from-source">
+<span id="installation-from-source-code"></span><h2>Installation from source code<a class="headerlink" href="#install-from-source" title="Link to this heading">#</a></h2>
 <section id="system-requirement">
 <h3>System requirement<a class="headerlink" href="#system-requirement" title="Link to this heading">#</a></h3>
 <p>The procedure to setup phonopy is explained in this section. It is supposed that
@@ -557,8 +557,8 @@ To also build the legacy C extension, additionally install C/C++ compilers:</p>
 </pre></div>
 </div>
 </section>
-<section id="building-using-pip-install">
-<span id="install-setup-py"></span><h3>Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code><a class="headerlink" href="#building-using-pip-install" title="Link to this heading">#</a></h3>
+<section id="install-setup-py">
+<span id="building-using-pip-install"></span><h3>Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code><a class="headerlink" href="#install-setup-py" title="Link to this heading">#</a></h3>
 <p>If package installation is not possible or you want to compile with a special
 compiler or special options, phonopy is built using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>. In this case,
 manual modification of <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> may be needed.</p>
@@ -589,8 +589,8 @@ which remains selectable at run time (<code class="docutils literal notranslate"
 <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span> <span class="pre">-vvv</span></code> without the env var. See <a class="reference internal" href="rust-backend.html#rust-backend"><span class="std std-ref">Rust backend</span></a> for details.</p>
 </section>
 </section>
-<section id="trouble-shooting">
-<span id="install-trouble-shooting"></span><h2>Trouble shooting<a class="headerlink" href="#trouble-shooting" title="Link to this heading">#</a></h2>
+<section id="install-trouble-shooting">
+<span id="trouble-shooting"></span><h2>Trouble shooting<a class="headerlink" href="#install-trouble-shooting" title="Link to this heading">#</a></h2>
 <section id="remove-previous-phonopy-installations">
 <h3>Remove previous phonopy installations<a class="headerlink" href="#remove-previous-phonopy-installations" title="Link to this heading">#</a></h3>
 <p>Sometimes previous installations of phonopy prevent from loading newly installed
@@ -694,18 +694,18 @@ that the CXX environment variable
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-via-conda">Installation via conda</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-conda">Installation via conda</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minimum-steps-to-install-and-use-phonopy-via-conda">Minimum steps to install and use phonopy via conda</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-hdf5-on-nfs-mounted-file-system">Using HDF5 on NFS mounted file system</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-from-source-code">Installation from source code</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-source">Installation from source code</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#system-requirement">System requirement</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-required-packages-by-conda">Installing required packages by conda</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-using-pip-install">Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-setup-py">Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trouble-shooting">Trouble shooting</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-trouble-shooting">Trouble shooting</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-previous-phonopy-installations">Remove previous phonopy installations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-using-conda-environment-this-information-is-not-applicable">When using conda environment, this information is not applicable</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-intel-libraries-when-building-from-source-using-icc">Missing Intel libraries when building from source using icc</a></li>

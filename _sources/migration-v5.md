@@ -10,9 +10,10 @@ and the deprecation policy.
 
 As part of this migration, a group of legacy `Phonopy` methods has
 been deprecated. They still work in the v4.x series but emit
-`DeprecationWarning` and are scheduled for removal in v5.0. This page
-lists each deprecated method and its replacement so that existing
-scripts can be updated ahead of v5.0.
+`DeprecationWarning`. Most of them are scheduled for removal in v5.0.
+The `get_*_dict()` methods and the `PhonopyQHA` class are kept until
+v6.0. This page lists each deprecated method and its replacement so
+that existing scripts can be updated ahead of the removal.
 
 The replacements are available now: every `run_*` method returns its
 result object, and the corresponding property on `Phonopy` exposes the
@@ -39,7 +40,8 @@ names and list.
 Each `get_*_dict()` method returned a plain dictionary. The
 replacement is the result object returned by the matching `run_*`
 method (also reachable through the property of the same name); its
-attributes replace the former dict keys.
+attributes replace the former dict keys. These methods are kept until
+v6.0.
 
 | Deprecated method | Replacement (result object): attributes |
 |-------------------|------------------------------------------|
@@ -133,7 +135,7 @@ computes the thermal properties internally, and returns an immutable
 `QHAResult` dataclass. File writers and plotters became free functions in
 `phonopy.qha.output` and `phonopy.qha.plot`. See
 {ref}`phonopy_qha_python_api` for the full description including the new
-lattice-parameter output.
+lattice-parameter output. `PhonopyQHA` is kept until v6.0.
 
 | Deprecated (`PhonopyQHA`)    | Replacement                                |
 |------------------------------|--------------------------------------------|
@@ -347,7 +349,7 @@ keep the v4.x result after v5.0, use `--no-symmetrize-tetrahedra` or
 ## Surfacing the warnings in existing code
 
 Python hides `DeprecationWarning` by default in many contexts. To see
-which deprecated calls a script makes before v5.0 removes them, run it
+which deprecated calls a script makes before they are removed, run it
 with warnings made visible:
 
 ```bash

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Random displacements &#8212; Phonopy v.4.10.0</title>
+    <title>Random displacements &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Dynamic structure factor" href="dynamic-structure-factor.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -420,10 +420,10 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-setting-tags">Related setting tags</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-directions-with-constant-displacement-distance">Random directions with constant displacement distance</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-random-direction-example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-sampling-of-harmonic-oscillator-probability-densities-of-phonon-modes">Random sampling of harmonic oscillator probability densities of phonon modes</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-at-temperatures">Random sampling of harmonic oscillator probability densities of phonon modes</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization-of-displacement-distance-distribution">Visualization of displacement distance distribution</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#another-example">Another example</a></li>
@@ -470,8 +470,8 @@ the force constants calculators, currently <a class="reference internal" href="s
 <section id="random-directions-with-constant-displacement-distance">
 <h2>Random directions with constant displacement distance<a class="headerlink" href="#random-directions-with-constant-displacement-distance" title="Link to this heading">#</a></h2>
 <p>See also <a class="reference internal" href="setting-tags.html#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a>.</p>
-<section id="example">
-<span id="random-displacements-random-direction-example"></span><h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
+<section id="random-displacements-random-direction-example">
+<span id="example"></span><h3>Example<a class="headerlink" href="#random-displacements-random-direction-example" title="Link to this heading">#</a></h3>
 <p>An example to generate the random direction diplacements with distance of 0.03
 Angstrom in <code class="docutils literal notranslate"><span class="pre">example/NaCl-rd</span></code> directory is as shown below,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">rd</span> <span class="mi">10</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="o">--</span><span class="n">pa</span> <span class="n">auto</span> <span class="o">--</span><span class="n">amplitude</span> <span class="mf">0.03</span> <span class="o">-</span><span class="n">c</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span>
@@ -575,8 +575,8 @@ necessary, e.g., symfc(<a class="github reference external" href="https://github
 </div>
 </section>
 </section>
-<section id="random-sampling-of-harmonic-oscillator-probability-densities-of-phonon-modes">
-<span id="random-displacements-at-temperatures"></span><h2>Random sampling of harmonic oscillator probability densities of phonon modes<a class="headerlink" href="#random-sampling-of-harmonic-oscillator-probability-densities-of-phonon-modes" title="Link to this heading">#</a></h2>
+<section id="random-displacements-at-temperatures">
+<span id="random-sampling-of-harmonic-oscillator-probability-densities-of-phonon-modes"></span><h2>Random sampling of harmonic oscillator probability densities of phonon modes<a class="headerlink" href="#random-displacements-at-temperatures" title="Link to this heading">#</a></h2>
 <p>Random displacements corresponding to a specific temperature are generated with
 the combination of the <a class="reference internal" href="setting-tags.html#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> (<code class="docutils literal notranslate"><span class="pre">--rd</span></code>) and
 <a class="reference internal" href="setting-tags.html#random-displacement-temperature-tag"><span class="std std-ref">RANDOM_DISPLACEMENT_TEMPERATURE</span></a> tags. This is based on the harmonic
@@ -714,10 +714,10 @@ solution corresponds to a stochastic self-consistent harmonic approximation
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-setting-tags">Related setting tags</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-directions-with-constant-displacement-distance">Random directions with constant displacement distance</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-random-direction-example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-sampling-of-harmonic-oscillator-probability-densities-of-phonon-modes">Random sampling of harmonic oscillator probability densities of phonon modes</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-at-temperatures">Random sampling of harmonic oscillator probability densities of phonon modes</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Example</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization-of-displacement-distance-distribution">Visualization of displacement distance distribution</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#another-example">Another example</a></li>

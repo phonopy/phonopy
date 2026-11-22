@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Octopus &amp; phonopy calculation &#8212; Phonopy v.4.10.0</title>
+    <title>Octopus &amp; phonopy calculation &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Questaal &amp; phonopy calculation" href="qlm.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -422,7 +422,7 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-interface-works">How the interface works</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-the-unit-cell-from-octopus">Exporting the unit cell from Octopus</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#octopus-export-poscar">Exporting the unit cell from Octopus</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-supercells-with-displacements">Creating supercells with displacements</a></li>
 </ul>
 </li>
@@ -445,8 +445,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="octopus-phonopy-calculation">
-<span id="octopus-interface"></span><h1>Octopus &amp; phonopy calculation<a class="headerlink" href="#octopus-phonopy-calculation" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="octopus-interface">
+<span id="octopus-phonopy-calculation"></span><h1>Octopus &amp; phonopy calculation<a class="headerlink" href="#octopus-interface" title="Link to this heading">#</a></h1>
 <p><a class="reference external" href="https://octopus-code.org/">Octopus</a> is a real-space (grid based) TDDFT /
 DFT code using pseudopotentials. This page explains how to calculate phonons
 with phonopy using Octopus as the force calculator, i.e., using the finite
@@ -484,8 +484,8 @@ reported in THz, as for the other interfaces.</p>
 <section id="pre-process">
 <h2>Pre-process<a class="headerlink" href="#pre-process" title="Link to this heading">#</a></h2>
 <p>A bulk silicon primitive cell is used as the example throughout this page.</p>
-<section id="exporting-the-unit-cell-from-octopus">
-<span id="octopus-export-poscar"></span><h3>Exporting the unit cell from Octopus<a class="headerlink" href="#exporting-the-unit-cell-from-octopus" title="Link to this heading">#</a></h3>
+<section id="octopus-export-poscar">
+<span id="exporting-the-unit-cell-from-octopus"></span><h3>Exporting the unit cell from Octopus<a class="headerlink" href="#octopus-export-poscar" title="Link to this heading">#</a></h3>
 <p>An Octopus calculation normally starts from an input file <code class="docutils literal notranslate"><span class="pre">inp</span></code> that already
 contains the crystal structure, for instance the cell obtained from a geometry
 optimization with Octopus. phonopy needs this unit cell as a VASP-style <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>
@@ -982,7 +982,7 @@ displacement workflow described here.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-interface-works">How the interface works</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-the-unit-cell-from-octopus">Exporting the unit cell from Octopus</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#octopus-export-poscar">Exporting the unit cell from Octopus</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-supercells-with-displacements">Creating supercells with displacements</a></li>
 </ul>
 </li>

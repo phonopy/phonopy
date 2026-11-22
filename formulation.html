@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Formulations &#8212; Phonopy v.4.10.0</title>
+    <title>Formulations &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="API reference" href="api-reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -421,11 +421,11 @@
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#second-order-force-constants">Second-order force constants</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modified-parlinski-li-kawazoe-method">Modified Parlinski-Li-Kawazoe method</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamical-matrix">Dynamical matrix</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-solver-theory">Modified Parlinski-Li-Kawazoe method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynacmial-matrix-theory">Dynamical matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction-theory">Non-analytical term correction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-population">Phonon population</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermodynamic-properties">Thermodynamic properties</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-expressions">Thermodynamic properties</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#harmonic-phonon-energy">Harmonic phonon energy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constant-volume-heat-capacity">Constant volume heat capacity</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#partition-function">Partition function</a></li>
@@ -435,7 +435,7 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement">Thermal displacement</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-square-displacement">Mean square displacement</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-square-displacement-matrix">Mean square displacement matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement-matrix">Mean square displacement matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-to-an-arbitrary-axis">Projection to an arbitrary axis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-square-displacement-matrix-in-cif-format">Mean square displacement matrix in cif format</a></li>
 </ul>
@@ -449,7 +449,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#physical-unit-conversion">Physical unit conversion</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#crystal-structure">Crystal structure</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#coordinates-in-direct-and-reciprocal-spaces">Coordinates in direct and reciprocal spaces</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commensurate-points">Commensurate points</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#definition-of-commensurate-points">Commensurate points</a></li>
 </ul>
 </li>
 </ul>
@@ -493,8 +493,8 @@ r_\alpha{(jl)}) - F_\beta(j'l')} {\Delta r_\alpha(jl)},\]</div>
 a finite displacement <span class="math notranslate nohighlight">\(\Delta r_\alpha{(jl)}\)</span> and usually
 <span class="math notranslate nohighlight">\(F_\beta(j'l') \equiv 0\)</span>.</p>
 </section>
-<section id="modified-parlinski-li-kawazoe-method">
-<span id="force-constants-solver-theory"></span><h2>Modified Parlinski-Li-Kawazoe method<a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Link to this heading">#</a></h2>
+<section id="force-constants-solver-theory">
+<span id="modified-parlinski-li-kawazoe-method"></span><h2>Modified Parlinski-Li-Kawazoe method<a class="headerlink" href="#force-constants-solver-theory" title="Link to this heading">#</a></h2>
 <p>The following is a modified and simplified version of the Parlinski-Li-Kawazoe
 method, which is just a numerical fitting approach to obtain force constants
 from forces and displacements.</p>
@@ -543,8 +543,8 @@ The combined simultaneous equations are built such as</p>
 <p>where the superscript with parenthesis gives the index of site-symmetry
 operations. This is solved by pseudo inverse.</p>
 </section>
-<section id="dynamical-matrix">
-<span id="dynacmial-matrix-theory"></span><h2>Dynamical matrix<a class="headerlink" href="#dynamical-matrix" title="Link to this heading">#</a></h2>
+<section id="dynacmial-matrix-theory">
+<span id="dynamical-matrix"></span><h2>Dynamical matrix<a class="headerlink" href="#dynacmial-matrix-theory" title="Link to this heading">#</a></h2>
 <p>In phonopy, a phase convention of dynamical matrix is used as follows:</p>
 <div class="math notranslate nohighlight" id="equation-eq-dynmat">
 <span class="eqno">(1)<a class="headerlink" href="#equation-eq-dynmat" title="Link to this equation">#</a></span>\[D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}} \sum_{l'}
@@ -572,8 +572,8 @@ D_{\alpha\beta}(jj',\mathbf{q}) e_\beta(j',\mathbf{q}\nu') =
 annihilation operators of phonon, <span class="math notranslate nohighlight">\(\hbar\)</span> is the reduced Planck constant,
 and <span class="math notranslate nohighlight">\(t\)</span> is the time.</p>
 </section>
-<section id="non-analytical-term-correction">
-<span id="non-analytical-term-correction-theory"></span><h2>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h2>
+<section id="non-analytical-term-correction-theory">
+<span id="non-analytical-term-correction"></span><h2>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction-theory" title="Link to this heading">#</a></h2>
 <p>To treat long range interaction of macroscopic electric field induced by
 polarization of collective ionic motions near the <span class="math notranslate nohighlight">\(\Gamma\)</span>-point,
 non-analytical term is added to dynamical matrix (<a class="reference internal" href="reference.html#reference-nac"><span class="std std-ref">Non-analytical term correction</span></a>). At
@@ -609,8 +609,8 @@ largest floating-point number at low temperature. Phonopy calculates the
 population at every temperature above 0 K, including temperatures below 1 K. At
 <span class="math notranslate nohighlight">\(T = 0\)</span> the population is zero.</p>
 </section>
-<section id="thermodynamic-properties">
-<span id="thermal-properties-expressions"></span><h2>Thermodynamic properties<a class="headerlink" href="#thermodynamic-properties" title="Link to this heading">#</a></h2>
+<section id="thermal-properties-expressions">
+<span id="thermodynamic-properties"></span><h2>Thermodynamic properties<a class="headerlink" href="#thermal-properties-expressions" title="Link to this heading">#</a></h2>
 <section id="harmonic-phonon-energy">
 <h3>Harmonic phonon energy<a class="headerlink" href="#harmonic-phonon-energy" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
@@ -716,8 +716,8 @@ displacement very large, also at temperatures below 1 K. To exclude these
 modes, use <code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code> (<a class="reference internal" href="setting-tags.html#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a>) or
 <code class="docutils literal notranslate"><span class="pre">FMIN</span></code> (<a class="reference internal" href="setting-tags.html#dos-fmin-fmax-tags"><span class="std std-ref">FMIN, FMAX, and FPITCH</span></a>).</p>
 </section>
-<section id="mean-square-displacement-matrix">
-<span id="thermal-displacement-matrix"></span><h3>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Link to this heading">#</a></h3>
+<section id="thermal-displacement-matrix">
+<span id="mean-square-displacement-matrix"></span><h3>Mean square displacement matrix<a class="headerlink" href="#thermal-displacement-matrix" title="Link to this heading">#</a></h3>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math notranslate nohighlight">
 \[\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
@@ -940,8 +940,8 @@ written at <a class="reference internal" href="setting-tags.html#primitive-axes-
 those calculated following Eq. <a class="reference internal" href="#equation-eq-rec-basis-vectors">(2)</a> with this
 <span class="math notranslate nohighlight">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c})\)</span>.</p>
 </section>
-<section id="commensurate-points">
-<span id="definition-of-commensurate-points"></span><h3>Commensurate points<a class="headerlink" href="#commensurate-points" title="Link to this heading">#</a></h3>
+<section id="definition-of-commensurate-points">
+<span id="commensurate-points"></span><h3>Commensurate points<a class="headerlink" href="#definition-of-commensurate-points" title="Link to this heading">#</a></h3>
 <p>In phonopy, so-called commensurate points mean the q-points whose waves are
 confined in the supercell used in the phonon calculation.</p>
 <p>To explain about the commensurate points, let basis vectors of a primitive cell
@@ -1044,11 +1044,11 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#second-order-force-constants">Second-order force constants</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modified-parlinski-li-kawazoe-method">Modified Parlinski-Li-Kawazoe method</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamical-matrix">Dynamical matrix</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-solver-theory">Modified Parlinski-Li-Kawazoe method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynacmial-matrix-theory">Dynamical matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction-theory">Non-analytical term correction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-population">Phonon population</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermodynamic-properties">Thermodynamic properties</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-expressions">Thermodynamic properties</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#harmonic-phonon-energy">Harmonic phonon energy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constant-volume-heat-capacity">Constant volume heat capacity</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#partition-function">Partition function</a></li>
@@ -1058,7 +1058,7 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement">Thermal displacement</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-square-displacement">Mean square displacement</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-square-displacement-matrix">Mean square displacement matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacement-matrix">Mean square displacement matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-to-an-arbitrary-axis">Projection to an arbitrary axis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-square-displacement-matrix-in-cif-format">Mean square displacement matrix in cif format</a></li>
 </ul>
@@ -1072,7 +1072,7 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#physical-unit-conversion">Physical unit conversion</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#crystal-structure">Crystal structure</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#coordinates-in-direct-and-reciprocal-spaces">Coordinates in direct and reciprocal spaces</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commensurate-points">Commensurate points</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#definition-of-commensurate-points">Commensurate points</a></li>
 </ul>
 </li>
 </ul>

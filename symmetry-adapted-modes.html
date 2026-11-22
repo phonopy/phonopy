@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Symmetry-adapted phonon modes &#8212; Phonopy v.4.10.0</title>
+    <title>Symmetry-adapted phonon modes &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Temperature dependent force constants using pypolymlp and symfc" href="polymlp-sscha.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -422,12 +422,12 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notation">Notation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phase-convention-of-the-dynamical-matrix">Phase convention of the dynamical matrix</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#little-group-of-q">Little group of q</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmodes-little-group-of-q">Little group of q</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#representation-matrix">Representation matrix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetrized-geometry">Symmetrized geometry</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#decomposition-into-degenerate-sets">Decomposition into degenerate sets</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-eigenspaces-of-x-are-irreducible">Why the eigenspaces of X are irreducible</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aligning-the-sets-of-one-type">Aligning the sets of one type</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmodes-why-irreducible">Why the eigenspaces of X are irreducible</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmodes-aligning-sets">Aligning the sets of one type</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remarks">Remarks</a></li>
 </ul>
 </li>
@@ -442,8 +442,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="symmetry-adapted-phonon-modes">
-<span id="symmetry-adapted-modes"></span><h1>Symmetry-adapted phonon modes<a class="headerlink" href="#symmetry-adapted-phonon-modes" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="symmetry-adapted-modes">
+<span id="symmetry-adapted-phonon-modes"></span><h1>Symmetry-adapted phonon modes<a class="headerlink" href="#symmetry-adapted-modes" title="Link to this heading">#</a></h1>
 <p>This page gives the equations that <code class="docutils literal notranslate"><span class="pre">phonopy/phonon/symmetry_adapted_modes.py</span></code>
 implements. The module takes the dynamical matrix at one q-point and returns the
 phonon frequencies, the eigenvectors and the degenerate sets. The degenerate
@@ -555,8 +555,8 @@ so it is not an overall phase.</p>
 <p>and the complex conjugate of an eigenvector at <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is an
 eigenvector at <span class="math notranslate nohighlight">\(-\mathbf{q}\)</span>. This is time-reversal symmetry.</p>
 </section>
-<section id="little-group-of-q">
-<span id="symmodes-little-group-of-q"></span><h2>Little group of q<a class="headerlink" href="#little-group-of-q" title="Link to this heading">#</a></h2>
+<section id="symmodes-little-group-of-q">
+<span id="little-group-of-q"></span><h2>Little group of q<a class="headerlink" href="#symmodes-little-group-of-q" title="Link to this heading">#</a></h2>
 <p>The little group of <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is the set of space-group operations
 <span class="math notranslate nohighlight">\(\mathrm{S}\)</span> with <span class="math notranslate nohighlight">\(\mathrm{R}\mathbf{q}=\mathbf{q}+\mathbf{G}\)</span>. The
 module keeps one operation for each rotation, as spglib returns them for the
@@ -845,8 +845,8 @@ same matrices. The procedure is given in <a class="reference internal" href="#sy
 <span class="math notranslate nohighlight">\(\operatorname{sgn}(\omega^2)\sqrt{|\omega^2|}\)</span> times the unit
 conversion factor.</p></li>
 </ol>
-<section id="why-the-eigenspaces-of-x-are-irreducible">
-<span id="symmodes-why-irreducible"></span><h3>Why the eigenspaces of X are irreducible<a class="headerlink" href="#why-the-eigenspaces-of-x-are-irreducible" title="Link to this heading">#</a></h3>
+<section id="symmodes-why-irreducible">
+<span id="why-the-eigenspaces-of-x-are-irreducible"></span><h3>Why the eigenspaces of X are irreducible<a class="headerlink" href="#symmodes-why-irreducible" title="Link to this heading">#</a></h3>
 <p>The goal of steps 1 and 2 is to split the <span class="math notranslate nohighlight">\(3N\)</span>-dimensional space of
 eigenvectors into subspaces that each carry one irreducible representation. A
 projection operator for each irreducible representation would do this, but it
@@ -903,8 +903,8 @@ found as one subspace in this way.</p>
 statement that each eigenspace carries one pair was checked for the structures
 in <code class="docutils literal notranslate"><span class="pre">test/phonon/test_symmetry_adapted_modes.py</span></code> and is not proven here.</p>
 </section>
-<section id="aligning-the-sets-of-one-type">
-<span id="symmodes-aligning-sets"></span><h3>Aligning the sets of one type<a class="headerlink" href="#aligning-the-sets-of-one-type" title="Link to this heading">#</a></h3>
+<section id="symmodes-aligning-sets">
+<span id="aligning-the-sets-of-one-type"></span><h3>Aligning the sets of one type<a class="headerlink" href="#symmodes-aligning-sets" title="Link to this heading">#</a></h3>
 <p>At <span class="math notranslate nohighlight">\(\Gamma\)</span> of NaCl, the acoustic set and the optical set both carry
 <span class="math notranslate nohighlight">\(T_{1u}\)</span>. After step 4, each set has the basis that <code class="docutils literal notranslate"><span class="pre">numpy.linalg.eigh</span></code>
 returns for it. The two sets are therefore transformed by two different
@@ -1008,12 +1008,12 @@ that <code class="docutils literal notranslate"><span class="pre">DynamicalMatri
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notation">Notation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phase-convention-of-the-dynamical-matrix">Phase convention of the dynamical matrix</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#little-group-of-q">Little group of q</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmodes-little-group-of-q">Little group of q</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#representation-matrix">Representation matrix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetrized-geometry">Symmetrized geometry</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#decomposition-into-degenerate-sets">Decomposition into degenerate sets</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-eigenspaces-of-x-are-irreducible">Why the eigenspaces of X are irreducible</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aligning-the-sets-of-one-type">Aligning the sets of one type</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmodes-why-irreducible">Why the eigenspaces of X are irreducible</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmodes-aligning-sets">Aligning the sets of one type</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remarks">Remarks</a></li>
 </ul>
 </li>

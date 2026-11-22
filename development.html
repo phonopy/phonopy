@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Development &#8212; Phonopy v.4.10.0</title>
+    <title>Development &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Migrating toward phonopy v5" href="migration-v5.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -420,6 +420,7 @@
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-principles">Architecture principles</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-migration-toward-v5-and-v6">Architecture migration toward v5 and v6</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#experimental-and-developer-only-features">Experimental and developer-only features</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecation-policy">Deprecation policy</a></li>
 </ul>
             </nav>
@@ -443,7 +444,8 @@ tests), see the <code class="docutils literal notranslate"><span class="pre">Dev
 <ul class="simple">
 <li><p><a class="reference internal" href="#architecture-principles" id="id2">Architecture principles</a></p></li>
 <li><p><a class="reference internal" href="#architecture-migration-toward-v5-and-v6" id="id3">Architecture migration toward v5 and v6</a></p></li>
-<li><p><a class="reference internal" href="#deprecation-policy" id="id4">Deprecation policy</a></p></li>
+<li><p><a class="reference internal" href="#experimental-and-developer-only-features" id="id4">Experimental and developer-only features</a></p></li>
+<li><p><a class="reference internal" href="#deprecation-policy" id="id5">Deprecation policy</a></p></li>
 </ul>
 </nav>
 <section id="architecture-principles">
@@ -482,8 +484,33 @@ emit <code class="docutils literal notranslate"><span class="pre">DeprecationWar
 self-contained result objects returned by <code class="docutils literal notranslate"><span class="pre">run_*</span></code> methods.</p></li>
 </ol>
 </section>
+<section id="experimental-and-developer-only-features">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Experimental and developer-only features</a><a class="headerlink" href="#experimental-and-developer-only-features" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>An experimental feature is documented, and is marked as
+experimental in the user documentation and with <code class="docutils literal notranslate"><span class="pre">[Experimental]</span></code>
+in its docstring or help message. Users can benefit from it, but
+its interface may change, and it may not be supported in the long
+term. It may be changed or removed without the deprecation period.</p></li>
+<li><p>A developer-only feature is not in the user documentation. It is
+being tested by developers, and users are not expected to use it.
+Every place where it can be reached (an argument, a setting tag, a
+command-line option) has a comment with the marker
+<code class="docutils literal notranslate"><span class="pre">DEVELOPER-ONLY</span></code>, its docstring says “Developer only.”, and its
+command-line option is hidden from the help message with
+<code class="docutils literal notranslate"><span class="pre">argparse.SUPPRESS</span></code>. It may be changed or removed at any time. It
+becomes an experimental or a regular feature only when it is
+documented.</p></li>
+<li><p>Code that is neither documented nor marked looks supported and
+misleads contributors. Example: the second derivative of the
+dynamical matrix (<code class="docutils literal notranslate"><span class="pre">derivative_order=2</span></code> of
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_modulations</span></code>) was neither. A contributor extended it
+to the Wang NAC term (#1080), and it was removed in #1099 instead
+(#1088).</p></li>
+</ul>
+</section>
 <section id="deprecation-policy">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Deprecation policy</a><a class="headerlink" href="#deprecation-policy" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Deprecation policy</a><a class="headerlink" href="#deprecation-policy" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>A replacement API lands first; the old API becomes a thin shim
 that delegates to the new implementation and emits
@@ -492,6 +519,11 @@ carried.</p></li>
 <li><p>The deprecation window is at most two major versions, e.g.,
 deprecated in v5.x and removed in v6.0. A deprecation may start
 earlier (already in v4.x) to extend the notice period.</p></li>
+<li><p>Every place in the code and the tests that has to change when a
+deprecated API is removed has a comment with the marker
+<code class="docutils literal notranslate"><span class="pre">REMOVE-AT-V&lt;N&gt;</span></code>, where N is the major version of the removal, for
+example <code class="docutils literal notranslate"><span class="pre">REMOVE-AT-V5</span></code>. <code class="docutils literal notranslate"><span class="pre">grep</span> <span class="pre">-rn</span> <span class="pre">REMOVE-AT-V5</span> <span class="pre">phonopy</span> <span class="pre">test</span></code> then
+lists all the places to change for v5.0.</p></li>
 <li><p>Example: <code class="docutils literal notranslate"><span class="pre">Phonopy.copy</span></code> is deprecated in v4.x in favor of
 <code class="docutils literal notranslate"><span class="pre">Phonopy.replicate</span></code>, which constructs a new instance from the same
 init parameters without carrying over internal state.</p></li>
@@ -548,6 +580,7 @@ init parameters without carrying over internal state.</p></li>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-principles">Architecture principles</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-migration-toward-v5-and-v6">Architecture migration toward v5 and v6</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#experimental-and-developer-only-features">Experimental and developer-only features</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecation-policy">Deprecation policy</a></li>
 </ul>
   </nav></div>

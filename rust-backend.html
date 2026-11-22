@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Rust backend &#8212; Phonopy v.4.10.0</title>
+    <title>Rust backend &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Installation" href="install.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -419,18 +419,18 @@
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonors-from-source">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-install">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-native-cpu-tuning">Optional: native CPU tuning</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-lang-dispatch">Python API</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line">Command line</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thread-pool">Thread pool</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dispatch-tracing">Dispatch tracing</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonopy-without-the-c-extension">Building phonopy without the C extension</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-no-c-ext">Building phonopy without the C extension</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known limitations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#differences-in-results">Differences in results</a></li>
@@ -468,19 +468,19 @@ under <code class="docutils literal notranslate"><span class="pre">test/</span><
 <ul class="simple">
 <li><p><a class="reference internal" href="#installation" id="id2">Installation</a></p>
 <ul>
-<li><p><a class="reference internal" href="#building-phonors-from-source" id="id3">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></p></li>
+<li><p><a class="reference internal" href="#rust-backend-install" id="id3">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></p></li>
 <li><p><a class="reference internal" href="#optional-native-cpu-tuning" id="id4">Optional: native CPU tuning</a></p></li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#usage" id="id5">Usage</a></p>
 <ul>
-<li><p><a class="reference internal" href="#python-api" id="id6">Python API</a></p></li>
+<li><p><a class="reference internal" href="#rust-backend-lang-dispatch" id="id6">Python API</a></p></li>
 <li><p><a class="reference internal" href="#command-line" id="id7">Command line</a></p></li>
 <li><p><a class="reference internal" href="#thread-pool" id="id8">Thread pool</a></p></li>
 <li><p><a class="reference internal" href="#dispatch-tracing" id="id9">Dispatch tracing</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#building-phonopy-without-the-c-extension" id="id10">Building phonopy without the C extension</a></p></li>
+<li><p><a class="reference internal" href="#rust-backend-no-c-ext" id="id10">Building phonopy without the C extension</a></p></li>
 <li><p><a class="reference internal" href="#scope" id="id11">Scope</a></p>
 <ul>
 <li><p><a class="reference internal" href="#known-limitations" id="id12">Known limitations</a></p></li>
@@ -494,8 +494,8 @@ under <code class="docutils literal notranslate"><span class="pre">test/</span><
 <p><code class="docutils literal notranslate"><span class="pre">phonors</span></code> is listed in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> as a required dependency, so
 <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">phonopy</span></code> (and the conda-forge package once updated)
 pulls it in automatically. No extra step is needed for normal use.</p>
-<section id="building-phonors-from-source">
-<span id="rust-backend-install"></span><h3><a class="toc-backref" href="#id3" role="doc-backlink">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a><a class="headerlink" href="#building-phonors-from-source" title="Link to this heading">#</a></h3>
+<section id="rust-backend-install">
+<span id="building-phonors-from-source"></span><h3><a class="toc-backref" href="#id3" role="doc-backlink">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a><a class="headerlink" href="#rust-backend-install" title="Link to this heading">#</a></h3>
 <p>When you want to track the development version of <code class="docutils literal notranslate"><span class="pre">phonors</span></code>, or to
 build with custom Rust flags, install it from a source clone instead
 of the PyPI wheel.</p>
@@ -536,8 +536,8 @@ instruction set can recover a few percent of wall-clock:</p>
 <p>The Rust backend is active by default; no flag or keyword is required.
 The legacy C backend is selected per call through the <code class="docutils literal notranslate"><span class="pre">lang</span></code> keyword on
 the Python API or the <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> flag on the CLI.</p>
-<section id="python-api">
-<span id="rust-backend-lang-dispatch"></span><h3><a class="toc-backref" href="#id6" role="doc-backlink">Python API</a><a class="headerlink" href="#python-api" title="Link to this heading">#</a></h3>
+<section id="rust-backend-lang-dispatch">
+<span id="python-api"></span><h3><a class="toc-backref" href="#id6" role="doc-backlink">Python API</a><a class="headerlink" href="#rust-backend-lang-dispatch" title="Link to this heading">#</a></h3>
 <p>The constructor and loader take a <code class="docutils literal notranslate"><span class="pre">lang</span></code> keyword:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
 
@@ -601,8 +601,8 @@ silent by default. It is attached to a dedicated logger
 enabling it does not affect normal output.</p>
 </section>
 </section>
-<section id="building-phonopy-without-the-c-extension">
-<span id="rust-backend-no-c-ext"></span><h2><a class="toc-backref" href="#id10" role="doc-backlink">Building phonopy without the C extension</a><a class="headerlink" href="#building-phonopy-without-the-c-extension" title="Link to this heading">#</a></h2>
+<section id="rust-backend-no-c-ext">
+<span id="building-phonopy-without-the-c-extension"></span><h2><a class="toc-backref" href="#id10" role="doc-backlink">Building phonopy without the C extension</a><a class="headerlink" href="#rust-backend-no-c-ext" title="Link to this heading">#</a></h2>
 <p>For Rust-only deployments (or to validate that every dispatch site has
 a Rust path), phonopy can be installed with the C extension skipped:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span><span class="nv">PHONOPY_NO_C_EXT</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-vvv
@@ -724,18 +724,18 @@ same result in the test suites of phonopy and phono3py.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonors-from-source">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-install">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-native-cpu-tuning">Optional: native CPU tuning</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-lang-dispatch">Python API</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line">Command line</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thread-pool">Thread pool</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dispatch-tracing">Dispatch tracing</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonopy-without-the-c-extension">Building phonopy without the C extension</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-no-c-ext">Building phonopy without the C extension</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known limitations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#differences-in-results">Differences in results</a></li>

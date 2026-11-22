@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>References &#8212; Phonopy v.4.10.0</title>
+    <title>References &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="How to cite phonopy" href="citation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -421,24 +421,24 @@
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-used-in-phonopy">Methods used in phonopy</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-of-supercell-force-constants">Generation of supercell force constants</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systematic-displacement-method">Systematic displacement method</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#projector-based-method">Projector-based method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-force-constants">Generation of supercell force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-systematic-displacement">Systematic displacement method</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-random-displacement">Projector-based method</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tadano-tsuneyuki-method">Tadano-Tsuneyuki method</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parlinski-li-kawazoe-method">Parlinski-Li-Kawazoe method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-expansion-using-quasi-harmonic-approximation">Thermal expansion using quasi-harmonic approximation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#correction-by-dipole-dipole-interaction">Correction by dipole-dipole interaction</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">Interpolation scheme at general <em>q</em>-points with non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-plk">Parlinski-Li-Kawazoe method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-thermal-expansion">Thermal expansion using quasi-harmonic approximation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-nac">Non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-dp-dp-nac">Correction by dipole-dipole interaction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-wang-nac">Interpolation scheme at general <em>q</em>-points with non-analytical term correction</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-methods-and-software-for-calculating-force-constants">Other methods and software for calculating force constants</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parlinsk-li-kawazoe-method">Parlinsk-Li-Kawazoe method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-small-displacement">Parlinsk-Li-Kawazoe method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#small-displacement-method">Small displacement method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dfpt">DFPT</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sscha">SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-dfpt">DFPT</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-sscha">SSCHA</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-the-study-of-basics">For the study of basics</a><ul class="nav section-nav flex-column">
@@ -461,8 +461,8 @@
 <h1>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h1>
 <section id="methods-used-in-phonopy">
 <h2>Methods used in phonopy<a class="headerlink" href="#methods-used-in-phonopy" title="Link to this heading">#</a></h2>
-<section id="generation-of-supercell-force-constants">
-<span id="reference-force-constants"></span><h3>Generation of supercell force constants<a class="headerlink" href="#generation-of-supercell-force-constants" title="Link to this heading">#</a></h3>
+<section id="reference-force-constants">
+<span id="generation-of-supercell-force-constants"></span><h3>Generation of supercell force constants<a class="headerlink" href="#reference-force-constants" title="Link to this heading">#</a></h3>
 <p>In phonopy, force constants are generated using the supercell method with finite
 displacements. Several approaches can be employed to calculate supercell force
 constants. Technical details regarding supercell method can be found in the
@@ -471,8 +471,8 @@ following paper:</p>
 <li><p>A. Togo, L. Chaput, T. Tadano, I. Tanaka,  J. Phys.: Condens. Matter 35 353001
 (2023)</p></li>
 </ul>
-<section id="systematic-displacement-method">
-<span id="reference-systematic-displacement"></span><h4>Systematic displacement method<a class="headerlink" href="#systematic-displacement-method" title="Link to this heading">#</a></h4>
+<section id="reference-systematic-displacement">
+<span id="systematic-displacement-method"></span><h4>Systematic displacement method<a class="headerlink" href="#reference-systematic-displacement" title="Link to this heading">#</a></h4>
 <p>This is the traditional method that phonopy has employed for many years. Crystal
 symmetry is utilized to reduce both the computational cost and numerical noise
 in supercell force constant calculations. First, a symmetry-reduced set of
@@ -490,8 +490,8 @@ can be found in the appendix of the following paper:</p>
 <li><p>L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, <strong>84</strong>, 094302 (2011)</p></li>
 </ul>
 </section>
-<section id="projector-based-method">
-<span id="reference-random-displacement"></span><h4>Projector-based method<a class="headerlink" href="#projector-based-method" title="Link to this heading">#</a></h4>
+<section id="reference-random-displacement">
+<span id="projector-based-method"></span><h4>Projector-based method<a class="headerlink" href="#reference-random-displacement" title="Link to this heading">#</a></h4>
 <p>This approach is implemented in the symfc code, allowing for the displacement of
 any number of atoms in the supercell. Typically, all atoms are displaced either
 in random directions with a fixed displacement magnitude or with both random
@@ -511,8 +511,8 @@ any number of atoms in the supercell.</p>
 </ul>
 </section>
 </section>
-<section id="parlinski-li-kawazoe-method">
-<span id="reference-plk"></span><h3>Parlinski-Li-Kawazoe method<a class="headerlink" href="#parlinski-li-kawazoe-method" title="Link to this heading">#</a></h3>
+<section id="reference-plk">
+<span id="parlinski-li-kawazoe-method"></span><h3>Parlinski-Li-Kawazoe method<a class="headerlink" href="#reference-plk" title="Link to this heading">#</a></h3>
 <p>Supercell force constants are calculated using the Moore–Penrose pseudoinverse
 by fitting the symmetry-reduced elements of supercell force constants to the
 linear relationships between atomic forces and atomic displacements. When
@@ -523,8 +523,8 @@ are equivalent under supercell lattice translations.</p>
 <li><p>K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. <strong>78</strong>, 4063 (1997)</p></li>
 </ul>
 </section>
-<section id="thermal-expansion-using-quasi-harmonic-approximation">
-<span id="reference-thermal-expansion"></span><h3>Thermal expansion using quasi-harmonic approximation<a class="headerlink" href="#thermal-expansion-using-quasi-harmonic-approximation" title="Link to this heading">#</a></h3>
+<section id="reference-thermal-expansion">
+<span id="thermal-expansion-using-quasi-harmonic-approximation"></span><h3>Thermal expansion using quasi-harmonic approximation<a class="headerlink" href="#reference-thermal-expansion" title="Link to this heading">#</a></h3>
 <p>In <a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">phonopy-qha</span></a>, thermal properties at constant pressure is
 obtained from the thermodynamic definition. To achieve Legendre transformation,
 volume-energy function is generated from a set of Helmholtz free energies and
@@ -540,8 +540,8 @@ paper:</p>
 <li><p>A. Togo, L. Chaput, I. Tanaka, G. Hug, Phys. Rev. B, 81, 174301-1-6 (2010)</p></li>
 </ul>
 </section>
-<section id="non-analytical-term-correction">
-<span id="reference-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
+<section id="reference-nac">
+<span id="non-analytical-term-correction"></span><h3>Non-analytical term correction<a class="headerlink" href="#reference-nac" title="Link to this heading">#</a></h3>
 <p>Non-metallic crystals are polarized by atomic displacements and the generated
 macroscopic field changes force constants near <span class="math notranslate nohighlight">\(\Gamma\)</span> point. This
 contribution is included through non-analytical term correction.</p>
@@ -549,8 +549,8 @@ contribution is included through non-analytical term correction.</p>
 <li><p>R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)</p></li>
 </ul>
 </section>
-<section id="correction-by-dipole-dipole-interaction">
-<span id="reference-dp-dp-nac"></span><h3>Correction by dipole-dipole interaction<a class="headerlink" href="#correction-by-dipole-dipole-interaction" title="Link to this heading">#</a></h3>
+<section id="reference-dp-dp-nac">
+<span id="correction-by-dipole-dipole-interaction"></span><h3>Correction by dipole-dipole interaction<a class="headerlink" href="#reference-dp-dp-nac" title="Link to this heading">#</a></h3>
 <ol class="arabic simple">
 <li><p>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni, Phys. Rev. B 43, 7231
 (1991)</p></li>
@@ -561,8 +561,8 @@ contribution is included through non-analytical term correction.</p>
 <p>Currently phonopy implements the method by Gonze <em>et al.</em> written in the above
 two papers (2 and 3) as the default method.</p>
 </section>
-<section id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">
-<span id="reference-wang-nac"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction" title="Link to this heading">#</a></h3>
+<section id="reference-wang-nac">
+<span id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#reference-wang-nac" title="Link to this heading">#</a></h3>
 <p>This is an interpolation scheme using phonons at
 <span class="math notranslate nohighlight">\(\mathbf{q}\rightarrow \mathbf{0}\)</span> with the correction by Pick <em>et al.</em>
 and other commensurate points.</p>
@@ -580,8 +580,8 @@ velocity calculation, is described in the following paper:</p>
 </section>
 <section id="other-methods-and-software-for-calculating-force-constants">
 <h2>Other methods and software for calculating force constants<a class="headerlink" href="#other-methods-and-software-for-calculating-force-constants" title="Link to this heading">#</a></h2>
-<section id="parlinsk-li-kawazoe-method">
-<span id="reference-small-displacement"></span><h3>Parlinsk-Li-Kawazoe method<a class="headerlink" href="#parlinsk-li-kawazoe-method" title="Link to this heading">#</a></h3>
+<section id="reference-small-displacement">
+<span id="parlinsk-li-kawazoe-method"></span><h3>Parlinsk-Li-Kawazoe method<a class="headerlink" href="#reference-small-displacement" title="Link to this heading">#</a></h3>
 <p><a class="reference external" href="http://wolf.ifj.edu.pl/phonon/">PHONON</a> is the original implementation of the
 Parlinsk-Li-Kawazoe method.</p>
 </section>
@@ -593,8 +593,8 @@ Parlinsk-Li-Kawazoe method.</p>
 <p><a class="reference external" href="http://www.homepages.ucl.ac.uk/~ucfbdxa/phon/">PHON</a> is based on the small
 displacement method.</p>
 </section>
-<section id="dfpt">
-<span id="reference-dfpt"></span><h3>DFPT<a class="headerlink" href="#dfpt" title="Link to this heading">#</a></h3>
+<section id="reference-dfpt">
+<span id="dfpt"></span><h3>DFPT<a class="headerlink" href="#reference-dfpt" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Paolo Giannozzi, Stefano de Gironcoli, Pasquale Pavone, and Stefano Baroni,
 Phys. Rev. B, <strong>43</strong>, 7231 (1991)</p></li>
@@ -606,8 +606,8 @@ Phys. Rev. B, <strong>43</strong>, 7231 (1991)</p></li>
 <a class="reference external" href="http://elk.sourceforge.net/">Elk</a>, etc. VASP can calculate force constants
 using DFPT however only at Gamma-point.</p>
 </section>
-<section id="sscha">
-<span id="reference-sscha"></span><h3>SSCHA<a class="headerlink" href="#sscha" title="Link to this heading">#</a></h3>
+<section id="reference-sscha">
+<span id="sscha"></span><h3>SSCHA<a class="headerlink" href="#reference-sscha" title="Link to this heading">#</a></h3>
 <p>Selected papers of SSCHA:</p>
 <ul class="simple">
 <li><p>Ion Errea, Matteo Calandra, and Francesco Mauri, Phys. Rev. Lett. <strong>111</strong>,
@@ -697,24 +697,24 @@ University Press</p></li>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-used-in-phonopy">Methods used in phonopy</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-of-supercell-force-constants">Generation of supercell force constants</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systematic-displacement-method">Systematic displacement method</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#projector-based-method">Projector-based method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-force-constants">Generation of supercell force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-systematic-displacement">Systematic displacement method</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-random-displacement">Projector-based method</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tadano-tsuneyuki-method">Tadano-Tsuneyuki method</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parlinski-li-kawazoe-method">Parlinski-Li-Kawazoe method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-expansion-using-quasi-harmonic-approximation">Thermal expansion using quasi-harmonic approximation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#correction-by-dipole-dipole-interaction">Correction by dipole-dipole interaction</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">Interpolation scheme at general <em>q</em>-points with non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-plk">Parlinski-Li-Kawazoe method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-thermal-expansion">Thermal expansion using quasi-harmonic approximation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-nac">Non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-dp-dp-nac">Correction by dipole-dipole interaction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-wang-nac">Interpolation scheme at general <em>q</em>-points with non-analytical term correction</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-methods-and-software-for-calculating-force-constants">Other methods and software for calculating force constants</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parlinsk-li-kawazoe-method">Parlinsk-Li-Kawazoe method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-small-displacement">Parlinsk-Li-Kawazoe method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#small-displacement-method">Small displacement method</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dfpt">DFPT</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sscha">SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-dfpt">DFPT</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-sscha">SSCHA</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-the-study-of-basics">For the study of basics</a><ul class="nav section-nav flex-column">

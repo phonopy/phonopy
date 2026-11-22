@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.4.10.0</title>
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Wien2k &amp; phonopy calculation" href="wien2k.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -423,8 +423,8 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-q2r-x-to-create-phonopy-force-constants-file">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qe-q2r">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qe-nac">Non-analytical term correction</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#nacl-example">NaCl example</a></li>
 </ul>
 </li>
@@ -441,8 +441,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="quantum-espresso-qe-phonopy-calculation">
-<span id="qe-interface"></span><h1>Quantum ESPRESSO (QE) &amp; phonopy calculation<a class="headerlink" href="#quantum-espresso-qe-phonopy-calculation" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="qe-interface">
+<span id="quantum-espresso-qe-phonopy-calculation"></span><h1>Quantum ESPRESSO (QE) &amp; phonopy calculation<a class="headerlink" href="#qe-interface" title="Link to this heading">#</a></h1>
 <p>Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.</p>
@@ -678,8 +678,8 @@ just adding the <code class="docutils literal notranslate"><span class="pre">--n
 </a>
 </section>
 </section>
-<section id="using-q2r-x-to-create-phonopy-force-constants-file">
-<span id="qe-q2r"></span><h2>Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file<a class="headerlink" href="#using-q2r-x-to-create-phonopy-force-constants-file" title="Link to this heading">#</a></h2>
+<section id="qe-q2r">
+<span id="using-q2r-x-to-create-phonopy-force-constants-file"></span><h2>Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file<a class="headerlink" href="#qe-q2r" title="Link to this heading">#</a></h2>
 <p><strong>Experimental</strong></p>
 <p>Using PW, PH, and Q2R, we can obtain supercell force constants that can be used
 for phonopy. But we may need some treatment before running Q2R. See
@@ -788,8 +788,8 @@ file readable by phonopy is created.</p>
 </div>
 <p>This gives <code class="docutils literal notranslate"><span class="pre">phonopy_params_q2r.yaml</span></code> file that contains supercell force
 constants.</p>
-<section id="non-analytical-term-correction">
-<span id="qe-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
+<section id="qe-nac">
+<span id="non-analytical-term-correction"></span><h3>Non-analytical term correction<a class="headerlink" href="#qe-nac" title="Link to this heading">#</a></h3>
 <p>The treatment of non-analytical term correction (NAC) differs between phonopy
 and QE. For insulators, QE automatically calculates the dielectric constant and
 Born effective charges during PH calculations when the q-point mesh sampling
@@ -909,8 +909,8 @@ Saving this script as `make_born_q2r.py`,
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-q2r-x-to-create-phonopy-force-constants-file">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qe-q2r">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qe-nac">Non-analytical term correction</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#nacl-example">NaCl example</a></li>
 </ul>
 </li>

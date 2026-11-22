@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>LAMMPS &amp; phonopy calculation &#8212; Phonopy v.4.10.0</title>
+    <title>LAMMPS &amp; phonopy calculation &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="ABACUS &amp; phonopy calculation" href="abacus.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -419,24 +419,24 @@
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow">Workflow</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-format">LAMMPS structure format</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-input-format">LAMMPS structure format</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-supercells-with-displacements">Generating supercells with displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-supercell-generation">Generating supercells with displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-a-from-a-lammps-structure-file">Route (a): from a LAMMPS structure file</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-b-from-a-unit-cell-defined-in-yaml">Route (b): from a unit cell defined in yaml</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-calculation-and-force-sets">Force calculation and FORCE_SETS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-force-calculation">Force calculation and FORCE_SETS</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-phonon-calculation">Running the phonon calculation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ti-lammps-and-si-lammps-polymlp">Ti-lammps and Si-lammps (polymlp)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#si-lammps-ace-ace">Si-lammps-ace (ACE)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-structure-optimization-using-lammps">Appendix: structure optimization using LAMMPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-optimization">Appendix: structure optimization using LAMMPS</a></li>
 </ul>
             </nav>
         </div>
@@ -448,8 +448,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="lammps-phonopy-calculation">
-<span id="lammps-interface"></span><h1>LAMMPS &amp; phonopy calculation<a class="headerlink" href="#lammps-phonopy-calculation" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="lammps-interface">
+<span id="lammps-phonopy-calculation"></span><h1>LAMMPS &amp; phonopy calculation<a class="headerlink" href="#lammps-interface" title="Link to this heading">#</a></h1>
 <p>Phonopy drives a LAMMPS force calculation in the same way as an ab-initio
 calculator: it builds supercells with atomic displacements, LAMMPS evaluates the
 forces on every atom, and phonopy collects them into <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>.</p>
@@ -477,8 +477,8 @@ directory</a>: <code class="docutils literal notranslate"><span class="pre">Ti-l
 and <code class="docutils literal notranslate"><span class="pre">Si-lammps</span></code> (<code class="docutils literal notranslate"><span class="pre">polymlp</span></code> potential) and <code class="docutils literal notranslate"><span class="pre">Si-lammps-ace</span></code> (ACE <code class="docutils literal notranslate"><span class="pre">pace</span></code>
 potential).</p>
 </section>
-<section id="lammps-structure-format">
-<span id="lammps-structure-input-format"></span><h2>LAMMPS structure format<a class="headerlink" href="#lammps-structure-format" title="Link to this heading">#</a></h2>
+<section id="lammps-structure-input-format">
+<span id="lammps-structure-format"></span><h2>LAMMPS structure format<a class="headerlink" href="#lammps-structure-input-format" title="Link to this heading">#</a></h2>
 <p>Phonopy reads and writes crystal structures in the LAMMPS
 <a class="reference external" href="https://docs.lammps.org/read_data.html">read_data</a> format, with two points to
 keep in mind:</p>
@@ -552,8 +552,8 @@ the LAMMPS input script for the force calculation does not need a <code class="d
 supercells it generates, so the force calculation needs no <code class="docutils literal notranslate"><span class="pre">mass</span></code> command.</p>
 </section>
 </section>
-<section id="generating-supercells-with-displacements">
-<span id="lammps-supercell-generation"></span><h2>Generating supercells with displacements<a class="headerlink" href="#generating-supercells-with-displacements" title="Link to this heading">#</a></h2>
+<section id="lammps-supercell-generation">
+<span id="generating-supercells-with-displacements"></span><h2>Generating supercells with displacements<a class="headerlink" href="#lammps-supercell-generation" title="Link to this heading">#</a></h2>
 <p>There are two routes, depending on how the unit cell is provided. After either
 route, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the supercell files (<code class="docutils literal notranslate"><span class="pre">supercell</span></code>,
 <code class="docutils literal notranslate"><span class="pre">supercell-001</span></code>, <code class="docutils literal notranslate"><span class="pre">supercell-002</span></code>, …) are created. Symmetry reduces the number
@@ -604,8 +604,8 @@ orientation, whereas route (a) stores the rotated triclinic cell. In both cases
 uses route (b); <code class="docutils literal notranslate"><span class="pre">Ti-lammps</span></code> and <code class="docutils literal notranslate"><span class="pre">Si-lammps-ace</span></code> use route (a).</p>
 </section>
 </section>
-<section id="force-calculation-and-force-sets">
-<span id="lammps-force-calculation"></span><h2>Force calculation and FORCE_SETS<a class="headerlink" href="#force-calculation-and-force-sets" title="Link to this heading">#</a></h2>
+<section id="lammps-force-calculation">
+<span id="force-calculation-and-force-sets"></span><h2>Force calculation and FORCE_SETS<a class="headerlink" href="#lammps-force-calculation" title="Link to this heading">#</a></h2>
 <p>Phonopy reads forces from a LAMMPS dump written in a fixed text format. For each
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx</span></code>, evaluate the forces once with <code class="docutils literal notranslate"><span class="pre">run</span> <span class="pre">0</span></code> (no time integration):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">units</span> <span class="n">metal</span>
@@ -686,8 +686,8 @@ frequencies around Gamma; relax the cell with the potential to remove it (see
 the appendix below).</p>
 </section>
 </section>
-<section id="appendix-structure-optimization-using-lammps">
-<span id="lammps-structure-optimization"></span><h2>Appendix: structure optimization using LAMMPS<a class="headerlink" href="#appendix-structure-optimization-using-lammps" title="Link to this heading">#</a></h2>
+<section id="lammps-structure-optimization">
+<span id="appendix-structure-optimization-using-lammps"></span><h2>Appendix: structure optimization using LAMMPS<a class="headerlink" href="#lammps-structure-optimization" title="Link to this heading">#</a></h2>
 <p>Relax the crystal structure with the potential before the phonon calculation so
 that the residual forces, and the residual stress on the lattice, vanish. The
 following relaxes both the cell and the internal coordinates:</p>
@@ -763,24 +763,24 @@ instruction is found at
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow">Workflow</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-format">LAMMPS structure format</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-input-format">LAMMPS structure format</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-supercells-with-displacements">Generating supercells with displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-supercell-generation">Generating supercells with displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-a-from-a-lammps-structure-file">Route (a): from a LAMMPS structure file</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-b-from-a-unit-cell-defined-in-yaml">Route (b): from a unit cell defined in yaml</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-calculation-and-force-sets">Force calculation and FORCE_SETS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-force-calculation">Force calculation and FORCE_SETS</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-phonon-calculation">Running the phonon calculation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ti-lammps-and-si-lammps-polymlp">Ti-lammps and Si-lammps (polymlp)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#si-lammps-ace-ace">Si-lammps-ace (ACE)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-structure-optimization-using-lammps">Appendix: structure optimization using LAMMPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-optimization">Appendix: structure optimization using LAMMPS</a></li>
 </ul>
   </nav></div>
 

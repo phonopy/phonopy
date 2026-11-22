@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Temperature dependent force constants using pypolymlp and symfc &#8212; Phonopy v.4.10.0</title>
+    <title>Temperature dependent force constants using pypolymlp and symfc &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -414,7 +414,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="prev" title="Random displacements" href="random-displacements.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -539,7 +539,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -786,32 +786,32 @@ window.runMermaid = runMermaid;</script>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-set">2. The training set</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermal-distribution">The thermal distribution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-thermal-distribution">The thermal distribution</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#drawing-the-displacements">Drawing the displacements</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#merging-the-temperatures">Merging the temperatures</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducing-and-extending-the-draw">Reproducing and extending the draw</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-merging">Merging the temperatures</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-draw-defaults">What the draw leaves at its defaults</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-normals">Reproducing and extending the draw</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-mlp">3. Training the MLP</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-parameters-of-the-mlp">The parameters of the MLP</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validating-the-mlp">Validating the MLP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-descriptor">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-validate">Validating the MLP</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-sscha">4. Running SSCHA</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-a-run">The options of a run</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-run-from-python">The same run from Python</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-options">The options of a run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-api">The same run from Python</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-run">5. Reading the run</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-reading">5. Reading the run</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mlpsscha-hdf5"><code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-force-constants">The force constants</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-sscha-free-energy">The SSCHA free energy</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-one-iteration">The error of one iteration</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-the-average">The error of the average</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-error">The error of the average</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence">Convergence</a><ul class="nav section-nav flex-column">
@@ -819,8 +819,8 @@ window.runMermaid = runMermaid;</script>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-size-of-the-training-set">The size of the training set</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-check-displacements">Appendix: checking the training displacements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-reproducing">Appendix: what a rerun reproduces</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#converting-phonopy-pmlp-to-polymlp-yaml">Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-cite">How to cite</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pypolymlp">pypolymlp</a></li>
@@ -838,8 +838,8 @@ window.runMermaid = runMermaid;</script>
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="temperature-dependent-force-constants-using-pypolymlp-and-symfc">
-<span id="mlp-sscha"></span><span id="polymlp-sscha"></span><h1>Temperature dependent force constants using pypolymlp and symfc<a class="headerlink" href="#temperature-dependent-force-constants-using-pypolymlp-and-symfc" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="mlp-sscha">
+<span id="temperature-dependent-force-constants-using-pypolymlp-and-symfc"></span><span id="polymlp-sscha"></span><h1>Temperature dependent force constants using pypolymlp and symfc<a class="headerlink" href="#mlp-sscha" title="Link to this heading">#</a></h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><strong>This is an experimental feature.</strong> The command-line options of
@@ -1023,8 +1023,8 @@ frequency and by the temperature.</p>
 iterates its own distribution to self-consistency with the anharmonic force
 constants; this draw does not. In practice that has been enough for a training
 set.</p>
-<section id="the-thermal-distribution">
-<span id="polymlp-sscha-thermal-distribution"></span><h3>The thermal distribution<a class="headerlink" href="#the-thermal-distribution" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-thermal-distribution">
+<span id="the-thermal-distribution"></span><h3>The thermal distribution<a class="headerlink" href="#polymlp-sscha-thermal-distribution" title="Link to this heading">#</a></h3>
 <p>Each mode <span class="math notranslate nohighlight">\((\mathbf{q}, \nu)\)</span> of the supercell is a harmonic oscillator
 in equilibrium at <span class="math notranslate nohighlight">\(T\)</span>, so its normal coordinate is normally distributed
 about zero with variance</p>
@@ -1117,8 +1117,8 @@ calculator runs 200 supercells of 64 atoms here. Collecting each set in turn
 leaves one <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> in <code class="docutils literal notranslate"><span class="pre">train/T0</span></code>, <code class="docutils literal notranslate"><span class="pre">train/T100</span></code>, <code class="docutils literal notranslate"><span class="pre">train/T300</span></code> and
 <code class="docutils literal notranslate"><span class="pre">train/T500</span></code>.</p>
 </section>
-<section id="merging-the-temperatures">
-<span id="polymlp-sscha-merging"></span><h3>Merging the temperatures<a class="headerlink" href="#merging-the-temperatures" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-merging">
+<span id="merging-the-temperatures"></span><h3>Merging the temperatures<a class="headerlink" href="#polymlp-sscha-merging" title="Link to this heading">#</a></h3>
 <p>The MLP is trained on all four temperatures at once. Script 2 merges the sets
 by interleaving, so that the temperatures alternate through the merged list
 instead of following one another in blocks.</p>
@@ -1167,8 +1167,8 @@ forces and supercell energies, and is the file the MLP is trained on.</p>
 is a second of arithmetic on what Scripts 1 and 2 wrote, and the check on the
 displacements can be made before the calculator is run.</p>
 </section>
-<section id="what-the-draw-leaves-at-its-defaults">
-<span id="polymlp-sscha-draw-defaults"></span><h3>What the draw leaves at its defaults<a class="headerlink" href="#what-the-draw-leaves-at-its-defaults" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-draw-defaults">
+<span id="what-the-draw-leaves-at-its-defaults"></span><h3>What the draw leaves at its defaults<a class="headerlink" href="#polymlp-sscha-draw-defaults" title="Link to this heading">#</a></h3>
 <p>Script 1 leaves the other parameters of <code class="docutils literal notranslate"><span class="pre">init_random_displacements</span></code> at their
 defaults. The parameters that change the displacements are
 <code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">dist_func</span></code> and <code class="docutils literal notranslate"><span class="pre">max_distance</span></code>.</p>
@@ -1186,8 +1186,8 @@ rebuilds the force constants from the shifted modes.</p>
 classical. <code class="docutils literal notranslate"><span class="pre">max_distance</span></code> shortens any displacement longer than the length
 given, which caps the tail of the distribution.</p>
 </section>
-<section id="reproducing-and-extending-the-draw">
-<span id="polymlp-sscha-normals"></span><h3>Reproducing and extending the draw<a class="headerlink" href="#reproducing-and-extending-the-draw" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-normals">
+<span id="reproducing-and-extending-the-draw"></span><h3>Reproducing and extending the draw<a class="headerlink" href="#polymlp-sscha-normals" title="Link to this heading">#</a></h3>
 <p>Snapshot <em>i</em> is drawn from <code class="docutils literal notranslate"><span class="pre">SeedSequence([random_seed,</span> <span class="pre">i])</span></code>, so it depends on
 its index and on nothing else. Asking for snapshots 0 to 49 and later for 50 to
 99 gives the same 100 as asking for 0 to 99 at once. A training set can
@@ -1266,8 +1266,8 @@ parameter adjustments, it is recommended to consult the
 <a class="reference external" href="https://github.com/sekocha/pypolymlp">pypolymlp</a> documentation and review the
 relevant research papers.</p>
 </section>
-<section id="the-descriptor-and-the-amount-of-training-data">
-<span id="polymlp-sscha-descriptor"></span><h3>The descriptor and the amount of training data<a class="headerlink" href="#the-descriptor-and-the-amount-of-training-data" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-descriptor">
+<span id="the-descriptor-and-the-amount-of-training-data"></span><h3>The descriptor and the amount of training data<a class="headerlink" href="#polymlp-sscha-descriptor" title="Link to this heading">#</a></h3>
 <p>There are two things to choose here: how big a descriptor to use, and how many
 structures to train it on. The ridge penalty is not a third choice. It is what
 the fit falls back on when the descriptor is too large for the training set, so
@@ -1368,8 +1368,8 @@ the largest size has not converged, and a line that has flattened has
 converged. Each point costs one fit, which is far less than the SSCHA runs of
 step 4, so make this plot first.</p>
 </section>
-<section id="validating-the-mlp">
-<span id="polymlp-sscha-validate"></span><h3>Validating the MLP<a class="headerlink" href="#validating-the-mlp" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-validate">
+<span id="validating-the-mlp"></span><h3>Validating the MLP<a class="headerlink" href="#polymlp-sscha-validate" title="Link to this heading">#</a></h3>
 <p>The MLP is judged by its phonons rather than by the force RMSE. The RMSE
 includes large-amplitude structures that the harmonic quantities never visit,
 while the frequencies are what enter the free energy. The comparison below is
@@ -1449,8 +1449,8 @@ ensemble, so no free energy is defined for it and none is recorded.</p>
 <p>NAC parameters are read from the input file when they are there, and from a
 <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file in the directory the command runs in otherwise. They are used in
 the mesh sampling of the harmonic part of the free energy.</p>
-<section id="the-options-of-a-run">
-<span id="polymlp-sscha-options"></span><h3>The options of a run<a class="headerlink" href="#the-options-of-a-run" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-options">
+<span id="the-options-of-a-run"></span><h3>The options of a run<a class="headerlink" href="#polymlp-sscha-options" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> is how many supercells each iteration draws, 1000 by default.
 Each one is an MLP evaluation, which makes it the main cost of the step.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--iterations</span></code> is how many iterations the run makes, 10 by default. The early
@@ -1490,8 +1490,8 @@ them.</p>
 <p><code class="docutils literal notranslate"><span class="pre">-v</span></code> logs each iteration and prints the listing at the end. <code class="docutils literal notranslate"><span class="pre">-vv</span></code> adds the
 force-constant fit.</p>
 </section>
-<section id="the-same-run-from-python">
-<span id="polymlp-sscha-api"></span><h3>The same run from Python<a class="headerlink" href="#the-same-run-from-python" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-api">
+<span id="the-same-run-from-python"></span><h3>The same run from Python<a class="headerlink" href="#polymlp-sscha-api" title="Link to this heading">#</a></h3>
 <p>The command is a thin wrapper around <code class="docutils literal notranslate"><span class="pre">MLPSSCHA</span></code>, which holds the iterations,
 and the two functions that write and read the hdf5 file. The script below
 does what the command above did:</p>
@@ -1528,8 +1528,8 @@ which <a class="reference internal" href="#polymlp-sscha-reading"><span class="s
 <code class="docutils literal notranslate"><span class="pre">read_sscha_trace_hdf5</span></code>.</p>
 </section>
 </section>
-<section id="reading-the-run">
-<span id="polymlp-sscha-reading"></span><h2>5. Reading the run<a class="headerlink" href="#reading-the-run" title="Link to this heading">#</a></h2>
+<section id="polymlp-sscha-reading">
+<span id="reading-the-run"></span><h2>5. Reading the run<a class="headerlink" href="#polymlp-sscha-reading" title="Link to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="nb">iter</span>       <span class="n">F</span> <span class="p">[</span><span class="n">meV</span><span class="p">]</span>   <span class="n">error</span> <span class="p">[</span><span class="n">meV</span><span class="p">]</span>   <span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">/</span><span class="n">error</span>
      <span class="mi">1</span><span class="o">*</span>     <span class="o">-</span><span class="mf">97.6965</span>        <span class="mf">0.0481</span>               <span class="o">+</span><span class="mf">2.6</span>
      <span class="mi">2</span>      <span class="o">-</span><span class="mf">97.8342</span>        <span class="mf">0.0496</span>               <span class="o">-</span><span class="mf">0.3</span>
@@ -1693,8 +1693,8 @@ statistical error comes from the anharmonic term. This error holds <span class="
 fixed, and the uncertainty of <span class="math notranslate nohighlight">\(\Phi\)</span> itself, which was also determined
 from a stochastic sampling, is not included in it.</p>
 </section>
-<section id="the-error-of-the-average">
-<span id="polymlp-sscha-error"></span><h3>The error of the average<a class="headerlink" href="#the-error-of-the-average" title="Link to this heading">#</a></h3>
+<section id="polymlp-sscha-error">
+<span id="the-error-of-the-average"></span><h3>The error of the average<a class="headerlink" href="#polymlp-sscha-error" title="Link to this heading">#</a></h3>
 <p>The iterations after the transient are independent draws, so the error of their
 mean is</p>
 <div class="math notranslate nohighlight">
@@ -1867,8 +1867,8 @@ sufficiently large training set in advance, before starting the temperature
 dependent force constants calculation.</p>
 </section>
 </section>
-<section id="appendix-checking-the-training-displacements">
-<span id="polymlp-sscha-check-displacements"></span><h2>Appendix: checking the training displacements<a class="headerlink" href="#appendix-checking-the-training-displacements" title="Link to this heading">#</a></h2>
+<section id="polymlp-sscha-check-displacements">
+<span id="appendix-checking-the-training-displacements"></span><h2>Appendix: checking the training displacements<a class="headerlink" href="#polymlp-sscha-check-displacements" title="Link to this heading">#</a></h2>
 <p>The draw and the check use the same force constants <span class="math notranslate nohighlight">\(\Phi\)</span>. The check
 therefore tests the temperature a set was drawn at, and tests nothing about
 <span class="math notranslate nohighlight">\(\Phi\)</span> itself. Force constants that are wrong change the draw and the
@@ -1966,8 +1966,8 @@ the offsets of the merged set. For the training sets of this page it prints</p>
 <p>where <span class="math notranslate nohighlight">\(\overline{u^2}\)</span> and <span class="math notranslate nohighlight">\(\langle u^2 \rangle\)</span> are in Angstrom
 squared and are summed over the 64 atoms of the supercell.</p>
 </section>
-<section id="appendix-what-a-rerun-reproduces">
-<span id="polymlp-sscha-reproducing"></span><h2>Appendix: what a rerun reproduces<a class="headerlink" href="#appendix-what-a-rerun-reproduces" title="Link to this heading">#</a></h2>
+<section id="polymlp-sscha-reproducing">
+<span id="appendix-what-a-rerun-reproduces"></span><h2>Appendix: what a rerun reproduces<a class="headerlink" href="#polymlp-sscha-reproducing" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> displaces the supercells of an SSCHA iteration along the
 thermal distribution, and Script 1 draws its training structures from the
 thermal distribution of the harmonic force constants. Both draw through
@@ -2106,32 +2106,32 @@ A. Seko and A. Togo, Phys. Rev. B, <strong>110</strong>, 214302 (2024)
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-set">2. The training set</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermal-distribution">The thermal distribution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-thermal-distribution">The thermal distribution</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#drawing-the-displacements">Drawing the displacements</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#merging-the-temperatures">Merging the temperatures</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducing-and-extending-the-draw">Reproducing and extending the draw</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-merging">Merging the temperatures</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-draw-defaults">What the draw leaves at its defaults</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-normals">Reproducing and extending the draw</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-mlp">3. Training the MLP</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-parameters-of-the-mlp">The parameters of the MLP</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validating-the-mlp">Validating the MLP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-descriptor">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-validate">Validating the MLP</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-sscha">4. Running SSCHA</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-a-run">The options of a run</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-run-from-python">The same run from Python</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-options">The options of a run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-api">The same run from Python</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-run">5. Reading the run</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-reading">5. Reading the run</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mlpsscha-hdf5"><code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-force-constants">The force constants</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-sscha-free-energy">The SSCHA free energy</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-one-iteration">The error of one iteration</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-the-average">The error of the average</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-error">The error of the average</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence">Convergence</a><ul class="nav section-nav flex-column">
@@ -2139,8 +2139,8 @@ A. Seko and A. Togo, Phys. Rev. B, <strong>110</strong>, 214302 (2024)
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-size-of-the-training-set">The size of the training set</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-check-displacements">Appendix: checking the training displacements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#polymlp-sscha-reproducing">Appendix: what a rerun reproduces</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#converting-phonopy-pmlp-to-polymlp-yaml">Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-cite">How to cite</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pypolymlp">pypolymlp</a></li>

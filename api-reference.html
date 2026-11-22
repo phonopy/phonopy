@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API reference &#8212; Phonopy v.4.10.0</title>
+    <title>API reference &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Phonopy API for Python" href="phonopy-module.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -1189,7 +1189,7 @@ displacement of a site is given to every atom of the site.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="phonopy.Phonopy.generate_displacements">
-<span class="sig-name descname"><span class="pre">generate_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_plusminus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_trigonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_snapshots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'supercell'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_estimation_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.generate_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.generate_displacements" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">generate_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_plusminus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_trigonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_snapshots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'supercell'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_estimation_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.generate_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.generate_displacements" title="Link to this definition">#</a></dt>
 <dd><p>Generate displacement dataset and store it in Phonopy.dataset.</p>
 <p>This method selects one of three generators and stores its result;
 the generators hold the details of each mode.</p>
@@ -1216,7 +1216,7 @@ in both directions (True), or in both directions only when
 symmetry requires it (<code class="docutils literal notranslate"><span class="pre">'auto'</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>.</p></li>
 <li><p><strong>is_diagonal</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Systematic displacements only. When False, displace only along
 basis vectors. Default is True.</p></li>
-<li><p><strong>is_trigonal</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Exists only for testing purposes. Default is False.</p></li>
+<li><p><strong>is_trigonal</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Deprecated.  Developer only.  Default is None.</p></li>
 <li><p><strong>number_of_snapshots</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>&quot;auto&quot;</em><em>, or </em><em>None</em><em>, </em><em>optional</em>) – Number of supercells with random displacements. When <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>,
 it is estimated with symfc. None selects systematic
 displacements. Default is None.</p></li>
@@ -2482,7 +2482,7 @@ object is also accessible through the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="phonopy.Phonopy.run_modulations">
-<span class="sig-name descname"><span class="pre">run_modulations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phonon_modes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nac_q_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.run_modulations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.run_modulations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run_modulations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phonon_modes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nac_q_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degeneracy_lifting_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.run_modulations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.run_modulations" title="Link to this definition">#</a></dt>
 <dd><p>Generate atomic displacements of phonon modes.</p>
 <p>The design of this feature, and thus its API, is not very
 satisfactory. It should be reconsidered someday in the future.</p>
@@ -2501,13 +2501,20 @@ satisfactory. It should be reconsidered someday in the future.</p>
 reduced coordinates. The remaining elements are the band
 index (starting with 0), amplitude, and phase factor.</p>
 </p></li>
+<li><p><strong>delta_q</strong> (<em>array_like</em><em>, </em><em>optional</em>) – Deprecated.  Use <code class="docutils literal notranslate"><span class="pre">degeneracy_lifting_direction</span></code>.  This is the
+same direction in Cartesian coordinates.</p></li>
 <li><p><strong>nac_q_direction</strong> (<em>array_like</em>) – q-point direction from Gamma-point in fractional coordinates
 of reciprocal basis vectors. Only the direction is used, i.e.,
 <code class="docutils literal notranslate"><span class="pre">q_direction</span> <span class="pre">/</span> <span class="pre">norm(q_direction)</span></code> is computed and used. This
 parameter is activated only at q=(0, 0, 0).
 <code class="docutils literal notranslate"><span class="pre">shape=(3,)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p></li>
-<li><p><strong>delta_q</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.15)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>] </em><em>| </em><em>NDArray</em><em>[</em><em>float64</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>derivative_order</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>degeneracy_lifting_direction</strong> (<em>array_like</em><em>, </em><em>optional</em>) – Direction in reduced coordinates of the reciprocal lattice used to
+choose eigenvectors of degenerate bands.  In each degenerate
+subspace, the eigenvectors are rotated to diagonalize the
+derivative of the dynamical matrix along this direction.  Bands
+that this derivative does not split are left as returned by the
+eigensolver.  Only the direction is used.  When None, no rotation
+is made.  <code class="docutils literal notranslate"><span class="pre">shape=(3,)</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

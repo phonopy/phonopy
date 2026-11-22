@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.4.10.0</title>
+    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Electronic thermal properties" href="electronic-thermal-properties.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -421,8 +421,8 @@
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run">How to run</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-calculator-interfaces">Force calculator interfaces</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-options">Command options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gruneisen-calculators">Force calculator interfaces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gruneisen-command-options">Command options</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#method-to-calculate-mode-gruneisen-parameters">Method to calculate mode Grüneisen parameters</a></li>
 </ul>
             </nav>
@@ -435,8 +435,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="calculation-of-mode-gruneisen-parameters">
-<span id="phonopy-gruneisen"></span><h1>Calculation of mode Grüneisen parameters<a class="headerlink" href="#calculation-of-mode-gruneisen-parameters" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="phonopy-gruneisen">
+<span id="calculation-of-mode-gruneisen-parameters"></span><h1>Calculation of mode Grüneisen parameters<a class="headerlink" href="#phonopy-gruneisen" title="Link to this heading">#</a></h1>
 <section id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Link to this heading">#</a></h2>
 <p>It is necessary to run three phonon calculations. One is calculated at the
@@ -473,8 +473,8 @@ example for band paths, mode Grüneinen parameters are calculated at
 on the plot. Instead the values at the neighboring <strong>q</strong>-points of
 <span class="math notranslate nohighlight">\(\Gamma\)</span>-point are used for the plot.</p>
 </section>
-<section id="force-calculator-interfaces">
-<span id="gruneisen-calculators"></span><h2>Force calculator interfaces<a class="headerlink" href="#force-calculator-interfaces" title="Link to this heading">#</a></h2>
+<section id="gruneisen-calculators">
+<span id="force-calculator-interfaces"></span><h2>Force calculator interfaces<a class="headerlink" href="#gruneisen-calculators" title="Link to this heading">#</a></h2>
 <p>Options of force calculator interfaces such as <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, … can be
 specified for corresponding calculators and the crystal structure file format
 should be different from that of the VASP format. An Abinit example is as
@@ -483,8 +483,8 @@ follows:</p>
 </pre></div>
 </div>
 </section>
-<section id="command-options">
-<span id="gruneisen-command-options"></span><h2>Command options<a class="headerlink" href="#command-options" title="Link to this heading">#</a></h2>
+<section id="gruneisen-command-options">
+<span id="command-options"></span><h2>Command options<a class="headerlink" href="#gruneisen-command-options" title="Link to this heading">#</a></h2>
 <p>If one of the force calculator options is specified, the interface mode is
 changed to it. The unit conversion factor to THz is appropriately selected and
 its crystal structure file format is accepted. If none of them is specified, as
@@ -584,8 +584,8 @@ with slightly larger and smaller volumes than <span class="math notranslate nohi
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run">How to run</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-calculator-interfaces">Force calculator interfaces</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-options">Command options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gruneisen-calculators">Force calculator interfaces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gruneisen-command-options">Command options</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#method-to-calculate-mode-gruneisen-parameters">Method to calculate mode Grüneisen parameters</a></li>
 </ul>
   </nav></div>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Anisotropic thermal expansion from free-energy minimization &#8212; Phonopy v.4.10.0</title>
+    <title>Anisotropic thermal expansion from free-energy minimization &#8212; Phonopy v.4.11.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=83681638"></script>
+    <script src="_static/documentation_options.js?v=7fb223d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -414,7 +414,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="prev" title="Quasi harmonic approximation" href="qha.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.10" />
+  <meta name="docsearch:version" content="4.11" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -539,7 +539,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.10.0</p>
+    <p class="title logo__title">Phonopy v.4.11.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -783,43 +783,43 @@ window.runMermaid = runMermaid;</script>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u">1. Build the static grid (internal energy U)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-the-phonons-phonon-grid">2. Compute the phonons (phonon grid)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-intermediate-dataset">3. Build the intermediate dataset</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-builder-reads">What the builder reads</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-ordering-is-checked">How the ordering is checked</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-file-holds">What the file holds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-build">3. Build the intermediate dataset</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-builder-reads">What the builder reads</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-ordering">How the ordering is checked</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-file-contents">What the file holds</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-f-mathrm-el-ready-made">Supplying <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> ready-made</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-temperature-dependent">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-this-step-fits">Where this step fits</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-mlp-per-grid-point">One MLP per grid point</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermal-distribution">The thermal distribution</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-displacements">The training displacements</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-one-draw-of-standard-normals">Sharing one draw of standard normals</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-normals">Sharing one draw of standard normals</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-validate">The descriptor and the amount of training data</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pinning-the-ridge-penalty-across-the-grid">Pinning the ridge penalty across the grid</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#computing-the-free-energies-with-sscha">Computing the free energies with SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-sscha">Computing the free energies with SSCHA</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-an-sscha-run-and-its-error">The options of an SSCHA run and its error</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gathering-the-runs-into-fph-hdf5">Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-transient">Choosing the transient</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-gather">Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-transient">Choosing the transient</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-the-free-energies-to-the-analysis">Supplying the free energies to the analysis</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-sscha-analysis">Running the analysis</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-one-ladder-of-descriptors">Appendix: one ladder of descriptors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-gather-script">Appendix: the gather script</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-descriptor-example">Appendix: one ladder of descriptors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-gather-script">Appendix: the gather script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-check-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-script">The script</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-spreading-the-sweep-over-a-cluster">Appendix: spreading the sweep over a cluster</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-distributed">Appendix: spreading the sweep over a cluster</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-reproducing">Appendix: what a rerun reproduces</a></li>
 </ul>
             </nav>
         </div>
@@ -831,8 +831,8 @@ window.runMermaid = runMermaid;</script>
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-thermal-expansion-from-free-energy-minimization">
-<span id="aniso-thermal-expansion"></span><h1>Anisotropic thermal expansion from free-energy minimization<a class="headerlink" href="#anisotropic-thermal-expansion-from-free-energy-minimization" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="aniso-thermal-expansion">
+<span id="anisotropic-thermal-expansion-from-free-energy-minimization"></span><h1>Anisotropic thermal expansion from free-energy minimization<a class="headerlink" href="#aniso-thermal-expansion" title="Link to this heading">#</a></h1>
 <p>This page computes the anisotropic thermal expansion of a crystal, with one
 expansion coefficient per crystal axis rather than one for the volume. The
 ordinary quasi-harmonic approximation (QHA) minimizes the free energy along a
@@ -1158,8 +1158,8 @@ one another or with step 0.</p>
 </div>
 <p>Then build the intermediate dataset, which is step 3.</p>
 </section>
-<section id="build-the-intermediate-dataset">
-<span id="anisotropic-qha-build"></span><h2>3. Build the intermediate dataset<a class="headerlink" href="#build-the-intermediate-dataset" title="Link to this heading">#</a></h2>
+<section id="anisotropic-qha-build">
+<span id="build-the-intermediate-dataset"></span><h2>3. Build the intermediate dataset<a class="headerlink" href="#anisotropic-qha-build" title="Link to this heading">#</a></h2>
 <p>The analysis of step 4 reads <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code>, and so does step 5. The
 grid points are given as two path lists, <code class="docutils literal notranslate"><span class="pre">--static</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon</span></code>, and paired
 <strong>by position</strong> after shell expansion:</p>
@@ -1214,8 +1214,8 @@ of each point:</p>
 </div>
 <p>Pass the internal energies per primitive cell, so that they match the phonon
 calculation.</p>
-<section id="what-the-builder-reads">
-<span id="anisotropic-qha-builder-reads"></span><h3>What the builder reads<a class="headerlink" href="#what-the-builder-reads" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-builder-reads">
+<span id="what-the-builder-reads"></span><h3>What the builder reads<a class="headerlink" href="#anisotropic-qha-builder-reads" title="Link to this heading">#</a></h3>
 <p>For each grid point the builder reads:</p>
 <ul>
 <li><p>the static single point, giving the internal energy <span class="math notranslate nohighlight">\(U(a_i, c_i)\)</span>. It
@@ -1254,8 +1254,8 @@ the free lattice DOF metadata and the calculator. The grid-point index recorded
 in the dataset is the position in the list, a label only, since the analysis
 reads the lattice parameters from each stored cell.</p>
 </section>
-<section id="how-the-ordering-is-checked">
-<span id="anisotropic-qha-ordering"></span><h3>How the ordering is checked<a class="headerlink" href="#how-the-ordering-is-checked" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-ordering">
+<span id="how-the-ordering-is-checked"></span><h3>How the ordering is checked<a class="headerlink" href="#anisotropic-qha-ordering" title="Link to this heading">#</a></h3>
 <p>The builder pairs <code class="docutils literal notranslate"><span class="pre">--static</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> by position after shell expansion,
 and takes the <code class="docutils literal notranslate"><span class="pre">disp-*</span></code> subdirectories of one grid point in sorted order. It
 checks both against the structures in the calculator outputs.</p>
@@ -1286,8 +1286,8 @@ builder on a path that does not exist instead of quietly passing a shorter
 list. <code class="docutils literal notranslate"><span class="pre">grid-*</span></code> also works, and is the shorter thing to type once the grid is
 known to be complete.</p>
 </section>
-<section id="what-the-file-holds">
-<span id="anisotropic-qha-file-contents"></span><h3>What the file holds<a class="headerlink" href="#what-the-file-holds" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-file-contents">
+<span id="what-the-file-holds"></span><h3>What the file holds<a class="headerlink" href="#anisotropic-qha-file-contents" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> is self-contained. Per grid point it stores the
 relaxed cell, the supercell and primitive matrices, the raw displacements and
 forces, the static internal energy <span class="math notranslate nohighlight">\(U\)</span>, and optionally the electronic
@@ -1610,8 +1610,8 @@ replaces <code class="docutils literal notranslate"><span class="pre">--electron
 states and the two paths would then carry different physics.</p>
 </section>
 </section>
-<section id="variant-temperature-dependent-force-constants-from-per-grid-point-mlps">
-<span id="anisotropic-qha-temperature-dependent"></span><h2>5. Variant: temperature-dependent force constants from per-grid-point MLPs<a class="headerlink" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps" title="Link to this heading">#</a></h2>
+<section id="anisotropic-qha-temperature-dependent">
+<span id="variant-temperature-dependent-force-constants-from-per-grid-point-mlps"></span><h2>5. Variant: temperature-dependent force constants from per-grid-point MLPs<a class="headerlink" href="#anisotropic-qha-temperature-dependent" title="Link to this heading">#</a></h2>
 <p>The displacements of step 2 are small, and the forces they give are almost
 harmonic. Anharmonic effects appear only in supercells displaced further than
 that. Here such supercells are made by moving every atom at once, by amounts
@@ -1876,8 +1876,8 @@ the draw takes <span class="math notranslate nohighlight">\(|\omega|\)</span>, s
 mode of the same magnitude. Look at the frequencies of step 2 before training
 on such a grid point.</p>
 </section>
-<section id="sharing-one-draw-of-standard-normals">
-<span id="anisotropic-qha-normals"></span><h3>Sharing one draw of standard normals<a class="headerlink" href="#sharing-one-draw-of-standard-normals" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-normals">
+<span id="sharing-one-draw-of-standard-normals"></span><h3>Sharing one draw of standard normals<a class="headerlink" href="#anisotropic-qha-normals" title="Link to this heading">#</a></h3>
 <p>Drawing the <span class="math notranslate nohighlight">\(\xi\)</span> once and using the same values at every grid point
 gives one realization of the randomness over the whole grid. The surface fit
 then carries it as a smooth function of the lattice parameters. The analysis
@@ -1894,8 +1894,8 @@ points then resemble one another.</p>
 seed fixes, what a NumPy upgrade does not, and how a saved draw is read back or
 extended.</p>
 </section>
-<section id="the-descriptor-and-the-amount-of-training-data">
-<span id="anisotropic-qha-validate"></span><h3>The descriptor and the amount of training data<a class="headerlink" href="#the-descriptor-and-the-amount-of-training-data" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-validate">
+<span id="the-descriptor-and-the-amount-of-training-data"></span><h3>The descriptor and the amount of training data<a class="headerlink" href="#anisotropic-qha-validate" title="Link to this heading">#</a></h3>
 <p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-descriptor"><span class="std std-ref">The descriptor and the amount of training data</span></a> covers what <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> sets, what a descriptor
 costs to evaluate, and how the ridge penalty pypolymlp selects says whether the
 training set is large enough for the descriptor.</p>
@@ -1934,8 +1934,8 @@ calculator forces, so nothing new has to be run with the calculator.</p>
 <p>Make that comparison at a few grid points. The MLPs are fitted independently,
 so an MLP that is weak at one grid point says nothing about the others.</p>
 </section>
-<section id="computing-the-free-energies-with-sscha">
-<span id="anisotropic-qha-sscha"></span><h3>Computing the free energies with SSCHA<a class="headerlink" href="#computing-the-free-energies-with-sscha" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-sscha">
+<span id="computing-the-free-energies-with-sscha"></span><h3>Computing the free energies with SSCHA<a class="headerlink" href="#anisotropic-qha-sscha" title="Link to this heading">#</a></h3>
 <p><span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> is the SSCHA free energy defined in
 <a class="reference internal" href="polymlp-sscha.html#polymlp-sscha"><span class="std std-ref">SSCHA</span></a>, computed from force constants that change with
 temperature. It is no longer the
@@ -2011,8 +2011,8 @@ over the iterations after the transient, one of them by default, and
 <code class="docutils literal notranslate"><span class="pre">--transient</span></code> sets how many. Choosing another is a second gather and costs no
 sampling, and <code class="docutils literal notranslate"><span class="pre">--transient</span></code> on a run marks its listing alone.</p>
 </section>
-<section id="gathering-the-runs-into-fph-hdf5">
-<span id="anisotropic-qha-gather"></span><h3>Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code><a class="headerlink" href="#gathering-the-runs-into-fph-hdf5" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-gather">
+<span id="gathering-the-runs-into-fph-hdf5"></span><h3>Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code><a class="headerlink" href="#anisotropic-qha-gather" title="Link to this heading">#</a></h3>
 <p>One SSCHA run is minutes with the lightest descriptor and longer with a heavy
 one, and the 1,025 of them are independent of each other, so they can be split
 over processes, nodes or jobs however is convenient.
@@ -2049,8 +2049,8 @@ Wrote<span class="w"> </span>fph.hdf5,<span class="w"> </span><span class="m">41
 <p>Each file is placed by the lattice lengths and the temperature it carries
 rather than by its name, so the order they are gathered in does not matter.</p>
 </section>
-<section id="choosing-the-transient">
-<span id="anisotropic-qha-transient"></span><h3>Choosing the transient<a class="headerlink" href="#choosing-the-transient" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-transient">
+<span id="choosing-the-transient"></span><h3>Choosing the transient<a class="headerlink" href="#anisotropic-qha-transient" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">--transient</span></code> sets how many iterations are left out of the averages. The
 default is <code class="docutils literal notranslate"><span class="pre">DEFAULT_TRANSIENT</span></code>, 1. Iteration 1 uses the force constants fitted
 to <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>, so its free energy is that of those force constants and not
@@ -2119,8 +2119,8 @@ cannot do is the draw of step 5: script 5 takes the widths of the thermal
 distribution from those harmonic force constants, and there are none
 here.</p>
 </section>
-<section id="running-the-analysis">
-<span id="anisotropic-qha-sscha-analysis"></span><h3>Running the analysis<a class="headerlink" href="#running-the-analysis" title="Link to this heading">#</a></h3>
+<section id="anisotropic-qha-sscha-analysis">
+<span id="running-the-analysis"></span><h3>Running the analysis<a class="headerlink" href="#anisotropic-qha-sscha-analysis" title="Link to this heading">#</a></h3>
 <p>The file is given to the analysis with <code class="docutils literal notranslate"><span class="pre">--phonon-free-energies</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--phonon-free-energies<span class="w"> </span>fph.hdf5
 </pre></div>
@@ -2215,8 +2215,8 @@ the range raises <code class="docutils literal notranslate"><span class="pre">Va
 no model to evaluate and raises as well.</p>
 </section>
 </section>
-<section id="appendix-one-ladder-of-descriptors">
-<span id="anisotropic-qha-descriptor-example"></span><h2>Appendix: one ladder of descriptors<a class="headerlink" href="#appendix-one-ladder-of-descriptors" title="Link to this heading">#</a></h2>
+<section id="anisotropic-qha-descriptor-example">
+<span id="appendix-one-ladder-of-descriptors"></span><h2>Appendix: one ladder of descriptors<a class="headerlink" href="#anisotropic-qha-descriptor-example" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-descriptor"><span class="std std-ref">The descriptor and the amount of training data</span></a> gives the method and a table for a two-element
 system. The table here is one example for a one-element system, measured with
 pypolymlp 0.20.5. The last column is the time to evaluate the descriptor once,
@@ -2282,8 +2282,8 @@ at every grid point and every temperature. Read the last column as what a
 descriptor costs there, and pick the descriptor from fits made at one grid
 point before the sweep is started.</p>
 </section>
-<section id="appendix-the-gather-script">
-<span id="anisotropic-qha-gather-script"></span><h2>Appendix: the gather script<a class="headerlink" href="#appendix-the-gather-script" title="Link to this heading">#</a></h2>
+<section id="anisotropic-qha-gather-script">
+<span id="appendix-the-gather-script"></span><h2>Appendix: the gather script<a class="headerlink" href="#anisotropic-qha-gather-script" title="Link to this heading">#</a></h2>
 <p>What <a class="reference internal" href="#anisotropic-qha-gather"><span class="std std-ref">gathering the runs</span></a> calls. It reads the
 dataset of step 3 for the lattice lengths it places the runs by, and nothing
 else of it. <code class="docutils literal notranslate"><span class="pre">--transient</span></code> says how many iterations at the start of each run to
@@ -2355,8 +2355,8 @@ leave out of the averages.</p>
 </div>
 </div>
 </section>
-<section id="appendix-checking-the-training-displacements">
-<span id="anisotropic-qha-check-displacements"></span><h2>Appendix: checking the training displacements<a class="headerlink" href="#appendix-checking-the-training-displacements" title="Link to this heading">#</a></h2>
+<section id="anisotropic-qha-check-displacements">
+<span id="appendix-checking-the-training-displacements"></span><h2>Appendix: checking the training displacements<a class="headerlink" href="#anisotropic-qha-check-displacements" title="Link to this heading">#</a></h2>
 <p>Script 5 writes one set of displaced supercells per grid point and temperature,
 into <code class="docutils literal notranslate"><span class="pre">train/grid-NNN-TK/</span></code>. Script 6 merges the sets of one grid point into
 <code class="docutils literal notranslate"><span class="pre">train/grid-NNN/merged.yaml</span></code>. The calculator is run on the POSCAR of each
@@ -2553,8 +2553,8 @@ point. A dataset that is not a tensor grid has <code class="docutils literal not
 pairs have to be given to <code class="docutils literal notranslate"><span class="pre">check_neighbours</span></code> explicitly.</p>
 </section>
 </section>
-<section id="appendix-spreading-the-sweep-over-a-cluster">
-<span id="anisotropic-qha-distributed"></span><h2>Appendix: spreading the sweep over a cluster<a class="headerlink" href="#appendix-spreading-the-sweep-over-a-cluster" title="Link to this heading">#</a></h2>
+<section id="anisotropic-qha-distributed">
+<span id="appendix-spreading-the-sweep-over-a-cluster"></span><h2>Appendix: spreading the sweep over a cluster<a class="headerlink" href="#anisotropic-qha-distributed" title="Link to this heading">#</a></h2>
 <p>The 1,025 runs do not talk to each other, so any split of them is allowed.
 Two are usual.</p>
 <p>One job per grid point runs script 7 with the grid point as its argument: 25
@@ -2599,8 +2599,8 @@ input when it is not given a file:</p>
 may be run again. <a class="reference internal" href="#anisotropic-qha-reproducing"><span class="std std-ref">What a rerun reproduces</span></a>
 says why, and where that stops.</p>
 </section>
-<section id="appendix-what-a-rerun-reproduces">
-<span id="anisotropic-qha-reproducing"></span><h2>Appendix: what a rerun reproduces<a class="headerlink" href="#appendix-what-a-rerun-reproduces" title="Link to this heading">#</a></h2>
+<section id="anisotropic-qha-reproducing">
+<span id="appendix-what-a-rerun-reproduces"></span><h2>Appendix: what a rerun reproduces<a class="headerlink" href="#anisotropic-qha-reproducing" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-reproducing"><span class="std std-ref">What a rerun reproduces</span></a> says what a seed
 fixes, what a NumPy upgrade does not, and why an SSCHA run keeps no record of
 the supercells it drew. Scripts 7 and 10 call <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> once per (grid
@@ -2673,43 +2673,43 @@ again is enough, since a rerun draws the supercells the lost run drew.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u">1. Build the static grid (internal energy U)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-the-phonons-phonon-grid">2. Compute the phonons (phonon grid)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-intermediate-dataset">3. Build the intermediate dataset</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-builder-reads">What the builder reads</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-ordering-is-checked">How the ordering is checked</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-file-holds">What the file holds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-build">3. Build the intermediate dataset</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-builder-reads">What the builder reads</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-ordering">How the ordering is checked</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-file-contents">What the file holds</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-f-mathrm-el-ready-made">Supplying <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> ready-made</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-temperature-dependent">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-this-step-fits">Where this step fits</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-mlp-per-grid-point">One MLP per grid point</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermal-distribution">The thermal distribution</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-displacements">The training displacements</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-one-draw-of-standard-normals">Sharing one draw of standard normals</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-normals">Sharing one draw of standard normals</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-validate">The descriptor and the amount of training data</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pinning-the-ridge-penalty-across-the-grid">Pinning the ridge penalty across the grid</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#computing-the-free-energies-with-sscha">Computing the free energies with SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-sscha">Computing the free energies with SSCHA</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-an-sscha-run-and-its-error">The options of an SSCHA run and its error</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gathering-the-runs-into-fph-hdf5">Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-transient">Choosing the transient</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-gather">Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-transient">Choosing the transient</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-the-free-energies-to-the-analysis">Supplying the free energies to the analysis</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-sscha-analysis">Running the analysis</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-one-ladder-of-descriptors">Appendix: one ladder of descriptors</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-gather-script">Appendix: the gather script</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-descriptor-example">Appendix: one ladder of descriptors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-gather-script">Appendix: the gather script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-check-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-script">The script</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-spreading-the-sweep-over-a-cluster">Appendix: spreading the sweep over a cluster</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-distributed">Appendix: spreading the sweep over a cluster</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropic-qha-reproducing">Appendix: what a rerun reproduces</a></li>
 </ul>
   </nav></div>
 
