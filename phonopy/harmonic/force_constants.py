@@ -642,6 +642,10 @@ def symmetrize_force_constants_by_space_group(
     being the Cartesian rotation of k. Every pair receives one such block per
     operation, and their average is the symmetrized force constants.
 
+    Many operations share the same rotation and differ only in translation.
+    R Phi R^T is computed once for each distinct rotation and added for all
+    operations having it.
+
     Parameters
     ----------
     force_constants : ndarray
@@ -654,10 +658,17 @@ def symmetrize_force_constants_by_space_group(
 
     """
     rotations = symmetry.symmetry_operations["rotations"]
+    perms = symmetry.atomic_permutations
+    unique_rotations, rotation_indices = np.unique(
+        rotations.reshape(len(rotations), 9), axis=0, return_inverse=True
+    )
+    rotation_indices = rotation_indices.ravel()
     fc = np.zeros_like(force_constants)
-    for r, perm in zip(rotations, symmetry.atomic_permutations, strict=True):
-        r_cart = similarity_transformation(lattice.T, r)
-        fc[np.ix_(perm, perm)] += r_cart @ force_constants @ r_cart.T
+    for i, r in enumerate(unique_rotations):
+        r_cart = similarity_transformation(lattice.T, r.reshape(3, 3))
+        rotated_fc = r_cart @ force_constants @ r_cart.T
+        for perm in perms[rotation_indices == i]:
+            fc[np.ix_(perm, perm)] += rotated_fc
     force_constants[:] = fc / len(rotations)
 
 
