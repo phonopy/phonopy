@@ -56,9 +56,6 @@ class ThermalMotion:
         masses = iter_mesh.dynamical_matrix.primitive.masses
         assert masses is not None
         self._masses = masses * get_physical_units().AMU
-        self._masses3 = (
-            np.array([[m] * 3 for m in masses]).ravel() * get_physical_units().AMU
-        )
         self._temperatures: NDArray[np.double] | None = None
         # Frequencies, shape=(modes,), and eigenvectors, shape=(bands, modes),
         # of the acoustic modes at Gamma that entered the sums.
@@ -110,7 +107,69 @@ class ThermalMotion:
                 )
         return valid
 
-    def _warn_gamma_acoustic_included(self, stacklevel: int = 4) -> None:
+    def _sum_disp_matrices(self) -> tuple[NDArray[np.cdouble], int]:
+        """Return the sum of displacement matrices over the mesh.
+
+        The sum is divided by the number of q-points to obtain the thermal
+        displacement matrices.
+
+        Returns
+        -------
+        disp_matrices : ndarray
+            shape=(temperatures, atoms, 3, 3), dtype='cdouble'
+        num_qpoints : int
+            Number of q-points in the mesh.
+
+        """
+        temps = self._temperatures
+        assert temps is not None
+        num_qpoints = len(self._iter_mesh.qpoints)
+        assert np.prod(self._iter_mesh.mesh_numbers) == num_qpoints
+        disps = np.zeros((len(temps), len(self._masses), 3, 3), dtype="cdouble")
+        for i_q, (freqs, eigvecs) in enumerate(self._iter_mesh):
+            assert eigvecs is not None
+            valid = self._get_valid_bands(i_q, freqs, eigvecs)
+            disps += self._get_disp_matrices_of_modes(
+                freqs[valid], eigvecs[:, valid], temps
+            )
+        self._warn_gamma_acoustic_included()
+        return disps, num_qpoints
+
+    def _get_disp_matrices_of_modes(
+        self,
+        freqs: NDArray[np.double],
+        eigvecs: NDArray[np.cdouble],
+        temps: NDArray[np.double],
+    ) -> NDArray[np.cdouble]:
+        """Return the sum of displacement matrices of the given modes.
+
+        The matrix of atom a of mode m is Q2[m] e[a, m] e[a, m]^H / M[a],
+        where e[a, m] is the three elements of the eigenvector of atom a.
+
+        Parameters
+        ----------
+        freqs : ndarray
+            Frequencies in THz. shape=(modes,), dtype='double'
+        eigvecs : ndarray
+            Eigenvectors in columns. shape=(bands, modes), dtype='cdouble'
+        temps : ndarray
+            Temperatures in K. shape=(temperatures,), dtype='double'
+
+        Returns
+        -------
+        ndarray
+            shape=(temperatures, atoms, 3, 3), dtype='cdouble'
+
+        """
+        Q2 = self._get_Q2(freqs, temps)
+        num_atoms = len(self._masses)
+        vecs = (
+            eigvecs.T.reshape(len(freqs), num_atoms, 3) / np.sqrt(self._masses)[:, None]
+        )
+        outer = vecs[:, :, :, None] * vecs.conj()[:, :, None, :]
+        return np.einsum("mt,maij->taij", Q2, outer)
+
+    def _warn_gamma_acoustic_included(self) -> None:
         """Warn when acoustic modes at Gamma enter the sums, with what they add."""
         included = self._gamma_acoustic_included
         self._gamma_acoustic_included = None
@@ -119,11 +178,11 @@ class ThermalMotion:
         assert self._temperatures is not None
         freqs, eigvecs = included
         t_max = float(np.max(self._temperatures))
-        added = np.zeros(len(self._masses3), dtype="double")
-        for f, vec in zip(freqs, eigvecs.T, strict=True):
-            Q2 = self._get_Q2(f, np.array([t_max], dtype="double"))[0]
-            added += Q2 * np.abs(vec) ** 2 / self._masses3
-        added /= np.prod(self._iter_mesh.mesh_numbers)
+        matrices = self._get_disp_matrices_of_modes(
+            freqs, eigvecs, np.array([t_max], dtype="double")
+        )[0]
+        added = np.diagonal(matrices.real, axis1=1, axis2=2)
+        added = added / np.prod(self._iter_mesh.mesh_numbers)
         warnings.warn(
             f"{len(freqs)} acoustic mode(s) at Gamma, at "
             + ", ".join(f"{f:.3e}" for f in freqs)
@@ -134,18 +193,35 @@ class ThermalMotion:
             "(EXCLUDE_GAMMA_ACOUSTIC = .TRUE., --exclude-gamma-acoustic) to "
             "exclude them.",
             GammaAcousticWarning,
-            stacklevel=stacklevel,
+            stacklevel=5,
         )
 
     def _get_Q2(
-        self, freq: float, t: NDArray[np.double]
-    ) -> NDArray[np.double]:  # freq in THz
-        population = np.asarray(bose_einstein_dist(freq, t))
+        self, freqs: NDArray[np.double], temps: NDArray[np.double]
+    ) -> NDArray[np.double]:
+        """Return hbar (n + 1/2) / omega in kg Angstrom^2.
+
+        Parameters
+        ----------
+        freqs : ndarray
+            Frequencies in THz. shape=(modes,), dtype='double'
+        temps : ndarray
+            Temperatures in K. shape=(temperatures,), dtype='double'
+
+        Returns
+        -------
+        ndarray
+            shape=(modes, temperatures), dtype='double'
+
+        """
+        units = get_physical_units()
+        population = np.asarray(bose_einstein_dist(freqs[:, None], temps[None, :]))
         return (
-            get_physical_units().Hbar
-            * get_physical_units().EV
-            / get_physical_units().Angstrom ** 2
-            * ((population + 0.5) / (freq * 1e12 * 2 * np.pi))
+            units.Hbar
+            * units.EV
+            / units.Angstrom**2
+            * (population + 0.5)
+            / (freqs[:, None] * 1e12 * 2 * np.pi)
         )
 
     @property
@@ -247,8 +323,6 @@ class ThermalDisplacements(ThermalMotion):
                 projection_direction
             )
         self._displacements: NDArray[np.double] | None = None
-        self._eigenvectors: NDArray[np.cdouble] | None = None
-        self._p_eigenvectors: NDArray[np.cdouble] | None = None
 
     @property
     def thermal_displacements(self) -> NDArray[np.double] | None:
@@ -256,34 +330,20 @@ class ThermalDisplacements(ThermalMotion):
         return self._displacements
 
     def run(self) -> None:
-        """Calculate thermal displacements."""
-        if self._projection_direction is not None:
-            masses = self._masses
+        """Calculate thermal displacements.
+
+        They are the diagonal elements of the thermal displacement matrices,
+        or the matrices projected along ``projection_direction``.
+
+        """
+        disp_matrices, num_qpoints = self._sum_disp_matrices()
+        if self._projection_direction is None:
+            disps = np.diagonal(disp_matrices.real, axis1=2, axis2=3)
+            disps = disps.reshape(len(disp_matrices), -1)
         else:
-            masses = self._masses3
-        temps = self._temperatures
-        assert temps is not None
-        disps = np.zeros((len(temps), len(masses)), dtype=float)
-
-        count = 0
-        for count, (fs, vecs) in enumerate(self._iter_mesh):  # noqa B007
-            assert vecs is not None
-            if self._projection_direction is not None:
-                p_vecs = np.dot(
-                    vecs.T.reshape(-1, 3), self._projection_direction
-                ).reshape(-1, len(masses))
-                vecs2 = np.abs(p_vecs) ** 2 / masses
-            else:
-                vecs2 = (abs(vecs) ** 2).T / masses
-
-            valid_indices = self._get_valid_bands(count, fs, vecs)
-
-            for f, v2 in zip(fs[valid_indices], vecs2[valid_indices], strict=True):
-                disps += np.outer(self._get_Q2(f, temps), v2)
-
-        assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
-        self._displacements = disps / (count + 1)
-        self._warn_gamma_acoustic_included()
+            direction = self._projection_direction
+            disps = np.einsum("i,taij,j->ta", direction, disp_matrices, direction).real
+        self._displacements = disps / num_qpoints
 
     def write_yaml(
         self, filename: str | os.PathLike = "thermal_displacements.yaml"
@@ -330,22 +390,6 @@ class ThermalDisplacements(ThermalMotion):
 
         if is_legend:
             ax.legend(loc="upper left")
-
-    def _project_eigenvectors(self) -> None:
-        """Project eigenvectors to specific direction.
-
-        Eigenvectors are projected along Cartesian direction.
-
-        """
-        assert self._eigenvectors is not None
-        assert self._projection_direction is not None
-        p_eigenvectors: list[NDArray[np.cdouble]] = []
-        for vecs_q in self._eigenvectors:
-            p_vecs_q = []
-            for vecs in vecs_q.T:
-                p_vecs_q.append(np.dot(vecs.reshape(-1, 3), self._projection_direction))
-            p_eigenvectors.append(np.transpose(p_vecs_q))
-        self._p_eigenvectors = np.array(p_eigenvectors)
 
 
 class ThermalDisplacementMatrices(ThermalMotion):
@@ -408,45 +452,14 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
     def run(self) -> None:
         """Calculate thermal displacement matrices."""
-        self._get_disp_matrices()
+        disps, num_qpoints = self._sum_disp_matrices()
+        assert (abs(disps.imag) < 1e-10).all()
+        self._disp_matrices = disps.real / num_qpoints
 
         if self._ANinv is not None:
-            assert self._disp_matrices is not None
-            self._disp_matrices_cif = np.zeros(
-                self._disp_matrices.shape, dtype="double"
+            self._disp_matrices_cif = np.einsum(
+                "ik,takl,jl->taij", self._ANinv, self._disp_matrices, self._ANinv
             )
-            for i, matrices in enumerate(self._disp_matrices):
-                for j, mat in enumerate(matrices):
-                    mat_cif = np.dot(np.dot(self._ANinv, mat), self._ANinv.T)
-                    self._disp_matrices_cif[i, j] = mat_cif
-
-    def _get_disp_matrices(self) -> None:
-        dtype_complex = np.cdouble
-        assert self._temperatures is not None
-        disps = np.zeros(
-            (len(self._temperatures), len(self._masses), 3, 3), dtype=dtype_complex
-        )
-        count = 0
-        for count, (freqs, eigvecs) in enumerate(self._iter_mesh):  # noqa B007
-            assert eigvecs is not None
-            valid_indices = self._get_valid_bands(count, freqs, eigvecs)
-            for f, vec in zip(
-                freqs[valid_indices], (eigvecs.T)[valid_indices], strict=True
-            ):
-                c = np.zeros((len(self._masses), 3, 3), dtype=dtype_complex, order="C")
-                for i, (v, m) in enumerate(
-                    zip(vec.reshape(-1, 3), self._masses, strict=True)
-                ):
-                    c[i] = np.outer(v, v.conj()) / m
-
-                Q2 = np.array(self._get_Q2(f, self._temperatures), dtype="double")
-                disps += Q2[:, None, None, None] * c[None, :, :, :]
-
-        assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
-        # Before the check, which a part of the acoustic modes at Gamma fails.
-        self._warn_gamma_acoustic_included(stacklevel=5)
-        assert (abs(disps.imag) < 1e-10).all()
-        self._disp_matrices = disps.real / (count + 1)
 
     def write_cif(
         self,
