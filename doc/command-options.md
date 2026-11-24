@@ -2,7 +2,9 @@
 # Command options
 
 From phonopy v1.12.2, the command option names with underscores `_` are replaced
-by those with dashes `-`. Those tag names are unchanged.
+by those with dashes `-`. Those tag names are unchanged. Option names with
+underscores are still accepted with a warning, but will not be accepted in
+phonopy v5.
 
 Some of command-line options are equivalent to respective setting tags:
 

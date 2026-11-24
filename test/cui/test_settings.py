@@ -7,7 +7,10 @@ import re
 
 import pytest
 
-from phonopy.cui.phonopy_argparse import get_init_parser
+from phonopy.cui.phonopy_argparse import (
+    fix_deprecated_option_names,  # REMOVE-AT-V5
+    get_init_parser,
+)
 from phonopy.cui.settings import PhonopyConfParser, parse_magmom
 from phonopy.exception import MagmomValueError
 
@@ -29,7 +32,7 @@ def _parse_magmom_conf_file(magmom: str, tmp_path: pathlib.Path) -> PhonopyConfP
 
 
 def _parse_magmom_option(magmom: str) -> PhonopyConfParser:
-    parser, _ = get_init_parser()
+    parser, _ = get_init_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["--magmom", *magmom.split()])
     return PhonopyConfParser(args=args)
 
@@ -130,3 +133,15 @@ def test_trigonal_conf_file(conf: str, expected: bool | None, tmp_path):
     conf_filename.write_text(f"DIM = 1 1 1\n{conf}")
     settings = PhonopyConfParser(filename=conf_filename).settings
     assert settings.is_trigonal_displacement is expected
+
+
+def test_fix_deprecated_option_names():  # REMOVE-AT-V5
+    """Test replacement of underscores in option names by dashes.
+
+    Empty arguments, such as the value of ``pytest -k ''``, and arguments
+    that are not options are kept as they are.
+
+    """
+    argv = ["phonopy", "", "--band_points=101", "--band-labels", "", "POSCAR_1"]
+    assert fix_deprecated_option_names(argv) == ["--band_points"]
+    assert argv == ["phonopy", "", "--band-points=101", "--band-labels", "", "POSCAR_1"]
