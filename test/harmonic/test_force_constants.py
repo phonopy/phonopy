@@ -8,9 +8,12 @@ from phonopy import Phonopy
 from phonopy.harmonic.force_constants import (
     cutoff_force_constants,
     rearrange_force_constants_array,
+    symmetrize_force_constants_by_space_group,
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive, isclose
+from phonopy.structure.symmetry import Symmetry
+from phonopy.utils import similarity_transformation
 
 
 def test_fc(ph_nacl: Phonopy):
@@ -160,3 +163,34 @@ def test_rearrange_force_constants_array(
     freq2 = ph2.qpoints.frequencies
     np.testing.assert_allclose(fc[indices[3], indices[3]], re_fc[3, 3])
     np.testing.assert_allclose(freq1, freq2)
+
+
+def test_symmetrize_force_constants_by_space_group(
+    nacl_unitcell_order1: PhonopyAtoms,
+):
+    """Test symmetrize_force_constants_by_space_group against direct sum.
+
+    The result is compared with the average of R Phi R^T over all
+    operations, each operation computed on its own. The force constants
+    are random numbers so that symmetrization changes them. In the
+    conventional unit cell of NaCl, each rotation appears in four
+    operations that differ in translation.
+
+    """
+    lattice = nacl_unitcell_order1.cell
+    symmetry = Symmetry(nacl_unitcell_order1)
+    num_atoms = len(nacl_unitcell_order1)
+    rng = np.random.default_rng(seed=7)
+    fc = rng.normal(size=(num_atoms, num_atoms, 3, 3))
+
+    fc_ref = np.zeros_like(fc)
+    rotations = symmetry.symmetry_operations["rotations"]
+    for r, perm in zip(rotations, symmetry.atomic_permutations, strict=True):
+        r_cart = similarity_transformation(lattice.T, r)
+        fc_ref[np.ix_(perm, perm)] += r_cart @ fc @ r_cart.T
+    fc_ref /= len(rotations)
+    assert not np.allclose(fc_ref, fc, atol=1e-1)
+
+    fc_sym = fc.copy()
+    symmetrize_force_constants_by_space_group(fc_sym, lattice, symmetry)
+    np.testing.assert_allclose(fc_sym, fc_ref, rtol=0, atol=1e-12)

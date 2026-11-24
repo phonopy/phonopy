@@ -1254,8 +1254,9 @@ class Phonopy:
     ) -> None:
         """Symmetrize force constants using space group operations.
 
-        Space group operations except for pure translations are applied
-        to force constants.
+        All space group operations of the supercell, including pure
+        translations, are applied to force constants, and the results are
+        averaged.
 
         Parameters
         ----------
