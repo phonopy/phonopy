@@ -193,3 +193,34 @@ def test_gv_si_many_qpoints(ph_si: Phonopy, q_length: float | None):
         np.testing.assert_allclose(
             gv_at_once[i], gv.group_velocities[0], rtol=0, atol=1e-8
         )
+
+
+def test_gv_switch_q_length(ph_si: Phonopy):
+    """Test switching between finite difference and analytical derivative.
+
+    Group velocities after each change of ``q_length`` are compared with
+    those of a new instance created with that ``q_length``.  The steps of
+    the finite difference are large enough that its results differ from
+    the analytical ones, so a switch that does not take effect fails.
+
+    """
+    q_points = [[0.13, 0.17, 0.19], [0.21, 0.07, 0.16]]
+    gv_analytical = GroupVelocity(ph_si.dynamical_matrix)
+    gv_analytical.run(q_points)
+    assert gv_analytical.group_velocities is not None
+
+    gv = GroupVelocity(ph_si.dynamical_matrix, q_length=1e-2)
+    for q_length in (1e-2, None, 2e-2, None):
+        gv.q_length = q_length
+        gv.run(q_points)
+        assert gv.group_velocities is not None
+        gv_ref = GroupVelocity(ph_si.dynamical_matrix, q_length=q_length)
+        gv_ref.run(q_points)
+        assert gv_ref.group_velocities is not None
+        np.testing.assert_allclose(
+            gv.group_velocities, gv_ref.group_velocities, rtol=0, atol=1e-8
+        )
+        if q_length is not None:
+            assert not np.allclose(
+                gv.group_velocities, gv_analytical.group_velocities, atol=1e-2
+            )
