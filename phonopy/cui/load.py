@@ -244,10 +244,11 @@ def load(
         smat = phpy_yaml.supercell_matrix
         if smat is None:
             smat = np.eye(3, dtype="int64", order="C")
-        # When the caller leaves primitive_matrix at the default "auto",
-        # a value stored in the yaml takes priority (preserves the cell
-        # transformation that was used originally).
-        if primitive_matrix == "auto" and phpy_yaml.primitive_matrix is not None:
+        if (
+            isinstance(primitive_matrix, str)
+            and primitive_matrix == "auto"
+            and phpy_yaml.primitive_matrix is not None
+        ):
             pmat = phpy_yaml.primitive_matrix
         else:
             pmat = primitive_matrix

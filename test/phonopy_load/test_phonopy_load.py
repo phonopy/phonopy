@@ -3,6 +3,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import phonopy
@@ -34,3 +35,18 @@ def test_unit_conversion_factor_QE():
     )
     assert ph.calculator == "qe"
     assert ph.unit_conversion_factor == pytest.approx(108.9707718)
+
+
+def test_load_yaml_with_numpy_primitive_matrix():
+    """Test primitive_matrix given as ndarray with a phonopy.yaml-like file.
+
+    The given matrix takes priority over the one stored in the file.
+
+    """
+    filename = cwd / ".." / "phonopy_disp_NaCl.yaml"
+    ph = phonopy.load(filename, produce_fc=False)
+    assert len(ph.primitive) == 2
+
+    ph = phonopy.load(filename, primitive_matrix=np.eye(3), produce_fc=False)
+    np.testing.assert_allclose(ph.primitive_matrix, np.eye(3))
+    assert len(ph.primitive) == 8
