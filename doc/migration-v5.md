@@ -232,6 +232,15 @@ gv_obj.run(qpoints)
 gv = gv_obj.group_velocities
 ```
 
+## Deprecated parameter: `hermitianize_dynamical_matrix`
+
+The `hermitianize_dynamical_matrix` argument of `Phonopy(...)` is
+deprecated and will be removed in v5.0. The dynamical matrix is always
+Hermitianized, D <- (D + D^H) / 2, which is the default already. To
+obtain the dynamical matrix without Hermitianization, pass
+`hermitianize=False` to
+`phonopy.harmonic.dynamical_matrix.get_dynamical_matrix`.
+
 ## Deprecated: command option names with underscores
 
 Command option names are written with dashes, for example
