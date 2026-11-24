@@ -1470,10 +1470,10 @@ def test_site_mixture_flags_only_in_init_parser(
     points to phonopy-init.
 
     """
-    parser, _ = get_init_parser()
+    parser, _ = get_init_parser()  # REMOVE-AT-V5
     parser.parse_args(["-c", "POSCAR", "-d", "--dim", "1", "1", "1"] + flags)
 
-    parser, _ = get_run_parser()
+    parser, _ = get_run_parser()  # REMOVE-AT-V5
     with pytest.raises(SystemExit) as excinfo:
         parser.parse_args(["phonopy_disp.yaml"] + flags)
     assert excinfo.value.code == 2
@@ -1487,7 +1487,7 @@ def test_run_parser_accepts_displacement_flag():
     proceed), deferring the setup-operation decision to the settings-level gate.
 
     """
-    parser, _ = get_run_parser()
+    parser, _ = get_run_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["phonopy_disp.yaml", "-d", "--pypolymlp"])
     assert args.is_displacement is True
     assert args.use_pypolymlp is True
@@ -1504,7 +1504,7 @@ def test_run_parser_accepts_displacement_distance_flags():
     them on phonopy-init alone would make '--pypolymlp -d' unable to set them.
 
     """
-    parser, _ = get_run_parser()
+    parser, _ = get_run_parser()  # REMOVE-AT-V5
     args = parser.parse_args(
         ["phonopy_disp.yaml", "--pypolymlp", "-d", "--amplitude", "0.03"]
     )
@@ -1664,7 +1664,7 @@ def test_prepare_dataset_by_pypolymlp_reports_effective_options(
 
 def test_init_parser_still_accepts_displacement_distance_flags():
     """phonopy-init keeps the distance options after they became shared."""
-    parser, _ = get_init_parser()
+    parser, _ = get_init_parser()  # REMOVE-AT-V5
     args = parser.parse_args(
         ["-c", "POSCAR", "--dim", "2", "2", "2", "-d", "--amplitude", "0.03"]
     )
@@ -1684,7 +1684,7 @@ def test_parsers_accept_amax_per_atom():
     to be reachable from 'phonopy-init --rd' and from '--pypolymlp --rd' alike.
 
     """
-    init_parser, _ = get_init_parser()
+    init_parser, _ = get_init_parser()  # REMOVE-AT-V5
     args = init_parser.parse_args(
         ["-c", "POSCAR", "--dim", "2", "2", "2"]
         + ["--rd", "100", "--amin", "0.03", "--amax", "1.5", "--amax-per-atom"]
@@ -1692,7 +1692,7 @@ def test_parsers_accept_amax_per_atom():
     assert args.displacement_distance_per_atom is True
     assert args.displacement_distance_max == pytest.approx(1.5)
 
-    run_parser, _ = get_run_parser()
+    run_parser, _ = get_run_parser()  # REMOVE-AT-V5
     args = run_parser.parse_args(
         ["phonopy_disp.yaml", "--pypolymlp", "--rd", "100", "--amax", "1.5"]
         + ["--amax-per-atom"]
@@ -1746,7 +1746,7 @@ def test_amax_per_atom_flag_sets_sampling_tag():
     way --alm selects FC_CALCULATOR = alm.
 
     """
-    parser, _ = get_init_parser()
+    parser, _ = get_init_parser()  # REMOVE-AT-V5
     args = parser.parse_args(
         ["-c", "POSCAR", "--dim", "2", "2", "2"]
         + ["--rd", "10", "--amax", "1.5", "--amax-per-atom"]
@@ -1790,7 +1790,7 @@ def test_prepare_dataset_by_pypolymlp_defaults_amax_per_atom_off():
 
 def test_init_parser_still_accepts_displacement_flag():
     """The phonopy-init parser continues to accept -d after it became shared."""
-    parser, _ = get_init_parser()
+    parser, _ = get_init_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["-c", "POSCAR", "--dim", "2", "2", "2", "-d"])
     assert args.is_displacement is True
 
@@ -1891,7 +1891,7 @@ def _check_no_files():
 
 def test_collect_parser_maps_positional_to_force_sets():
     """phonopy-collect takes the calculator output files as arguments."""
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["vasprun.xml-001", "vasprun.xml-002"])
     resolve_collect_args(args, parser)
     assert args.create_force_sets == ["vasprun.xml-001", "vasprun.xml-002"]
@@ -1902,7 +1902,7 @@ def test_collect_parser_maps_positional_to_force_sets():
 def test_collect_parser_takes_dataset_as_first_argument():
     """A phonopy.yaml-like file placed first names the displacement dataset."""
     disp_filename = str(cwd / "NaCl" / "phonopy_disp.yaml.xz")
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     args = parser.parse_args([disp_filename, "vasprun.xml-001"])
     resolve_collect_args(args, parser)
     assert args.filename == [disp_filename]
@@ -1916,7 +1916,7 @@ def test_collect_parser_leaves_missing_first_file_to_the_force_sets():
     every missing file rather than only the first.
 
     """
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["no-such-file.xml", "vasprun.xml-001"])
     resolve_collect_args(args, parser)
     assert args.filename == []
@@ -1925,7 +1925,7 @@ def test_collect_parser_leaves_missing_first_file_to_the_force_sets():
 
 def test_collect_parser_accepts_options_beside_the_files():
     """Options and files mix freely, the files staying positional."""
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["vasprun.xml-001", "--sp"])
     resolve_collect_args(args, parser)
     assert args.create_force_sets == ["vasprun.xml-001"]
@@ -1934,7 +1934,7 @@ def test_collect_parser_accepts_options_beside_the_files():
 
 def test_collect_parser_fz_takes_only_the_perfect_supercell():
     """--fz names the supercell without displacement; the rest stay positional."""
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     args = parser.parse_args(
         ["--fz", "perfect.xml", "vasprun.xml-001", "vasprun.xml-002"]
     )
@@ -1949,7 +1949,7 @@ def test_collect_parser_fz_takes_only_the_perfect_supercell():
 
 def test_collect_parser_fz_without_displaced_supercells():
     """--fz alone collects nothing and says so."""
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["--fz", "perfect.xml"])
     with pytest.raises(SystemExit) as excinfo:
         resolve_collect_args(args, parser)
@@ -1959,7 +1959,7 @@ def test_collect_parser_fz_without_displaced_supercells():
 @pytest.mark.parametrize("flag", ["-d", "--rd", "--dim", "--symmetry", "--fc", "-f"])
 def test_collect_parser_rejects_flags_it_does_not_offer(flag: str):
     """Setup flags, --fc, and -f (the files are positional) are not offered."""
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     with pytest.raises(SystemExit):
         parser.parse_args([flag])
 
@@ -1967,7 +1967,7 @@ def test_collect_parser_rejects_flags_it_does_not_offer(flag: str):
 @pytest.mark.parametrize("flag", ["--vasp", "--qe", "--wien2k"])
 def test_collect_parser_rejects_calculator_flags(flag: str):
     """The calculator is read from phonopy_disp.yaml, not from a flag."""
-    parser, _ = get_collect_parser()
+    parser, _ = get_collect_parser()  # REMOVE-AT-V5
     with pytest.raises(SystemExit):
         parser.parse_args([flag, "vasprun.xml-001"])
 
@@ -2037,7 +2037,7 @@ def test_phonopy_collect_creates_force_sets():
 
 def test_symmetry_parser_takes_the_cell_as_an_argument():
     """phonopy-symmetry takes the unit cell as its one argument."""
-    parser, _ = get_symmetry_parser()
+    parser, _ = get_symmetry_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["--qe", "--tolerance", "1e-3", "NaCl.in"])
     resolve_symmetry_args(args)
     assert args.cell_filename == "NaCl.in"
@@ -2049,7 +2049,7 @@ def test_symmetry_parser_takes_the_cell_as_an_argument():
 
 def test_symmetry_parser_without_a_cell():
     """Without an argument the calculator's default file name is used."""
-    parser, _ = get_symmetry_parser()
+    parser, _ = get_symmetry_parser()  # REMOVE-AT-V5
     args = parser.parse_args([])
     resolve_symmetry_args(args)
     assert args.cell_filename is None
@@ -2062,7 +2062,7 @@ def test_symmetry_parser_sets_is_check_symmetry():
     the cell cannot be read at all for want of a supercell matrix.
 
     """
-    parser, _ = get_symmetry_parser()
+    parser, _ = get_symmetry_parser()  # REMOVE-AT-V5
     args = parser.parse_args(["POSCAR-unitcell"])
     resolve_symmetry_args(args)
     assert args.is_check_symmetry is True
@@ -2076,14 +2076,14 @@ def test_symmetry_parser_sets_is_check_symmetry():
 )
 def test_symmetry_parser_rejects_flags_it_does_not_offer(flag: str):
     """Only what the symmetry display actually reads is offered."""
-    parser, _ = get_symmetry_parser()
+    parser, _ = get_symmetry_parser()  # REMOVE-AT-V5
     with pytest.raises(SystemExit):
         parser.parse_args([flag, "POSCAR-unitcell"])
 
 
 def test_symmetry_parser_rejects_dim():
     """--dim replaces the display with a file, so it is left to phonopy-init."""
-    parser, _ = get_symmetry_parser()
+    parser, _ = get_symmetry_parser()  # REMOVE-AT-V5
     with pytest.raises(SystemExit):
         parser.parse_args(["--dim", "2", "2", "2", "POSCAR-unitcell"])
 

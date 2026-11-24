@@ -38,7 +38,7 @@ from phonopy.cui.phonopy_argparse import (
     get_symmetry_parser,
     resolve_collect_args,
     resolve_symmetry_args,
-    show_deprecated_option_warnings,
+    show_deprecated_option_warnings,  # REMOVE-AT-V5
 )
 from phonopy.cui.settings import (
     PhonopyConfParser,
@@ -1695,6 +1695,7 @@ def _run_calculation(
 
 def _start_phonopy(load_phonopy_yaml: bool = False, mode: str | None = None):
     """Parse arguments and set some basic parameters."""
+    # REMOVE-AT-V5: the parsers no longer return deprecated option names.
     if mode == "collect":
         parser, deprecated = get_collect_parser()
         args = parser.parse_args()
@@ -1747,7 +1748,7 @@ def _start_phonopy(load_phonopy_yaml: bool = False, mode: str | None = None):
 
         print("")
 
-        if deprecated:
+        if deprecated:  # REMOVE-AT-V5
             show_deprecated_option_warnings(deprecated)
 
     return args, log_level

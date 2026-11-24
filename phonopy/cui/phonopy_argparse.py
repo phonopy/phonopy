@@ -42,11 +42,17 @@ class _SortedHelpFormatter(argparse.HelpFormatter):
         super().add_arguments(sorted(actions, key=sort_key))
 
 
+# REMOVE-AT-V5
 def fix_deprecated_option_names(argv: list[str]) -> list[str]:
-    """Replace underscore in command option name by hyphen."""
+    """Replace underscore in command option name by hyphen.
+
+    Option names with underscores are deprecated and will not be accepted
+    in phonopy v5.
+
+    """
     deprecated = []
     for i, v in enumerate(argv[1:]):
-        if v[0] == "-":
+        if v.startswith("-"):
             tag = v.split("=")[0]
             if "_" in tag:
                 correct_tag = tag.replace("_", "-")
@@ -56,11 +62,12 @@ def fix_deprecated_option_names(argv: list[str]) -> list[str]:
     return deprecated
 
 
+# REMOVE-AT-V5
 def show_deprecated_option_warnings(deprecated: list[str]) -> None:
     """Show warning when underscore is included in command option name."""
     lines = [
-        "Option names with underscores are deprecated, by which",
-        "the underscores are replaced by dashes. Therefore",
+        "Option names with underscores are deprecated and will not be",
+        "accepted in phonopy v5. Replace the underscores by dashes:",
     ]
     for tag in deprecated:
         lines.append("'%s' has to be written as '%s'." % (tag, tag.replace("_", "-")))
@@ -1067,9 +1074,10 @@ def _reject_init_options(parser: argparse.ArgumentParser) -> None:
         parser.add_argument(*option_strings, **kwargs)
 
 
+# REMOVE-AT-V5: return only the parser.
 def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     """Return argument parser for the phonopy-init command."""
-    deprecated = fix_deprecated_option_names(sys.argv)
+    deprecated = fix_deprecated_option_names(sys.argv)  # REMOVE-AT-V5
     parser = argparse.ArgumentParser(
         description=(
             "phonopy-init: set up supercells, displacements, FORCE_SETS or "
@@ -1090,9 +1098,10 @@ def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
             "phonopy.yaml like file, this file is read as phonopy.yaml like file."
         ),
     )
-    return parser, deprecated
+    return parser, deprecated  # REMOVE-AT-V5
 
 
+# REMOVE-AT-V5: return only the parser.
 def get_collect_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     """Return argument parser for the phonopy-collect command.
 
@@ -1119,7 +1128,7 @@ def get_collect_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     phonopy.yaml-like file. There is no option for it.
 
     """
-    deprecated = fix_deprecated_option_names(sys.argv)
+    deprecated = fix_deprecated_option_names(sys.argv)  # REMOVE-AT-V5
     parser = argparse.ArgumentParser(
         description=(
             "phonopy-collect: collect calculator results into a FORCE_SETS or "
@@ -1152,7 +1161,7 @@ def get_collect_parser() -> tuple[argparse.ArgumentParser, list[str]]:
             "displacement dataset; otherwise phonopy_disp.yaml is read."
         ),
     )
-    return parser, deprecated
+    return parser, deprecated  # REMOVE-AT-V5
 
 
 def resolve_collect_args(
@@ -1191,6 +1200,7 @@ def resolve_collect_args(
         )
 
 
+# REMOVE-AT-V5: return only the parser.
 def get_symmetry_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     """Return argument parser for the phonopy-symmetry command.
 
@@ -1208,7 +1218,7 @@ def get_symmetry_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     named after. Use phonopy-init --symmetry --dim for it.
 
     """
-    deprecated = fix_deprecated_option_names(sys.argv)
+    deprecated = fix_deprecated_option_names(sys.argv)  # REMOVE-AT-V5
     parser = argparse.ArgumentParser(
         description=("phonopy-symmetry: show the crystal symmetry of a unit cell."),
         allow_abbrev=False,
@@ -1226,7 +1236,7 @@ def get_symmetry_parser() -> tuple[argparse.ArgumentParser, list[str]]:
         default=None,
         help=("Unit cell file. Defaults to the calculator's own default file name."),
     )
-    return parser, deprecated
+    return parser, deprecated  # REMOVE-AT-V5
 
 
 def resolve_symmetry_args(args: argparse.Namespace) -> None:
@@ -1245,9 +1255,10 @@ def resolve_symmetry_args(args: argparse.Namespace) -> None:
     args.is_check_symmetry = True
 
 
+# REMOVE-AT-V5: return only the parser.
 def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     """Return argument parser for the phonopy command (phonon calculation)."""
-    deprecated = fix_deprecated_option_names(sys.argv)
+    deprecated = fix_deprecated_option_names(sys.argv)  # REMOVE-AT-V5
     parser = argparse.ArgumentParser(
         description="phonopy: phonon calculation from a phonopy.yaml-like file.",
         allow_abbrev=False,
@@ -1258,9 +1269,10 @@ def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     _reject_init_options(parser)
     _reject_removed_options(parser)
     parser.add_argument("filename", nargs="*", help="phonopy.yaml like file")
-    return parser, deprecated
+    return parser, deprecated  # REMOVE-AT-V5
 
 
+# REMOVE-AT-V5: return only the parser.
 def get_parser(
     load_phonopy_yaml: bool = False,
 ) -> tuple[argparse.ArgumentParser, list[str]]:

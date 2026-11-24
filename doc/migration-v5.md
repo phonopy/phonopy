@@ -232,6 +232,13 @@ gv_obj.run(qpoints)
 gv = gv_obj.group_velocities
 ```
 
+## Deprecated: command option names with underscores
+
+Command option names are written with dashes, for example
+`--band-points`. Option names with underscores, such as `--band_points`,
+are still accepted with a warning in v4.x, and will not be accepted in
+v5.0. Setting tags such as `BAND_POINTS` are not affected.
+
 ## Moved modules: electronic states and free energies
 
 | Deprecated module | Replacement |
