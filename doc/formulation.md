@@ -480,8 +480,10 @@ so the same expression holds for the NAC-corrected dynamical matrix.
 
 ### Finite difference method
 
-The finite-difference path is still available and is activated by the
-`GV_DELTA_Q` tag or the `--gv_delta_q` option:
+The finite-difference path is still available and is activated by `q_length`
+of `phonopy.phonon.group_velocity.GroupVelocity`, or by the `GV_DELTA_Q` tag
+or the `--gv_delta_q` option, which are deprecated and will be removed in
+phonopy v5:
 
 ```{math}
 \mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
@@ -499,7 +501,7 @@ difference is employed, and {math}`+\Delta q_\alpha` and
 {math}`-\Delta q_\alpha` are taken to calculate group velocity, where
 {math}`\alpha` is the Cartesian index in reciprocal space.
 {math}`\Delta q_\alpha` is specified in the unit of reciprocal space distance
-by the `--gv_delta_q` option or the `GV_DELTA_Q` tag.
+by `q_length`, the `--gv_delta_q` option or the `GV_DELTA_Q` tag.
 
 (physical_unit_conversion)=
 ## Physical unit conversion

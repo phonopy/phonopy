@@ -608,12 +608,16 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="Calculate group velocities at q-points",
     )
+    # REMOVE-AT-V5
     parser.add_argument(
         "--gv-delta-q",
         dest="gv_delta_q",
         type=float,
         default=None,
-        help="Delta-q distance used for group velocity calculation",
+        help=(
+            "Delta-q distance used for group velocity calculation by finite "
+            "difference (deprecated)"
+        ),
     )
     parser.add_argument(
         "--irreps",

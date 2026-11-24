@@ -201,6 +201,37 @@ init parameters; neither carries over internal state such as force
 constants or NAC parameters. `copy()` is deprecated already in v4.x to
 extend the notice period.
 
+## Deprecated parameter: `group_velocity_delta_q`
+
+Group velocities are calculated with the analytical derivative of the
+dynamical matrix by default, also with the non-analytical term
+correction. The `group_velocity_delta_q` argument of `Phonopy(...)`,
+which selects finite difference instead, is deprecated and will be
+removed in v5.0. The `GV_DELTA_Q` tag and the `--gv-delta-q` option of
+the `phonopy` command are removed with it.
+
+To use finite difference from Python, use `GroupVelocity` directly.
+
+**Deprecated:**
+
+```python
+ph = Phonopy(unitcell, supercell_matrix, group_velocity_delta_q=1e-5)
+...
+gv = ph.run_qpoints(qpoints, with_group_velocities=True).group_velocities
+```
+
+**Replacement:**
+
+```python
+from phonopy.phonon.group_velocity import GroupVelocity
+
+gv_obj = GroupVelocity(
+    ph.dynamical_matrix, q_length=1e-5, symmetry=ph.primitive_symmetry
+)
+gv_obj.run(qpoints)
+gv = gv_obj.group_velocities
+```
+
 ## Moved modules: electronic states and free energies
 
 | Deprecated module | Replacement |

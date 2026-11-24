@@ -145,7 +145,7 @@ class Phonopy:
         | Sequence[Sequence[float]]
         | NDArray
         | None = "auto",
-        group_velocity_delta_q: float | None = None,
+        group_velocity_delta_q: float | None = None,  # REMOVE-AT-V5
         symprec: float = 1e-5,
         is_symmetry: bool = True,
         distinguish_symbol_index: bool = False,
@@ -173,7 +173,12 @@ class Phonopy:
             (identity transformation), pass ``"P"``. ``None`` is treated
             the same as ``"auto"``.
         group_velocity_delta_q : float, optional
-            Delta-q distance to calculate group velocity.
+            Deprecated.  Delta-q distance to calculate group velocity by
+            finite difference.  Group velocities are calculated with the
+            analytical derivative of the dynamical matrix by default.  To
+            use finite difference, use
+            :class:`~phonopy.phonon.group_velocity.GroupVelocity` with
+            ``q_length``.
         symprec : float, optional
             Symmetry search precision. Default is 1e-5.
         is_symmetry : bool, optional
@@ -304,7 +309,17 @@ class Phonopy:
         self._qpoints = None
 
         self._group_velocity = None
+        # REMOVE-AT-V5
         self._gv_delta_q = group_velocity_delta_q
+        if group_velocity_delta_q is not None:
+            warnings.warn(
+                "group_velocity_delta_q of Phonopy is deprecated. Group "
+                "velocities are calculated with the analytical derivative of "
+                "the dynamical matrix. To use finite difference, use "
+                "phonopy.phonon.group_velocity.GroupVelocity with q_length.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
     @property
     def version(self) -> str:
@@ -3832,7 +3847,6 @@ class Phonopy:
             else self._unmerged_unitcell,
             supercell_matrix=smat,
             primitive_matrix=self._primitive_matrix,
-            group_velocity_delta_q=self._gv_delta_q,
             symprec=self._symprec,
             is_symmetry=self._is_symmetry,
             use_SNF_supercell=self._use_SNF_supercell,
@@ -3840,6 +3854,7 @@ class Phonopy:
             log_level=_log_level,
             site_mixture_scheme=self._site_mixture_scheme,
         )
+        ph._gv_delta_q = self._gv_delta_q  # REMOVE-AT-V5
         if self._unit_conversion_factor_overridden:
             ph.unit_conversion_factor = self._unit_conversion_factor
         return ph
@@ -3974,7 +3989,7 @@ class Phonopy:
 
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
-            q_length=self._gv_delta_q,
+            q_length=self._gv_delta_q,  # REMOVE-AT-V5
             symmetry=self._primitive_symmetry,
             frequency_factor_to_THz=self._unit_conversion_factor,
         )
