@@ -12,8 +12,10 @@ from phonopy._lang import have_phonors
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     DynamicalMatrixGL,
+    DynamicalMatrixNAC,
     diagonalize_dynamical_matrices,
     get_dynamical_matrices_at_qpoints,
+    get_dynamical_matrix,
 )
 
 dynmat_ref_000 = [
@@ -494,20 +496,34 @@ def test_dynmat(
 
 
 def test_dynmat_without_hermitianize(ph_tipn3: Phonopy):
-    """Test dynamical matrix of NaCl without hermitianization."""
+    """Test dynamical matrix of TiPN3 without hermitianization.
+
+    Born effective charges and dielectric constant symmetrized by Phonopy
+    are taken from its dynamical matrix.
+
+    """
     ph = ph_tipn3
-    ph_no_H = Phonopy(
-        unitcell=ph.unitcell,
-        supercell_matrix=ph.supercell_matrix,
-        primitive_matrix=ph.primitive_matrix,
-        hermitianize_dynamical_matrix=False,
-    )
-    ph_no_H.force_constants = ph.force_constants
-    ph_no_H.dynamical_matrix.run([0.1, 0.2, 0.3])
-    dynmat = ph_no_H.dynamical_matrix.dynamical_matrix.copy().view("double").ravel()
-    ph_no_H.nac_params = ph.nac_params
-    ph_no_H.dynamical_matrix.run([0.1, 0.2, 0.3])
-    dynmat_nac = ph_no_H.dynamical_matrix.dynamical_matrix.copy().view("double").ravel()
+    assert ph.force_constants is not None
+    assert ph.nac_params is not None
+    dm = ph.dynamical_matrix
+    assert isinstance(dm, DynamicalMatrixNAC)
+    nac_params = {
+        "born": dm.born,
+        "dielectric": dm.dielectric_constant,
+        "factor": ph.nac_params["factor"],
+    }
+    dynmats = []
+    for _nac_params in (None, nac_params):
+        dm_no_H = get_dynamical_matrix(
+            ph.force_constants,
+            ph.supercell,
+            ph.primitive,
+            nac_params=_nac_params,
+            hermitianize=False,
+        )
+        dm_no_H.run([0.1, 0.2, 0.3])
+        dynmats.append(dm_no_H.dynamical_matrix.copy().view("double").ravel())
+    dynmat, dynmat_nac = dynmats
 
     # for v, v_nac in zip(
     #     dynmat, dynmat_nac

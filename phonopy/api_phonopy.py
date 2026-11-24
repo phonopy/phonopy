@@ -150,7 +150,7 @@ class Phonopy:
         is_symmetry: bool = True,
         distinguish_symbol_index: bool = False,
         use_SNF_supercell: bool = False,
-        hermitianize_dynamical_matrix: bool = True,
+        hermitianize_dynamical_matrix: bool | None = None,  # REMOVE-AT-V5
         calculator: str | None = None,
         log_level: int = 0,
         lang: Literal["C", "Rust"] = "Rust",
@@ -198,8 +198,10 @@ class Phonopy:
             be different. Backward compatibility with old data (e.g.,
             force constants) is therefore not guaranteed.
         hermitianize_dynamical_matrix : bool, optional
-            Whether to force-Hermitianize the dynamical matrix. Default
-            is True, i.e., ``D <- (D + D^H) / 2``.
+            Deprecated. The dynamical matrix is always Hermitianized,
+            i.e., ``D <- (D + D^H) / 2``. To obtain it without
+            Hermitianization, use ``hermitianize`` of
+            :func:`~phonopy.harmonic.dynamical_matrix.get_dynamical_matrix`.
         calculator : str, optional
             Calculator name such as ``'vasp'``, ``'qe'``, etc. Default
             is None.
@@ -221,7 +223,18 @@ class Phonopy:
         self._symprec = symprec
         self._is_symmetry = is_symmetry
         self._distinguish_symbol_index = distinguish_symbol_index
-        self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
+        # REMOVE-AT-V5
+        self._hermitianize_dynamical_matrix = True
+        if hermitianize_dynamical_matrix is not None:
+            warnings.warn(
+                "hermitianize_dynamical_matrix of Phonopy is deprecated. The "
+                "dynamical matrix is always Hermitianized. To obtain it without "
+                "Hermitianization, use hermitianize of "
+                "phonopy.harmonic.dynamical_matrix.get_dynamical_matrix.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
         self._lang: Literal["C", "Rust"] = lang
 
@@ -3850,12 +3863,17 @@ class Phonopy:
             primitive_matrix=self._primitive_matrix,
             symprec=self._symprec,
             is_symmetry=self._is_symmetry,
+            distinguish_symbol_index=self._distinguish_symbol_index,
             use_SNF_supercell=self._use_SNF_supercell,
             calculator=self._calculator,
             log_level=_log_level,
+            lang=self._lang,
             site_mixture_scheme=self._site_mixture_scheme,
         )
         ph._gv_delta_q = self._gv_delta_q  # REMOVE-AT-V5
+        ph._hermitianize_dynamical_matrix = (  # REMOVE-AT-V5
+            self._hermitianize_dynamical_matrix
+        )
         if self._unit_conversion_factor_overridden:
             ph.unit_conversion_factor = self._unit_conversion_factor
         return ph
@@ -3940,7 +3958,7 @@ class Phonopy:
             self._supercell,
             self._primitive,
             nac_params=nac_params,
-            hermitianize=self._hermitianize_dynamical_matrix,
+            hermitianize=self._hermitianize_dynamical_matrix,  # REMOVE-AT-V5
             log_level=self._log_level,
             use_openmp=c_use_openmp(),
             lang=self._lang,

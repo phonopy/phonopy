@@ -3,6 +3,7 @@
 
 import copy
 import inspect
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +12,7 @@ import pytest
 import phonopy
 from phonopy import Phonopy
 from phonopy.interface.pypolymlp import PypolymlpParams
+from phonopy.interface.qe import read_pwscf
 from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.structure.cells import isclose
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -58,6 +60,51 @@ def test_replicate_NaCl(ph_nacl: Phonopy):
     assert ph.force_constants is None
     assert ph.nac_params is None
     assert ph.dataset is None
+
+
+def test_replicate_distinguish_symbol_index():
+    """Test Phonopy.replicate carrying distinguish_symbol_index.
+
+    In NaCl-pwscf-Xn.in, two of the Cl atoms are labeled Cl1. With
+    distinguish_symbol_index=True, they are not equivalent to the other Cl
+    atoms, and four atoms are independent instead of two.
+
+    """
+    cell, _ = read_pwscf(cwd / ".." / "interface" / "NaCl-pwscf-Xn.in")
+    ph = Phonopy(
+        cell,
+        supercell_matrix=[1, 1, 1],
+        primitive_matrix="P",
+        distinguish_symbol_index=True,
+    )
+    assert len(np.unique(ph.symmetry.get_map_atoms())) == 4
+
+    replica = ph.replicate()
+    np.testing.assert_array_equal(
+        replica.symmetry.get_map_atoms(), ph.symmetry.get_map_atoms()
+    )
+
+
+def test_hermitianize_dynamical_matrix_deprecated(ph_nacl: Phonopy):  # REMOVE-AT-V5
+    """Test deprecated hermitianize_dynamical_matrix of Phonopy.
+
+    Until it is removed, the given value is used. ``replicate`` carries it
+    over without warning.
+
+    """
+    with pytest.warns(DeprecationWarning, match="hermitianize_dynamical_matrix"):
+        ph = Phonopy(
+            ph_nacl.unitcell,
+            supercell_matrix=ph_nacl.supercell_matrix,
+            primitive_matrix=ph_nacl.primitive_matrix,
+            hermitianize_dynamical_matrix=False,
+        )
+    assert ph._hermitianize_dynamical_matrix is False
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        replica = ph.replicate()
+    assert replica._hermitianize_dynamical_matrix is False
 
 
 # REMOVE-AT-V5
