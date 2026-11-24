@@ -1157,6 +1157,11 @@ Technical details are shown at {ref}`group_velocity`.
 (gv_delta_q_tag)=
 ### `GV_DELTA_Q`
 
+This tag is deprecated and will be removed in phonopy v5.  The analytical
+derivative, used by default, needs no step size.  In the Python API, the
+finite-difference path remains available through `q_length` of
+`phonopy.phonon.group_velocity.GroupVelocity`.
+
 The reciprocal distance used for the finite difference method is specified.
 Unless this tag is set, the analytical derivative of the dynamical matrix
 is used (including the Gonze-Lee non-analytical term correction, for which

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Tests for group velocity calculation."""
 
+import warnings
+
 import numpy as np
 import pytest
 
@@ -224,3 +226,47 @@ def test_gv_switch_q_length(ph_si: Phonopy):
             assert not np.allclose(
                 gv.group_velocities, gv_analytical.group_velocities, atol=1e-2
             )
+
+
+def test_phonopy_group_velocity_delta_q(ph_si: Phonopy):  # REMOVE-AT-V5
+    """Test deprecated group_velocity_delta_q of Phonopy.
+
+    Until it is removed, finite difference is used with the given step.
+    ``replicate`` carries the value over without warning.
+
+    """
+    q_points = [[0.13, 0.17, 0.19], [0.21, 0.07, 0.16]]
+    gv_fd = GroupVelocity(
+        ph_si.dynamical_matrix, q_length=1e-2, symmetry=ph_si.primitive_symmetry
+    )
+    gv_fd.run(q_points)
+    assert gv_fd.group_velocities is not None
+    gv_analytical = GroupVelocity(
+        ph_si.dynamical_matrix, symmetry=ph_si.primitive_symmetry
+    )
+    gv_analytical.run(q_points)
+    assert gv_analytical.group_velocities is not None
+    assert not np.allclose(
+        gv_fd.group_velocities, gv_analytical.group_velocities, atol=1e-2
+    )
+
+    with pytest.warns(DeprecationWarning, match="group_velocity_delta_q"):
+        ph = Phonopy(
+            ph_si.unitcell,
+            supercell_matrix=ph_si.supercell_matrix,
+            primitive_matrix=ph_si.primitive_matrix,
+            group_velocity_delta_q=1e-2,
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        ph_replicated = ph.replicate()
+
+    for _ph in (ph, ph_replicated):
+        _ph.force_constants = ph_si.force_constants
+        qpoints_phonon = _ph.run_qpoints(q_points, with_group_velocities=True)
+        np.testing.assert_allclose(
+            qpoints_phonon.group_velocities,
+            gv_fd.group_velocities,
+            rtol=0,
+            atol=1e-8,
+        )

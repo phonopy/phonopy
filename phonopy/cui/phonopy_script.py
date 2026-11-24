@@ -410,7 +410,7 @@ def _print_settings(
         run_mode == "band" or run_mode == "mesh" or run_mode == "qpoints"
     ) and settings.is_group_velocity:  # noqa 129
         gv_delta_q = settings.group_velocity_delta_q
-        if gv_delta_q is not None:
+        if gv_delta_q is not None:  # REMOVE-AT-V5
             print("  With group velocity calculation (dq=%3.1e)" % gv_delta_q)
         else:
             print("")
@@ -1951,11 +1951,18 @@ def _init_phonopy(
             site_mixture_scheme=_get_site_mixture_scheme(settings, cell_info),
         )
     else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
+        # REMOVE-AT-V5
+        if settings.group_velocity_delta_q is not None:
+            print("")
+            print("WARNING: GV_DELTA_Q (--gv-delta-q) is deprecated and will be")
+            print("removed in phonopy v5. Group velocities are calculated with")
+            print("the analytical derivative of the dynamical matrix by default.")
+            print("")
         phonon = Phonopy(
             cell_info.unitcell,
             cell_info.supercell_matrix,
             primitive_matrix=cell_info.primitive_matrix,
-            group_velocity_delta_q=settings.group_velocity_delta_q,
+            group_velocity_delta_q=settings.group_velocity_delta_q,  # REMOVE-AT-V5
             symprec=symprec,
             is_symmetry=settings.is_symmetry,
             calculator=cell_info.interface_mode,
