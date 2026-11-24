@@ -216,6 +216,19 @@ def test_Mesh_full_fcsym_si(ph_si: Phonopy):
     _test_IterMesh(ph_si, freqs_full_fcsym_ref_si)
 
 
+def test_IterMesh_without_eigenvectors(ph_si: Phonopy):
+    """Test IterMesh with with_eigenvectors=False against Mesh."""
+    ph_si.init_mesh(mesh=[3, 3, 3], with_eigenvectors=False, use_iter_mesh=True)
+    assert isinstance(ph_si.mesh, IterMesh)
+    freqs = []
+    for f, e in ph_si.mesh:
+        assert e is None
+        freqs.append(f)
+    ph_si.run_mesh([3, 3, 3])
+    assert isinstance(ph_si.mesh, Mesh)
+    np.testing.assert_allclose(ph_si.mesh.frequencies, freqs, atol=1e-5)
+
+
 @pytest.mark.parametrize(
     "compression,with_eigenvectors,with_group_velocities",
     itertools.product(

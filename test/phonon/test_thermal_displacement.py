@@ -411,3 +411,42 @@ def test_ThermalDisplacementMatrices_write_cif(
     for i, parts in enumerate(aniso_lines):
         vals = np.array([float(x) for x in parts[1:]])
         np.testing.assert_allclose(np.abs(vals), np.abs(_cif_ref[i]), atol=1e-4)
+
+
+@pytest.mark.parametrize("freq_max", [None, 5.0, 1e-10])
+def test_thermal_displacements_from_matrices(ph_sno2: Phonopy, freq_max):
+    """Test thermal displacements against thermal displacement matrices.
+
+    Thermal displacements are the diagonal elements of the matrices, and
+    with a direction, the matrices projected along it. With
+    freq_max=1e-10, no mode enters the sums.
+
+    """
+    ph_sno2.init_mesh([3, 3, 3], with_eigenvectors=True, is_mesh_symmetry=False)
+    settings = {
+        "temperatures": [0, 300, 1000],
+        "freq_max": freq_max,
+        "exclude_gamma_acoustic": True,
+    }
+    tdm = ph_sno2.run_thermal_displacement_matrices(**settings)
+    matrices = tdm.thermal_displacement_matrices
+    assert matrices is not None
+
+    td = ph_sno2.run_thermal_displacements(**settings)
+    np.testing.assert_allclose(
+        td.thermal_displacements,
+        np.diagonal(matrices, axis1=2, axis2=3).reshape(len(matrices), -1),
+        rtol=1e-12,
+        atol=1e-14,
+    )
+
+    direction = [1, 2, 3]
+    td = ph_sno2.run_thermal_displacements(direction=direction, **settings)
+    cartesian = np.dot(direction, ph_sno2.primitive.cell)
+    cartesian /= np.linalg.norm(cartesian)
+    np.testing.assert_allclose(
+        td.thermal_displacements,
+        np.einsum("i,taij,j->ta", cartesian, matrices, cartesian),
+        rtol=1e-12,
+        atol=1e-14,
+    )

@@ -820,11 +820,12 @@ class IterMesh(MeshBase):
             q = self._qpoints[self._q_count]
             self._dynamical_matrix.run(q)
             dm = self._dynamical_matrix.dynamical_matrix
-            if self._with_eigenvectors:
-                eigvals, eigenvectors = np.linalg.eigh(dm)  # type: ignore
-                eigenvalues = eigvals.real
-            else:
-                eigenvalues = np.linalg.eigvalsh(dm).real  # type: ignore
+            assert dm is not None
+            eigvals, eigvecs = diagonalize_dynamical_matrices(
+                dm[None], with_eigenvectors=self._with_eigenvectors, lang=self._lang
+            )
+            eigenvalues = eigvals[0]
+            eigenvectors = None if eigvecs is None else eigvecs[0]
             frequencies = (
                 np.array(
                     np.sqrt(abs(eigenvalues)) * np.sign(eigenvalues),
